@@ -1,0 +1,229 @@
+﻿@page "/order-list"
+
+@using ArtStore.Shared.DTOs.Order
+@using ArtStore.Shared.Models.Enums
+@using ArtStore.UI.Client.Services
+@using MudBlazor
+
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Lista de Pedidos</MudText>
+
+    @if (Orders == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!Orders.Any())
+    {
+        <MudAlert Severity="Severity.Info">
+            Nenhum pedido encontrado.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var order in Orders)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="3" Class="mud-height-full">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <MudText Typo="Typo.h6">
+                                        #@order.OrderNumber
+                                        <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Small">
+                                            @order.OrderSource
+                                        </MudChip>
+                                    </MudText>
+                                    <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Small">
+                                        @GetStatusText(order.Status)
+                                    </MudChip>
+                                </div>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                </MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <MudCardContent>
+                            <div class="mb-2">
+                                <MudText Typo="Typo.subtitle2">Cliente</MudText>
+                                <MudText Typo="Typo.body2">@order.CustomerName</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@order.CustomerEmail</MudText>
+                            </div>
+
+                            <div class="mb-2">
+                                <MudText Typo="Typo.subtitle2">Pagamento</MudText>
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@GetPaymentIcon(order.PaymentMethod)" Size="Size.Small" Class="mr-1" />
+                                    <MudText Typo="Typo.body2">@GetPaymentMethodText(order.PaymentMethod)</MudText>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <MudText Typo="Typo.subtitle2">Items</MudText>
+                                <MudText Typo="Typo.body2">@order.OrderDetails.Count item(s)</MudText>
+
+                                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                                    Total: @order.OrderDetails.Sum(d => d.Quantity) unidade(s)
+                                </MudText>
+                                <MudPaper Square="true">
+                                    <MudList T="OrderDetailDto" Dense="true" Class="mt-2">
+                                        @foreach (var item in order.OrderDetails)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.LocalDrink">
+                                                <MudText Typo="Typo.body2">@($"{item.Quantity}x - {item.ProductName}")</MudText>
+                                            </MudListItem>
+                                            <MudDivider />
+                                        }
+                                    </MudList>
+                                </MudPaper>
+                                <MudDivider />
+                                <MudPaper Square="true">
+                                    <MudText Typo="Typo.subtitle2" Class="mt-2">Histórico de Status</MudText>
+                                    <MudList T="OrderStatusHistoryDto" Dense="true" Class="mt-2">
+                                        @{
+                                            var sortedHistories = order.OrderStatusHistories
+                                            .OrderBy(h => h.ChangedAt)
+                                            .ToList();
+                                            DateTime? previousChangedAt = null;
+                                        }
+                                        @foreach (var item in sortedHistories)
+                                        {
+                                            TimeSpan? diff = previousChangedAt.HasValue ? item.ChangedAt - previousChangedAt.Value : (TimeSpan?)null;
+                                            previousChangedAt = item.ChangedAt;
+                                            <MudListItem>
+                                                <MudChip T="string" Icon="@Icons.Material.Filled.WatchLater" IconColor="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">@($"{item.ChangedAt:HH:mm:ss}")</MudChip>
+                                                <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="GetStatusColor(item.OldStatus)">@GetStatusText(item.OldStatus)</MudChip>
+                                                @if (item.OldStatus != item.NewStatus)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.ArrowRightAlt" Variant="Variant.Outlined" style="border:none; padding:0px;"></MudChip>
+                                                    <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Color="GetStatusColor(item.NewStatus)">@GetStatusText(item.NewStatus)</MudChip>
+                                                }
+                                                <MudText Typo="Typo.body2">
+                                                    @if (diff.HasValue)
+                                                    {
+                                                        <span class="mud-text-secondary" style="margin-left:8px;">
+                                                            (+@($"{(int)diff.Value.TotalMinutes}m {diff.Value.Seconds}s"))
+                                                        </span>
+                                                    }
+                                                </MudText>
+                                            </MudListItem>
+                                            <MudDivider />
+                                        }
+                                    </MudList>
+                                </MudPaper>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(order.ShippingAddress))
+                            {
+                                <div class="mb-2">
+                                    <MudText Typo="Typo.subtitle2">Endereço</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-truncate">@order.ShippingAddress</MudText>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(order.Notes))
+                            {
+                                <div class="mb-2">
+                                    <MudText Typo="Typo.subtitle2">Observações</MudText>
+                                    <MudText Typo="Typo.body2" Class="text-truncate">@order.Notes</MudText>
+                                </div>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions Class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.h6" Color="Color.Primary">
+                                @order.TotalAmount.ToString("C2")
+                            </MudText>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+
+@inject IDialogService DialogService
+@inject OrderService OrderService
+
+@code {
+    public List<OrderDto>? Orders { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Orders = await OrderService.GetOrdersAsync();
+            StateHasChanged();
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+
+    private Color GetStatusColor(OrderStatus? status)
+    {
+        if (status == null)
+            return Color.Default;
+        return status switch
+        {
+            OrderStatus.Pending => Color.Warning,
+            OrderStatus.Confirmed => Color.Info,
+            OrderStatus.Processing => Color.Primary,
+            OrderStatus.Shipped => Color.Secondary,
+            OrderStatus.Delivered => Color.Success,
+            OrderStatus.Cancelled => Color.Error,
+            OrderStatus.Refunded => Color.Dark,
+            _ => Color.Default
+        };
+    }
+
+    private string GetStatusText(OrderStatus? status)
+    {
+        if (status == null)
+            return "Desconhecido";
+        return status switch
+        {
+            OrderStatus.Pending => "Pendente",
+            OrderStatus.Confirmed => "Confirmado",
+            OrderStatus.Processing => "Processando",
+            OrderStatus.Shipped => "Enviado",
+            OrderStatus.Delivered => "Entregue",
+            OrderStatus.Cancelled => "Cancelado",
+            OrderStatus.Refunded => "Reembolsado",
+            _ => status.ToString()
+        };
+    }
+
+    private string GetPaymentIcon(PaymentMethodType paymentMethod)
+    {
+        return paymentMethod switch
+        {
+            PaymentMethodType.None => Icons.Material.Filled.HelpOutline,
+            PaymentMethodType.Cash => Icons.Material.Filled.Money,
+            PaymentMethodType.DebitCard => Icons.Material.Filled.Payment,
+            PaymentMethodType.CreditCard => Icons.Material.Filled.CreditCard,
+            PaymentMethodType.Bitcoin => Icons.Material.Filled.CurrencyBitcoin,
+            PaymentMethodType.USDT => Icons.Material.Filled.AttachMoney,
+            _ => Icons.Material.Filled.Payment
+        };
+    }
+
+    private string GetPaymentMethodText(PaymentMethodType paymentMethod)
+    {
+        return paymentMethod switch
+        {
+            PaymentMethodType.None => "Não definido",
+            PaymentMethodType.Cash => "Dinheiro",
+            PaymentMethodType.DebitCard => "Cartão de Débito",
+            PaymentMethodType.CreditCard => "Cartão de Crédito",
+            PaymentMethodType.Bitcoin => "Bitcoin",
+            PaymentMethodType.USDT => "USDT",
+            _ => paymentMethod.ToString()
+        };
+    }
+
+}

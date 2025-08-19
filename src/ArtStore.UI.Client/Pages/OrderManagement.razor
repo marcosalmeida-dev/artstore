@@ -1,0 +1,309 @@
+﻿@page "/order-management"
+
+@using ArtStore.Shared.DTOs.Order.Events
+@using Microsoft.AspNetCore.SignalR.Client
+@using ArtStore.Shared.DTOs.Order
+@using ArtStore.Shared.DTOs.Order.Commands
+@using ArtStore.Shared.Models.Enums
+@using ArtStore.UI.Client.Services
+@using MudBlazor
+
+@inject IJSRuntime JSRuntime
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Lista de Pedidos</MudText>
+
+    @if (Orders == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!Orders.Any())
+    {
+        <MudAlert Severity="Severity.Info">
+            Nenhum pedido encontrado.
+        </MudAlert>
+    }
+    else
+    {
+        <MudCard>
+            <MudCardHeader>
+                <MudText>OrderStatusChangedEvent counter: @_updateOrderCount</MudText>
+            </MudCardHeader>
+        </MudCard>
+        <MudGrid>
+            @foreach (var order in Orders)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="3" Class="mud-height-full">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <div class="d-flex justify-space-between align-center">
+                                    <MudText Typo="Typo.h6">
+                                        #@order.OrderNumber
+                                        <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Small">
+                                            @order.OrderSource
+                                        </MudChip>
+                                    </MudText>
+                                    <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Medium">
+                                        @GetStatusText(order.Status)
+                                    </MudChip>
+                                </div>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                </MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+
+                        <MudCardContent>
+                            <div class="mb-2">
+                                <MudText Typo="Typo.subtitle2">Cliente</MudText>
+                                <MudText Typo="Typo.body2">@order.CustomerName</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@order.CustomerEmail</MudText>
+                            </div>
+
+                            <div class="mb-2">
+                                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                                    Total: @order.OrderDetails.Sum(d => d.Quantity) unidade(s)
+                                </MudText>
+                                <MudPaper Square="true">
+                                    <MudList T="OrderDetailDto" Dense="true" Class="mt-2">
+                                        @foreach (var item in order.OrderDetails)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.LocalDrink">
+                                                <MudText Typo="Typo.body2">@($"{item.Quantity}x - {item.ProductName}")</MudText>
+                                            </MudListItem>
+                                            <MudDivider />
+                                        }
+                                    </MudList>
+                                </MudPaper>
+                            </div>
+                        </MudCardContent>
+
+                        <MudCardActions Class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudButton Variant="Variant.Filled"
+                                           StartIcon="@GetOrderActionIcon(order.Status)"
+                                           Color="@GetStatusColor(order.Status)"
+                                           OnClick="() => UpdateOrderStatus(order)"
+                                           Disabled="@isUpdating"
+                                           style="@GetOrderButtonStyle(order.Status)"
+                                           id="order-update-btn"
+                                           @key="order.Id">
+                                    @GetOrderActionText(order.Status)
+                                </MudButton>
+                            </div>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject OrderService OrderService
+
+@code {
+    public List<OrderDto>? Orders { get; set; }
+    private bool isUpdating = false;
+
+    private int _updateOrderCount = 0;
+
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/orderManagementHub"))
+            .Build();
+
+        _hubConnection.On<OrderCreatedEvent>("OrderCreated", async (orderCreatedEvent) =>
+        {
+            Snackbar.Add($"Pedido #{orderCreatedEvent.OrderNumber} criado com sucesso!", Severity.Success);
+            await LoadOrdersAsync();
+        });
+
+        _hubConnection.On<OrderStatusChangedEvent>("OrderStatusChanged", async (orderStatusChangedEvent) =>
+        {
+            _updateOrderCount++;
+            var updatedOrderItem = Orders?.Where(w => w.Id == orderStatusChangedEvent.OrderId).FirstOrDefault();
+            if (updatedOrderItem is not null)
+            {
+                updatedOrderItem.Status = orderStatusChangedEvent.NewStatus;
+                await InvokeAsync(StateHasChanged);
+
+                Snackbar.Add(
+                    $"Status do pedido #{orderStatusChangedEvent.OrderNumber} alterado para {GetStatusText(orderStatusChangedEvent.NewStatus)}.",
+                    Severity.Info
+                );
+            }
+            else
+            {
+                Snackbar.Add($"Pedido #{orderStatusChangedEvent.OrderNumber} atualizado e não encontrado!", Severity.Warning);
+            }
+        });
+
+        await LoadOrdersAsync();
+        await _hubConnection.StartAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender)
+        // {
+        //     LoadOrdersAsync();
+        // }
+
+        base.OnAfterRender(firstRender);
+    }
+
+    private async Task LoadOrdersAsync()
+    {
+        try
+        {
+            Orders = await OrderService.GetOrdersAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions (e.g., log error, show message)
+            Console.Error.WriteLine($"Error loading orders: {ex.Message}");
+        }
+    }
+
+
+    private Color GetStatusColor(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => Color.Warning,
+            OrderStatus.Confirmed => Color.Info,
+            OrderStatus.Processing => Color.Primary,
+            OrderStatus.Shipped => Color.Secondary,
+            OrderStatus.Delivered => Color.Success,
+            OrderStatus.Cancelled => Color.Error,
+            OrderStatus.Refunded => Color.Dark,
+            _ => Color.Default
+        };
+    }
+
+    private string GetStatusText(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => "Pendente",
+            OrderStatus.Confirmed => "Confirmado",
+            OrderStatus.Processing => "Processando",
+            OrderStatus.Shipped => "Enviado",
+            OrderStatus.Delivered => "Entregue",
+            OrderStatus.Cancelled => "Cancelado",
+            OrderStatus.Refunded => "Reembolsado",
+            _ => status.ToString()
+        };
+    }
+
+    private string GetPaymentIcon(PaymentMethodType paymentMethod)
+    {
+        return paymentMethod switch
+        {
+            PaymentMethodType.None => Icons.Material.Filled.HelpOutline,
+            PaymentMethodType.Cash => Icons.Material.Filled.Money,
+            PaymentMethodType.DebitCard => Icons.Material.Filled.Payment,
+            PaymentMethodType.CreditCard => Icons.Material.Filled.CreditCard,
+            PaymentMethodType.Bitcoin => Icons.Material.Filled.CurrencyBitcoin,
+            PaymentMethodType.USDT => Icons.Material.Filled.AttachMoney,
+            _ => Icons.Material.Filled.Payment
+        };
+    }
+
+    private string GetPaymentMethodText(PaymentMethodType paymentMethod)
+    {
+        return paymentMethod switch
+        {
+            PaymentMethodType.None => "Não definido",
+            PaymentMethodType.Cash => "Dinheiro",
+            PaymentMethodType.DebitCard => "Cartão de Débito",
+            PaymentMethodType.CreditCard => "Cartão de Crédito",
+            PaymentMethodType.Bitcoin => "Bitcoin",
+            PaymentMethodType.USDT => "USDT",
+            _ => paymentMethod.ToString()
+        };
+    }
+
+    private async Task UpdateOrderStatus(OrderDto order)
+    {
+        try
+        {
+            isUpdating = true;
+            var newStatus = order.Status switch
+            {
+                OrderStatus.Confirmed => OrderStatus.Processing,
+                OrderStatus.Processing => OrderStatus.Shipped,
+                _ => order.Status
+            };
+
+            if (newStatus != order.Status)
+            {
+                var command = new UpdateOrderStatusCommand
+                    {
+                        OrderId = order.Id,
+                        Status = newStatus
+                    };
+
+                var success = await OrderService.UpdateOrderStatusAsync(command);
+                if (success)
+                {
+                    order.Status = newStatus;
+                    StateHasChanged();
+                }
+                // Optionally handle failure (e.g., show a message)
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions (e.g., log error, show message)
+            Console.Error.WriteLine($"Error updating order status: {ex.Message}");
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private string GetOrderActionText(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => "Atender",
+            OrderStatus.Processing => "Entregar",
+            _ => ""
+        };
+    }
+
+    private string GetOrderActionIcon(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => Icons.Material.Filled.PlayArrow,
+            OrderStatus.Processing => Icons.Material.Filled.LocalShipping,
+            _ => ""
+        };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
+    private string GetOrderButtonStyle(OrderStatus status)
+    {
+        return status == OrderStatus.Shipped
+            ? "min-width: 120px; display:none;"
+            : "min-width: 120px;";
+    }
+}

@@ -1,0 +1,641 @@
+﻿@using ArtStore.Shared.DTOs.Common
+@using ArtStore.Shared.Models.Enums
+@using ArtStore.UI.Client.Models
+@using ArtStore.UI.Client.Services
+
+<MudDialog @bind-IsVisible="checkoutDialogVisible" Options="dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Payment" Class="mr-3" Color="Color.Primary" />
+            <MudText Typo="Typo.h5">Complete Your Purchase</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="px-0">
+            <MudGrid>
+                <!-- Order Summary Section: Hide when OrderComplete -->
+                @if (checkoutStep != CheckoutStep.OrderComplete)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="1" Class="pa-4 mb-4" Style="background: var(--mud-palette-background-grey); height: fit-content;">
+                            <MudText Typo="Typo.h6" Class="mb-3">
+                                <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" Size="Size.Small" />
+                                Order Summary
+                            </MudText>
+                            
+                            <MudList Dense="true" T="string" Class="pa-0">
+                                @foreach (var id in SelectedOrderItems)
+                                {
+                                    var item = OrderItems.FirstOrDefault(i => i.Id == id);
+                                    if (item != null && item.Quantity > 0)
+                                    {
+                                        <MudListItem Class="px-0 py-2">
+                                            <div class="d-flex justify-space-between align-center w-100">
+                                                <div class="d-flex align-center flex-grow-1">
+                                                    <MudAvatar Size="Size.Small" Class="mr-3" Style="background: var(--mud-palette-primary-lighten);">
+                                                        <MudText Typo="Typo.caption">@item.Quantity</MudText>
+                                                    </MudAvatar>
+                                                    <div class="flex-grow-1">
+                                                        <MudText Typo="Typo.body2" Class="mb-0 font-weight-medium">@item.Name</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Price.ToString("C") each</MudText>
+                                                    </div>
+                                                </div>
+                                                <MudText Typo="Typo.body2" Class="font-weight-bold ml-4">@((item.Price * item.Quantity).ToString("C"))</MudText>
+                                            </div>
+                                        </MudListItem>
+                                        <MudDivider Class="my-1" />
+                                    }
+                                }
+                            </MudList>
+                            
+                            <div class="mt-4">
+                                <MudDivider Class="my-3" />
+                                
+                                <div class="d-flex justify-space-between py-1">
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">Total</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">@CalculateTotalPrice().ToString("C")</MudText>
+                                </div>
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                <!-- Payment Section / Success Section -->
+                <MudItem xs="12" md="@(checkoutStep == CheckoutStep.OrderComplete ? 12 : 6)">
+                    <MudPaper Elevation="1" Class="pa-4">
+                        @if (checkoutStep == CheckoutStep.PaymentMethod)
+                        {
+                            <MudText Typo="Typo.h6" Class="mb-4">
+                                <MudIcon Icon="@Icons.Material.Filled.CreditCard" Class="mr-2" Size="Size.Small" />
+                                Choose Payment Method
+                            </MudText>
+                            
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <div class="payment-methods-container">
+                                        <MudCard Class="@(selectedPaymentMethod == PaymentMethodType.DebitCard ? "payment-method-card selected" : "payment-method-card")"
+                                                 @onclick="() => selectedPaymentMethod = PaymentMethodType.DebitCard">
+                                            <MudCardContent Class="py-3">
+                                                <div class="d-flex align-center">
+                                                    <div class="payment-method-indicator">
+                                                        @if (selectedPaymentMethod == PaymentMethodType.DebitCard)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="payment-method-circle"></div>
+                                                        }
+                                                    </div>
+                                                    <MudIcon Icon="@Icons.Material.Filled.CreditCardOff" Class="mr-3" Color="Color.Primary" />
+                                                    <div>
+                                                        <MudText Typo="Typo.body1" Class="font-weight-medium">Debit Card</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Visa, Mastercard, American Express</MudText>
+                                                    </div>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+                                        <MudCard Class="@(selectedPaymentMethod == PaymentMethodType.CreditCard ? "payment-method-card selected" : "payment-method-card")" 
+                                                 @onclick="() => selectedPaymentMethod = PaymentMethodType.CreditCard">
+                                            <MudCardContent Class="py-3">
+                                                <div class="d-flex align-center">
+                                                    <div class="payment-method-indicator">
+                                                        @if (selectedPaymentMethod == PaymentMethodType.CreditCard)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="payment-method-circle"></div>
+                                                        }
+                                                    </div>
+                                                    <MudIcon Icon="@Icons.Material.Filled.CreditCard" Class="mr-3" Color="Color.Primary" />
+                                                    <div>
+                                                        <MudText Typo="Typo.body1" Class="font-weight-medium">Credit Card</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Visa, Mastercard, American Express</MudText>
+                                                    </div>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+
+                                        <MudCard Class="@(selectedPaymentMethod == PaymentMethodType.Bitcoin ? "payment-method-card selected" : "payment-method-card")" 
+                                                 @onclick="() => selectedPaymentMethod = PaymentMethodType.Bitcoin">
+                                            <MudCardContent Class="py-3">
+                                                <div class="d-flex align-center">
+                                                    <div class="payment-method-indicator">
+                                                        @if (selectedPaymentMethod == PaymentMethodType.Bitcoin)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="payment-method-circle"></div>
+                                                        }
+                                                    </div>
+                                                    <MudIcon Icon="@Icons.Material.Filled.CurrencyBitcoin" Class="mr-3" Color="Color.Info" />
+                                                    <div class="@(string.IsNullOrEmpty("")? "hide-errors" : "")">
+                                                        <MudText Typo="Typo.body1" Class="font-weight-medium">Bitcoin</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pay with your Lightning Bitcoin</MudText>
+                                                    </div>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+
+                                        <MudCard Class="@(selectedPaymentMethod == PaymentMethodType.USDT ? "payment-method-card selected" : "payment-method-card")"
+                                                 @onclick="() => selectedPaymentMethod = PaymentMethodType.USDT">
+                                            <MudCardContent Class="py-3">
+                                                <div class="d-flex align-center">
+                                                    <div class="payment-method-indicator">
+                                                        @if (selectedPaymentMethod == PaymentMethodType.USDT)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="payment-method-circle"></div>
+                                                        }
+                                                    </div>
+                                                    <MudIcon Icon="@Icons.Material.Filled.MoneyOff" Class="mr-3" Color="Color.Success" />
+                                                    <div>
+                                                        <MudText Typo="Typo.body1" Class="font-weight-medium">USDT</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pay with USDT</MudText>
+                                                    </div>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+
+                                        <MudCard Class="@(selectedPaymentMethod == PaymentMethodType.Cash ? "payment-method-card selected" : "payment-method-card")" 
+                                                 @onclick="() => selectedPaymentMethod = PaymentMethodType.Cash">
+                                            <MudCardContent Class="py-3">
+                                                <div class="d-flex align-center">
+                                                    <div class="payment-method-indicator">
+                                                        @if (selectedPaymentMethod == PaymentMethodType.Cash)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Small" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="payment-method-circle"></div>
+                                                        }
+                                                    </div>
+                                                    <MudIcon Icon="@Icons.Material.Filled.Money" Class="mr-3" Color="Color.Dark" />
+                                                    <div>
+                                                        <MudText Typo="Typo.body1" Class="font-weight-medium">Cash</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Pay with Cash</MudText>
+                                                    </div>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </div>
+                                </MudItem>
+                            </MudGrid>
+                            
+                            <div class="d-flex justify-end mt-4">
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary"
+                                          Size="Size.Large"
+                                          StartIcon="@Icons.Material.Filled.ArrowForward"
+                                          OnClick="ContinueToPaymentDetails"
+                                          Disabled="selectedPaymentMethod == PaymentMethodType.None">
+                                    Continue
+                                </MudButton>
+                            </div>
+                        }
+                        
+                        @if (checkoutStep == CheckoutStep.PaymentDetails)
+                        {
+                            <div class="d-flex align-center justify-space-between mb-4">
+                                <MudText Typo="Typo.h6">
+                                    <MudIcon Icon="@GetPaymentIcon()" Class="mr-2" Size="Size.Small" />
+                                    @GetPaymentMethodName()
+                                </MudText>
+                                <MudButton Variant="Variant.Text" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          OnClick="() => checkoutStep = CheckoutStep.PaymentMethod">
+                                    Change
+                                </MudButton>
+                            </div>
+                            
+                            @if (selectedPaymentMethod == PaymentMethodType.CreditCard)
+                            {
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudTextField @bind-Value="paymentInfo.CardholderName" 
+                                                     Label="Cardholder Name" 
+                                                     Variant="Variant.Outlined" 
+                                                     Required="true"
+                                                     HelperText="Enter name as it appears on card" />
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField @bind-Value="paymentInfo.CardNumber" 
+                                                     Label="Card Number" 
+                                                     Variant="Variant.Outlined" 
+                                                     Required="true"
+                                                     Placeholder="1234 5678 9012 3456"
+                                                     HelperText="16-digit number on your card" />
+                                    </MudItem>
+                                    <MudItem xs="12" sm="6">
+                                        <MudTextField @bind-Value="paymentInfo.ExpiryDate" 
+                                                     Label="Expiry Date" 
+                                                     Variant="Variant.Outlined" 
+                                                     Required="true"
+                                                     Placeholder="MM/YY"
+                                                     HelperText="Month/Year" />
+                                    </MudItem>
+                                    <MudItem xs="12" sm="6">
+                                        <MudTextField @bind-Value="paymentInfo.Cvv" 
+                                                     Label="CVV" 
+                                                     Variant="Variant.Outlined" 
+                                                     Required="true"
+                                                     InputType="InputType.Password"
+                                                     Placeholder="123"
+                                                     HelperText="3-digit security code" />
+                                    </MudItem>
+                                </MudGrid>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Info" Class="mb-4">
+                                    <MudText>You will be redirected to @GetPaymentMethodName() to complete your payment securely.</MudText>
+                                </MudAlert>
+                            }
+                            
+                            <div class="d-flex justify-space-between mt-6">
+                                <MudButton Variant="Variant.Outlined" 
+                                          Color="Color.Secondary"
+                                          Size="Size.Large"
+                                          StartIcon="@Icons.Material.Filled.ArrowBack"
+                                          OnClick="() => checkoutStep = CheckoutStep.PaymentMethod">
+                                    Back
+                                </MudButton>
+                                
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Success"
+                                          Size="Size.Large"
+                                          StartIcon="@Icons.Material.Filled.Lock"
+                                          OnClick="CompleteOrder"
+                                          Disabled="isProcessingPayment">
+                                    @if (isProcessingPayment)
+                                    {
+                                        <span class="d-flex align-center">
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            Processing...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="d-flex align-center">
+                                            Pay @CalculateTotalPrice().ToString("C")
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" Class="ml-2" Size="Size.Small" />
+                                        </span>
+                                    }
+                                </MudButton>
+                            </div>
+                        }
+                        
+                        @if (checkoutStep == CheckoutStep.OrderComplete)
+                        {
+                            <div class="order-complete-container">
+                                @if (isProcessingPayment)
+                                {
+                                    <div class="centered-icon-container">
+                                        <MudProgressCircular Size="Size.Large" 
+                                                           Indeterminate="true" 
+                                                           Color="Color.Primary"
+                                                           Class="processing-spinner" />
+                                        <MudText Typo="Typo.h6" Class="mt-4 text-center">Processing Payment...</MudText>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="centered-icon-container">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                                                Color="Color.Success" 
+                                                Size="Size.Large" 
+                                                Class="success-icon" />
+                                    </div>
+
+                                    <MudText Typo="Typo.h4" Class="mb-2 font-weight-bold text-center">Payment Successful!</MudText>
+                                    
+                                    <!-- Increased Order Number Box -->
+                                    <MudPaper Elevation="0" Class="order-number-box pa-5 mb-4" Style="background: var(--mud-palette-success-lighten); border-radius: 12px;">
+                                        <MudText Typo="Typo.body1" Class="font-weight-medium darken-1 shades-text text-white text-center" Style="font-size: 1.25rem;">Order Number</MudText>
+                                        <MudText Typo="Typo.h4" Class="darken-1 shades-text text-white text-center" Style="font-size: 2.5rem;">@orderNumber</MudText>
+                                    </MudPaper>
+                                    
+                                    <div class="order-number-box" style="padding:0; box-shadow:none; background:none; border-radius:12px; margin-bottom:0;">
+                                        <MudButton Variant="Variant.Filled" 
+                                                  Color="Color.Primary" 
+                                                  Size="Size.Large"
+                                                  Style="width:100%;"
+                                                  OnClick="CloseCheckoutDialog">
+                                            Close
+                                        </MudButton>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+</MudDialog>
+
+<style type="text/css">
+    .payment-methods-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-method-card {
+    cursor: pointer;
+    border: 2px solid var(--mud-palette-lines-default);
+    transition: all 0.2s ease;
+    height: 70px;
+    width: 100%;
+    user-select: none;
+    position: relative;
+}
+
+    .payment-method-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        transform: translateY(-2px);
+        border-color: var(--mud-palette-primary-lighten);
+    }
+
+    .payment-method-card:active {
+        transform: translateY(0px) scale(0.98);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+    }
+
+    .payment-method-card.selected {
+        border-color: var(--mud-palette-primary) !important;
+        background-color: var(--mud-palette-primary-lighten) !important;
+        box-shadow: 0 4px 12px rgba(var(--mud-palette-primary-rgb), 0.2) !important;
+    }
+
+        .payment-method-card.selected:hover {
+            background-color: var(--mud-palette-primary-lighten) !important;
+        }
+
+.payment-method-indicator {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.payment-method-circle {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--mud-palette-text-secondary);
+    border-radius: 50%;
+    background-color: transparent;
+}
+
+.mud-dialog {
+    width: 900px !important;
+    max-width: 900px !important;
+    height: 600px !important;
+    max-height: 600px !important;
+}
+
+    .mud-dialog .mud-dialog-content {
+        overflow-y: auto;
+        height: 100%;
+    }
+
+.order-complete-container {
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.centered-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.success-icon {
+    font-size: 4rem !important;
+    animation: successPulse 0.6s ease-in-out;
+}
+
+.processing-spinner {
+    width: 64px !important;
+    height: 64px !important;
+}
+
+.order-number-box {
+    min-width: 320px;
+    max-width: 480px;
+    padding: 32px !important;
+    margin: 0 auto 24px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    font-size: 1.5rem;
+}
+
+.order-number-box .mud-typography {
+    font-size: 2.5rem !important;
+}
+
+@@keyframes successPulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+</style>
+
+@inject OrderService OrderService
+
+@code {
+    [Parameter]
+    public List<ProductModel> OrderItems { get; set; } = new List<ProductModel>();
+
+    [Parameter]
+    public HashSet<int> SelectedOrderItems { get; set; } = new HashSet<int>();
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private PaymentMethodType selectedPaymentMethod = PaymentMethodType.None;
+
+    private CheckoutStep checkoutStep = CheckoutStep.PaymentMethod;
+    private string orderNumber = "";
+    private PaymentInformationDto paymentInfo = new PaymentInformationDto();
+    private bool isProcessingPayment = false;
+
+    // Checkout dialog
+    private bool checkoutDialogVisible = false;
+    private DialogOptions dialogOptions = new DialogOptions
+    {
+        MaxWidth = MaxWidth.Large,
+        FullWidth = false,
+        BackdropClick = false,
+    };
+
+    private void ContinueToPaymentDetails()
+    {
+        if (selectedPaymentMethod != PaymentMethodType.None)
+        {
+            checkoutStep = CheckoutStep.PaymentDetails;
+        }
+    }
+
+    private string GetPaymentMethodName()
+    {
+        return selectedPaymentMethod switch
+        {
+            PaymentMethodType.Cash => "Cash",
+            PaymentMethodType.DebitCard => "Debit Card",
+            PaymentMethodType.CreditCard => "Credit Card",
+            PaymentMethodType.Bitcoin => "Bitcoin",
+            PaymentMethodType.USDT => "USDT",
+            _ => "Payment Method"
+        };
+    }
+
+    private string GetPaymentIcon()
+    {
+        return selectedPaymentMethod switch
+        {
+            PaymentMethodType.Cash => Icons.Material.Filled.Money,
+            PaymentMethodType.DebitCard => Icons.Material.Filled.CreditCardOff,
+            PaymentMethodType.CreditCard => Icons.Material.Filled.CreditCard,
+            PaymentMethodType.Bitcoin => Icons.Material.Filled.CurrencyBitcoin,
+            PaymentMethodType.USDT => Icons.Material.Filled.MoneyOff,
+            _ => Icons.Material.Filled.Payment
+        };
+    }
+
+    private void CloseCheckoutDialog()
+    {
+        if(!string.IsNullOrEmpty(orderNumber))
+        {
+            // Optionally, you can show a confirmation dialog or snackbar here
+            // to inform the user about the successful order completion.
+            checkoutDialogVisible = false;
+            ResetCheckout();
+            MudDialog.Close(DialogResult.Ok(true)); // Indicates payment was successful
+        }
+    }
+
+    private void ResetCheckout()
+    {
+        checkoutStep = CheckoutStep.PaymentMethod;
+        selectedPaymentMethod = PaymentMethodType.None;
+        paymentInfo = new PaymentInformationDto();
+        isProcessingPayment = false;
+    }
+
+    private async Task CompleteOrder()
+    {
+        // Set loading state
+        isProcessingPayment = true;
+        
+        // Move to the order complete step first to show the loading spinner
+        checkoutStep = CheckoutStep.OrderComplete;
+        
+        // Force UI update
+        StateHasChanged();
+
+        try
+        {
+            // Call your payment processing method
+            await ProcessPayment(selectedPaymentMethod, paymentInfo);
+
+            // Map selected items and total amount to CreateOrderModel
+            var orderModel = new CreateOrderModel
+            {
+                TotalAmount = CalculateTotalPrice(),
+                PaymentMethod = selectedPaymentMethod,
+                CustomerEmail = "customer@example.com", // Replace with actual customer email
+                CustomerName = "John Doe", // Replace with actual customer name
+                CustomerPhone = "123-456-7890", // Replace with actual customer phone
+                ShippingAddress = "123 Main St, City, Country", // Replace with actual shipping address
+                Items = SelectedOrderItems
+                    .Select(id => OrderItems.FirstOrDefault(item => item.Id == id))
+                    .Where(item => item != null)
+                    .Select(item => new ProductModel
+                    {
+                        Id = item.Id,
+                        Name = item.Name,
+                        Price = item.Price,
+                        Quantity = item.Quantity
+                    })
+                    .ToList()
+            };
+
+            // Call CreateOrderAsync and set the result to orderNumber
+            orderNumber = await OrderService.CreateOrderAsync(orderModel);
+        }
+    catch (Exception ex)
+    {
+        checkoutStep = CheckoutStep.PaymentDetails;
+        // Handle error (e.g., show a snackbar or log the error)
+    }
+    finally
+    {
+        isProcessingPayment = false;
+        StateHasChanged();
+    }
+}
+    
+    private async Task ProcessPayment(PaymentMethodType paymentMethod, PaymentInformationDto paymentInfo)
+    {
+        // Simulate payment processing delay
+        await Task.Delay(2000);
+        
+        // Here you would implement your actual payment processing logic
+        // For example:
+        // - Call payment gateway API
+        // - Validate payment information
+        // - Process the transaction
+        // - Handle success/failure responses
+        
+        // For now, we'll just simulate a successful payment
+        // In a real implementation, you might throw an exception on payment failure
+    }
+    
+    private decimal CalculateTotalPrice()
+    {
+        decimal total = 0;
+        foreach (var id in SelectedOrderItems)
+        {
+            var item = OrderItems.FirstOrDefault(i => i.Id == id);
+            if (item != null)
+            {
+                total += item.Price * item.Quantity;
+            }
+        }
+        return total;
+    }
+}

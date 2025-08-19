@@ -1,0 +1,287 @@
+﻿@* @page "/order" *@
+@page "/"
+
+@using System.Collections.Generic
+@using System.Linq
+@using ArtStore.UI.Client.Models
+@using ArtStore.UI.Client.Services
+
+<div class="multi-select-card-container">
+    <MudText Typo="Typo.h5" Class="mb-4">Item list</MudText>
+
+    <MudGrid>
+        @foreach (var item in Items)
+        {
+            <MudItem xs="12" sm="6" md="@ItemSize">
+                <MudCard Style="transition: all 0.2s ease; cursor: pointer; height: 100%;"
+                         Class="@(IsSelected(item) ? "selected-card mud-elevation-8" : "hover-card mud-elevation-2")">
+                    @if (IsSelected(item))
+                    {
+                        <div class="selected-indicator">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                        </div>
+                    }
+                    <div @onclick="() => ToggleSelection(item)">
+                        <MudCardMedia Image="@item.ImageUrl" Height="200" />
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-1">@item.Name</MudText>
+                            <MudText Typo="Typo.body2" Class="mb-3" Style="min-height: 60px;">@item.Description</MudText>
+                        </MudCardContent>
+                    </div>
+                    <MudCardActions>
+                        <div class="d-flex align-center justify-space-between" style="width: 100%;">
+                            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+                                @item.Price.ToString("C")
+                            </MudText>
+
+                            @if (IsSelected(item))
+                            {
+                                <div class="d-flex align-center" @onclick:stopPropagation>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => DecreaseItemCount(item))"
+                                                   Disabled="@(GetItemCount(item) < 1)" />
+
+                                    <MudTextField T="int"
+                                                  Value="@GetItemCount(item)"
+                                                  ValueChanged="@((int val) => UpdateItemCount(item, val))"
+                                                  Style="width: 60px; margin: 0 8px; text-align: center;"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.None"
+                                                  InputMode="InputMode.numeric" />
+
+                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => IncreaseItemCount(item))"
+                                                   Disabled="@(GetItemCount(item) > 9)" />
+                                </div>
+                            }
+                        </div>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</div>
+
+@if (SelectedItems.Count > 0)
+{
+    <div class="selection-popup-overlay">
+        <div class="selection-popup mb-2 d-flex align-center">
+            <MudPaper Class="px-6 py-4" Elevation="12" Style="border-radius: 8px; max-width: 400px; width: 100%;">
+                <div class="d-flex flex-column">
+                    <!-- Selected-item summary -->
+                    <MudText Typo="Typo.body1">
+                        <strong>@SelectedItems.Count</strong> @(SelectedItems.Count == 1 ? "item" : "items") selected
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1 mb-2">
+                        Total quantity: @GetTotalQuantity()
+                    </MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-3">
+                        Total: @CalculateTotalPrice().ToString("C")
+                    </MudText>
+
+                    <MudDivider />
+
+                    <!-- Actions at bottom -->
+                    <div class="d-flex justify-end mt-3">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Payment"
+                                   OnClick="OpenPaymentDialog"
+                                   Class="mr-2">
+                            Buy Now
+                        </MudButton>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Dark"
+                                   OnClick="ClearSelections">
+                            Cancel
+                        </MudButton>
+                    </div>
+                </div>
+            </MudPaper>
+        </div>
+    </div>
+}
+
+<style>
+    .selected-card {
+        position: relative;
+        border: 2px solid var(--mud-palette-primary);
+        transform: translateY(-2px);
+        background-color: var(--mud-palette-primary-hover);
+    }
+
+    .selected-indicator {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 10;
+        background-color: transparent;
+        border-radius: 50%;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-2px);
+        transition: transform 0.3s ease;
+    }
+
+    .multi-select-card-container {
+        padding: 16px 0;
+        margin-bottom: 80px;
+    }
+
+    /* Bottom-center the overlay */
+    .selection-popup-overlay {
+        position: fixed;
+        bottom: 16px;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .selection-popup {
+        pointer-events: all;
+        width: calc(100% - 32px);
+        max-width: 500px;
+    }
+</style>
+
+@inject IDialogService DialogService
+@inject ProductService ProductService
+
+@code {
+    [Parameter]
+    public List<ProductModel> Items { get; set; } = new List<ProductModel>();
+
+    [Parameter]
+    public HashSet<int> SelectedItems { get; set; } = new HashSet<int>();
+
+    [Parameter]
+    public EventCallback<HashSet<int>> SelectedItemsChanged { get; set; }
+
+    [Parameter]
+    public int MinSelections { get; set; } = 1;
+
+    [Parameter]
+    public int ItemSize { get; set; } = 3; // Defaults to 3 items per row on md screens
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Items = await ProductService.GetProductsAsync();
+            StateHasChanged();
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+    private void ToggleSelection(ProductModel item)
+    {
+        if (SelectedItems.Contains(item.Id))
+        {
+            item.Quantity = 0;
+            SelectedItems.Remove(item.Id);
+        }
+        else
+        {
+            SelectedItems.Add(item.Id);
+            IncreaseItemCount(item);
+        }
+
+        SelectedItemsChanged.InvokeAsync(SelectedItems);
+    }
+
+    private bool IsSelected(ProductModel item) => SelectedItems.Contains(item.Id);
+
+    private async Task ClearSelections()
+    {
+        SelectedItems.Clear();
+        foreach (var item in Items)
+        {
+            item.Quantity = 0;
+        }
+        await SelectedItemsChanged.InvokeAsync(SelectedItems);
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        decimal total = 0;
+        foreach (var id in SelectedItems)
+        {
+            var item = Items.FirstOrDefault(i => i.Id == id);
+            if (item != null)
+                total += item.Price * GetItemCount(item);
+        }
+        return total;
+    }
+
+    private int GetItemCount(ProductModel item) => item.Quantity;
+
+    private void IncreaseItemCount(ProductModel item)
+    {
+        item.Quantity++;
+        StateHasChanged();
+    }
+
+    private void DecreaseItemCount(ProductModel item)
+    {
+        item.Quantity--;
+        if (item.Quantity < 1)
+            SelectedItems.Remove(item.Id);
+        StateHasChanged();
+    }
+
+    private void UpdateItemCount(ProductModel item, int value)
+    {
+        if (value < 1) value = 1;
+        else if (value > 99) value = 99;
+        item.Quantity = value;
+        StateHasChanged();
+    }
+
+    private int GetTotalQuantity()
+    {
+        int total = 0;
+        foreach (var id in SelectedItems)
+        {
+            var item = Items.FirstOrDefault(i => i.Id == id);
+            if (item != null)
+                total += item.Quantity;
+        }
+        return total;
+    }
+
+    private IDialogReference _paymentDialogReference;
+
+    private async Task OpenPaymentDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = false };
+        var parameters = new DialogParameters<PaymentCheckout>
+        {
+            { x => x.SelectedOrderItems, SelectedItems },
+            { x => x.OrderItems, Items },
+        };
+        _paymentDialogReference = await DialogService.ShowAsync<PaymentCheckout>("Choose Payment Method", parameters, options);
+
+        var result = await _paymentDialogReference.Result;
+
+        if (!result.Canceled && result.Data is bool success && success)
+        {
+            // Handle successful payment here
+            // For example, you might want to clear selections or navigate to a confirmation page
+            await ClearSelections();
+        }
+    }
+}

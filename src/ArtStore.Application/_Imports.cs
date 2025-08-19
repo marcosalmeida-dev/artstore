@@ -1,0 +1,18 @@
+﻿global using System.ComponentModel;
+global using System.Data;
+global using System.Globalization;
+global using System.Linq.Expressions;
+global using System.Reflection;
+global using Ardalis.Specification;
+global using ArtStore.Application.Common.Extensions;
+global using ArtStore.Application.Common.Interfaces.Identity;
+global using ArtStore.Application.Common.Security;
+global using ArtStore.Domain.Common.Entities;
+global using ArtStore.Domain.Common.Events;
+global using ArtStore.Domain.Entities;
+global using ArtStore.Shared.DTOs;
+global using ArtStore.Shared.Interfaces;
+global using FluentValidation;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Localization;
+

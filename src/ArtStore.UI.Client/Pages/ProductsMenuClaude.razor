@@ -1,0 +1,487 @@
+﻿@page "/product-menu-claude"
+
+@using System.Globalization
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@GetLocalizedText("PageTitle")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
+    <!-- Language Selector -->
+    <MudPaper Elevation="2" Class="pa-4 mb-6">
+        <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h3" Color="Color.Primary" Class="fw-bold">
+                    @GetLocalizedText("RestaurantName")
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+                    @GetLocalizedText("RestaurantTagline")
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudText Typo="Typo.body2" Class="mb-2">@GetLocalizedText("SelectLanguage")</MudText>
+                        <MudButtonGroup @key="currentLanguage" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium"
+                                        OverrideStyles="false">
+                            <MudButton OnClick="@(() => ChangeLanguage(PORTUGUESE))"
+                                       Color="@(currentLanguage == PORTUGUESE ? Color.Primary : Color.Default)"
+                                       Variant="@(currentLanguage == PORTUGUESE ? Variant.Filled : Variant.Outlined)"
+                                       StartIcon="@GetFlagIcon(PORTUGUESE)" Size="Size.Medium">
+                                BR
+                            </MudButton>
+                            <MudButton OnClick="@(() => ChangeLanguage(ENGLISH))"
+                                      Color="@(currentLanguage == ENGLISH ? Color.Primary : Color.Default)"
+                                      Variant="@(currentLanguage == ENGLISH ? Variant.Filled : Variant.Outlined)"
+                                      StartIcon="@GetFlagIcon(ENGLISH)" Size="Size.Medium">
+                                EN
+                            </MudButton>
+                            <MudButton OnClick="@(() => ChangeLanguage(SPANISH))"
+                                      Color="@(currentLanguage == SPANISH ? Color.Primary : Color.Default)"
+                                      Variant="@(currentLanguage == SPANISH ? Variant.Filled : Variant.Outlined)"
+                                      StartIcon="@GetFlagIcon(SPANISH)" Size="Size.Medium">
+                                AR
+                            </MudButton>
+                        </MudButtonGroup>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Menu Categories -->
+    @foreach (var category in GetCategories())
+    {
+        <MudPaper Elevation="1" Class="pa-6 mb-6">
+            <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-4 text-center">
+                <MudIcon Icon="@GetCategoryIcon(category)" Class="mr-2" />
+                @GetLocalizedCategory(category)
+            </MudText>
+            
+            <MudGrid>
+                @foreach (var product in GetProductsByCategory(category))
+                {
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudCard Elevation="2" Class="h-100">
+                            <MudCardMedia Image="@product.ImageUrl" Height="200" />
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="9">
+                                        <MudText Typo="Typo.h6" Class="fw-bold">
+                                            @GetLocalizedProductName(product)
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="3" Class="text-right">
+                                        <MudText Typo="Typo.h6" Color="Color.Success" Class="fw-bold">
+                                            @FormatPrice(product.Price)
+                                        </MudText>
+                                    </MudItem>
+                                </MudGrid>
+                                
+
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                                    @GetLocalizedProductDescription(product)
+                                </MudText>
+                                
+
+                                @if (product.Quantity > 0)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Success" Class="mt-1">
+                                        @GetLocalizedText("InStock"): @product.Quantity @product.Unit
+                                    </MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Error" Class="mt-1">
+                                        @GetLocalizedText("OutOfStock")
+                                    </MudText>
+                                }
+                            </MudCardContent>
+                            
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary" 
+                                          FullWidth="true"
+                                          Disabled="@(product.Quantity == 0)"
+                                          StartIcon="Icons.Material.Filled.ShoppingCart">
+                                    @GetLocalizedText("AddToOrder")
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    // Language constants
+    private const string ENGLISH = "en-US";
+    private const string PORTUGUESE = "pt-BR";
+    private const string SPANISH = "es-AR";
+
+    private string currentLanguage = ENGLISH;
+    private List<ProductModel> products = new();
+
+    protected override void OnInitialized()
+    {
+        InitializeTestData();
+    }
+
+    private void InitializeTestData()
+    {
+        products = new List<ProductModel>
+        {
+            // Appetizers
+            new ProductModel
+            {
+                Id = 1,
+                Name = "Classic Caesar Salad",
+                Description = "Fresh romaine lettuce with parmesan cheese, croutons and our signature Caesar dressing",
+                Category = "Appetizers",
+                Brand = "House Special",
+                Unit = "portion",
+                Price = 12.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop",
+                Quantity = 15
+            },
+            new ProductModel
+            {
+                Id = 2,
+                Name = "Bruschetta Trio",
+                Description = "Three varieties of bruschetta: tomato basil, mushroom truffle, and goat cheese honey",
+                Category = "Appetizers",
+                Unit = "portion",
+                Price = 14.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=400&h=300&fit=crop",
+                Quantity = 8
+            },
+            new ProductModel
+            {
+                Id = 3,
+                Name = "Buffalo Wings",
+                Description = "Crispy chicken wings tossed in spicy buffalo sauce, served with ranch dressing",
+                Category = "Appetizers",
+                Unit = "pieces",
+                Price = 16.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400&h=300&fit=crop",
+                Quantity = 12
+            },
+
+            // Main Courses
+            new ProductModel
+            {
+                Id = 4,
+                Name = "Grilled Salmon",
+                Description = "Atlantic salmon fillet grilled to perfection, served with roasted vegetables and lemon butter sauce",
+                Category = "Main Courses",
+                Unit = "portion",
+                Price = 28.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop",
+                Quantity = 6
+            },
+            new ProductModel
+            {
+                Id = 5,
+                Name = "Ribeye Steak",
+                Description = "Premium 12oz ribeye steak cooked to your preference, with garlic mashed potatoes and seasonal vegetables",
+                Category = "Main Courses",
+                Brand = "Prime Cut",
+                Unit = "portion",
+                Price = 42.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop",
+                Quantity = 4
+            },
+            new ProductModel
+            {
+                Id = 6,
+                Name = "Chicken Parmesan",
+                Description = "Breaded chicken breast topped with marinara sauce and melted mozzarella, served over pasta",
+                Category = "Main Courses",
+                Unit = "portion",
+                Price = 22.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=400&h=300&fit=crop",
+                Quantity = 10
+            },
+            new ProductModel
+            {
+                Id = 7,
+                Name = "Vegetarian Pasta",
+                Description = "Fresh penne pasta with seasonal vegetables in a creamy herb sauce, topped with parmesan",
+                Category = "Main Courses",
+                Unit = "portion",
+                Price = 18.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop",
+                Quantity = 0
+            },
+
+            // Desserts
+            new ProductModel
+            {
+                Id = 8,
+                Name = "Chocolate Lava Cake",
+                Description = "Warm chocolate cake with a molten center, served with vanilla ice cream and berry compote",
+                Category = "Desserts",
+                Unit = "slice",
+                Price = 9.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop",
+                Quantity = 8
+            },
+            new ProductModel
+            {
+                Id = 9,
+                Name = "Tiramisu",
+                Description = "Classic Italian dessert with layers of coffee-soaked ladyfingers and mascarpone cream",
+                Category = "Desserts",
+                Brand = "Authentic Italian",
+                Unit = "slice",
+                Price = 8.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop",
+                Quantity = 6
+            },
+            new ProductModel
+            {
+                Id = 10,
+                Name = "Cheesecake",
+                Description = "New York style cheesecake with graham cracker crust and fresh strawberry topping",
+                Category = "Desserts",
+                Unit = "slice",
+                Price = 7.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400&h=300&fit=crop",
+                Quantity = 12
+            },
+
+            // Beverages
+            new ProductModel
+            {
+                Id = 11,
+                Name = "House Wine Red",
+                Description = "Premium red wine blend with notes of cherry and oak, perfect for pairing with meat dishes",
+                Category = "Beverages",
+                Brand = "Vineyard Select",
+                Unit = "glass",
+                Price = 12.00m,
+                ImageUrl = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=300&fit=crop",
+                Quantity = 20
+            },
+            new ProductModel
+            {
+                Id = 12,
+                Name = "Craft Beer IPA",
+                Description = "Hoppy India Pale Ale with citrus notes and a crisp finish, locally brewed",
+                Category = "Beverages",
+                Brand = "Local Brewery",
+                Unit = "pint",
+                Price = 8.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=300&fit=crop",
+                Quantity = 15
+            },
+            new ProductModel
+            {
+                Id = 13,
+                Name = "Fresh Lemonade",
+                Description = "House-made lemonade with fresh lemons and mint, served ice cold",
+                Category = "Beverages",
+                Unit = "glass",
+                Price = 4.50m,
+                ImageUrl = "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400&h=300&fit=crop",
+                Quantity = 25
+            }
+        };
+    }
+
+    private void ChangeLanguage(string language)
+    {
+        currentLanguage = language;
+        StateHasChanged();
+    }
+
+    private string GetFlagIcon(string language) => language switch
+    {
+        // United States (en-US)
+        "en-US" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#b22234'/><g><rect y='2' width='24' height='2' fill='#fff'/><rect y='6' width='24' height='2' fill='#fff'/><rect y='10' width='24' height='2' fill='#fff'/><rect y='14' width='24' height='2' fill='#fff'/></g><rect width='10' height='8' fill='#3c3b6e'/><g fill='#fff'><circle cx='2' cy='2' r='0.7'/><circle cx='5' cy='2' r='0.7'/><circle cx='8' cy='2' r='0.7'/><circle cx='2' cy='5' r='0.7'/><circle cx='5' cy='5' r='0.7'/><circle cx='8' cy='5' r='0.7'/><circle cx='2' cy='7' r='0.7'/><circle cx='5' cy='7' r='0.7'/><circle cx='8' cy='7' r='0.7'/></g></svg>",
+
+        // Brazil (pt-BR)
+        "pt-BR" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#009739'/><path d='M 3,8 L 12,2 L 21,8 L 12,14 Z' fill='#FEDD00'/><circle cx='12' cy='8' r='3.5' fill='#002776'/><path d='M 9.5,8.5 Q 12,7.5 14.5,8.5' fill='none' stroke='white' stroke-width='0.3'/><path d='M 9.5,7.5 Q 12,6.5 14.5,7.5' fill='none' stroke='white' stroke-width='0.3'/><circle cx='10.5' cy='7' r='0.15' fill='white'/><circle cx='11' cy='6.5' r='0.15' fill='white'/><circle cx='12' cy='6.3' r='0.15' fill='white'/><circle cx='13' cy='6.5' r='0.15' fill='white'/><circle cx='13.5' cy='7' r='0.15' fill='white'/><circle cx='11.5' cy='7.5' r='0.15' fill='white'/><circle cx='12.5' cy='7.5' r='0.15' fill='white'/><circle cx='10' cy='8' r='0.15' fill='white'/><circle cx='14' cy='8' r='0.15' fill='white'/><circle cx='11' cy='8.5' r='0.15' fill='white'/><circle cx='13' cy='8.5' r='0.15' fill='white'/><circle cx='12' cy='9' r='0.15' fill='white'/></svg>",
+        // Argentina (es-AR)
+        "es-AR" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#74acdf'/><rect y='5' width='24' height='6' fill='#fff'/><circle cx='12' cy='8' r='2' fill='#f6b40e'/></svg>",
+
+        // Default (globe)
+        _ => "<svg width='24' height='16' viewBox='0 0 24 16'><circle cx='12' cy='8' r='7' fill='#bbb'/><circle cx='12' cy='8' r='6' fill='#fff'/><path d='M12 2a6 6 0 0 1 0 12a6 6 0 0 1 0-12z' fill='#4caf50'/></svg>"
+    };
+
+    private string GetCategoryIcon(string category) => category switch
+    {
+        "Appetizers" => Icons.Material.Filled.Restaurant,
+        "Main Courses" => Icons.Material.Filled.DinnerDining,
+        "Desserts" => Icons.Material.Filled.Cake,
+        "Beverages" => Icons.Material.Filled.LocalBar,
+        _ => Icons.Material.Filled.MenuBook
+    };
+
+    private List<string> GetCategories()
+    {
+        return products.Select(p => p.Category).Distinct().ToList();
+    }
+
+    private List<ProductModel> GetProductsByCategory(string category)
+    {
+        return products.Where(p => p.Category == category).ToList();
+    }
+
+    private string GetLocalizedText(string key) => currentLanguage switch
+    {
+        "pt-BR" => key switch
+        {
+            "PageTitle" => "Cardápio do Restaurante",
+            "RestaurantName" => "Bella Vista Restaurant",
+            "RestaurantTagline" => "Sabores autênticos, experiências inesquecíveis",
+            "SelectLanguage" => "Selecionar Idioma",
+            "AddToOrder" => "Adicionar ao Pedido",
+            "InStock" => "Em estoque",
+            "OutOfStock" => "Esgotado",
+            _ => key
+        },
+        "es-AR" => key switch
+        {
+            "PageTitle" => "Menú del Restaurante",
+            "RestaurantName" => "Bella Vista Restaurant",
+            "RestaurantTagline" => "Sabores auténticos, experiencias inolvidables",
+            "SelectLanguage" => "Seleccionar Idioma",
+            "AddToOrder" => "Agregar al Pedido",
+            "InStock" => "En stock",
+            "OutOfStock" => "Agotado",
+            _ => key
+        },
+        _ => key switch // en-US (default)
+        {
+            "PageTitle" => "Restaurant Menu",
+            "RestaurantName" => "Bella Vista Restaurant",
+            "RestaurantTagline" => "Authentic flavors, unforgettable experiences",
+            "SelectLanguage" => "Select Language",
+            "AddToOrder" => "Add to Order",
+            "InStock" => "In Stock",
+            "OutOfStock" => "Out of Stock",
+            _ => key
+        }
+    };
+
+    private string GetLocalizedCategory(string category) => currentLanguage switch
+    {
+        "pt-BR" => category switch
+        {
+            "Appetizers" => "Aperitivos",
+            "Main Courses" => "Pratos Principais",
+            "Desserts" => "Sobremesas",
+            "Beverages" => "Bebidas",
+            _ => category
+        },
+        "es-AR" => category switch
+        {
+            "Appetizers" => "Aperitivos",
+            "Main Courses" => "Platos Principales",
+            "Desserts" => "Postres",
+            "Beverages" => "Bebidas",
+            _ => category
+        },
+        _ => category // en-US (default)
+    };
+
+    private string GetLocalizedProductName(ProductModel product) => currentLanguage switch
+    {
+        "pt-BR" => product.Id switch
+        {
+            1 => "Salada Caesar Clássica",
+            2 => "Trio de Bruschetta",
+            3 => "Asinhas Buffalo",
+            4 => "Salmão Grelhado",
+            5 => "Bife de Chorizo",
+            6 => "Frango à Parmegiana",
+            7 => "Massa Vegetariana",
+            8 => "Petit Gâteau",
+            9 => "Tiramisu",
+            10 => "Cheesecake",
+            11 => "Vinho Tinto da Casa",
+            12 => "Cerveja Artesanal IPA",
+            13 => "Limonada Fresca",
+            _ => product.Name ?? ""
+        },
+        "es-AR" => product.Id switch
+        {
+            1 => "Ensalada César Clásica",
+            2 => "Trío de Bruschetta",
+            3 => "Alitas Buffalo",
+            4 => "Salmón a la Parrilla",
+            5 => "Bife de Chorizo",
+            6 => "Pollo a la Parmesana",
+            7 => "Pasta Vegetariana",
+            8 => "Volcán de Chocolate",
+            9 => "Tiramisu",
+            10 => "Cheesecake",
+            11 => "Vino Tinto de la Casa",
+            12 => "Cerveza Artesanal IPA",
+            13 => "Limonada Fresca",
+            _ => product.Name ?? ""
+        },
+        _ => product.Name ?? "" // en-US (default)
+    };
+
+    private string GetLocalizedProductDescription(ProductModel product) => currentLanguage switch
+    {
+        "pt-BR" => product.Id switch
+        {
+            1 => "Alface romana fresca com queijo parmesão, croutons e nosso molho Caesar especial",
+            2 => "Três variedades de bruschetta: tomate manjericão, cogumelos com trufa e queijo de cabra com mel",
+            3 => "Asinhas de frango crocantes no molho buffalo picante, servidas com molho ranch",
+            4 => "Filé de salmão do Atlântico grelhado na perfeição, servido com legumes assados e molho de manteiga com limão",
+            5 => "Bife de chorizo premium de 350g no ponto desejado, com purê de batata com alho e vegetais da estação",
+            6 => "Peito de frango empanado coberto com molho marinara e mussarela derretida, servido sobre massa",
+            7 => "Massa penne fresca com vegetais da estação no molho cremoso de ervas, finalizada com parmesão",
+            8 => "Bolo de chocolate quente com centro cremoso, servido com sorvete de baunilha e compota de frutas vermelhas",
+            9 => "Sobremesa italiana clássica com camadas de biscoitos embebidos no café e creme de mascarpone",
+            10 => "Cheesecake estilo Nova York com base de biscoito e cobertura de morangos frescos",
+            11 => "Blend premium de vinho tinto com notas de cereja e carvalho, perfeito para acompanhar pratos de carne",
+            12 => "India Pale Ale lupulada com notas cítricas e final refrescante, produzida localmente",
+            13 => "Limonada caseira com limões frescos e hortelã, servida bem gelada",
+            _ => product.Description ?? ""
+        },
+        "es-AR" => product.Id switch
+        {
+            1 => "Lechuga romana fresca con queso parmesano, crutones y nuestro aderezo César especial",
+            2 => "Tres variedades de bruschetta: tomate albahaca, hongos con trufa y queso de cabra con miel",
+            3 => "Alitas de pollo crocantes bañadas en salsa buffalo picante, servidas con aderezo ranch",
+            4 => "Filet de salmón del Atlántico a la parrilla a la perfección, servido con vegetales asados y salsa de manteca con limón",
+            5 => "Bife de chorizo premium de 350g a gusto, con puré de papas con ajo y vegetales de estación",
+            6 => "Pechuga de pollo empanada cubierta con salsa marinara y mozzarella derretida, servida sobre pasta",
+            7 => "Pasta penne fresca con vegetales de estación en salsa cremosa de hierbas, terminada con parmesano",
+            8 => "Torta de chocolate caliente con centro cremoso, servida con helado de vainilla y compota de frutos rojos",
+            9 => "Postre italiano clásico con capas de bizcochos embebidos en café y crema de mascarpone",
+            10 => "Cheesecake estilo Nueva York con base de galletas y cobertura de frutillas frescas",
+            11 => "Blend premium de vino tinto con notas de cereza e roble, perfecto para acompañar platos de carne",
+            12 => "India Pale Ale lupulizada con notas cítricas y final refrescante, producida localmente",
+            13 => "Limonada casera con limones frescos y menta, servida bien fría",
+            _ => product.Description ?? ""
+        },
+        _ => product.Description ?? "" // en-US (default)
+    };
+
+    private string FormatPrice(decimal price) => currentLanguage switch
+    {
+        "pt-BR" => price.ToString("C", new CultureInfo("pt-BR")),
+        "es-AR" => price.ToString("C", new CultureInfo("es-AR")),
+        _ => price.ToString("C", new CultureInfo("en-US"))
+    };
+
+    public class ProductModel
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string Category { get; set; } = "";
+        public string? Brand { get; set; }
+        public string? Unit { get; set; }
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; } = "";
+        public int Quantity { get; set; }
+    }
+}

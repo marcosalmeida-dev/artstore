@@ -1,0 +1,10 @@
+﻿global using System.Security.Claims;
+global using FluentValidation;
+global using Microsoft.AspNetCore.Components.Authorization;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Options;
+global using MudBlazor;
+global using ArtStore.Shared.DTOs;
+global using ArtStore.Shared.Interfaces.Command;
