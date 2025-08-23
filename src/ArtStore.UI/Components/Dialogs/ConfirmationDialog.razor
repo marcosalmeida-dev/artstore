@@ -1,0 +1,29 @@
+﻿@inject IStringLocalizer<SharedResource> L
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@ContentText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="Cancel" title="@ConstantString.Cancel">@ConstantString.Cancel</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" title="@ConstantString.Confirm" OnClick="Submit">@ConstantString.Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code
+{
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string? ContentText { get; set; }
+
+    private void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

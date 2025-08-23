@@ -8,7 +8,6 @@ public static class LocalizationConstants
     public const string ResourcesPath = "Resources";
     /// <summary>
     /// Default language code. Set to English (en-US). 
-    /// Change to "zh-CN" for Chinese or other codes from SupportedLanguages.
     /// </summary>
     public const string DefaultLanguageCode = "en-US";
 
@@ -21,53 +20,13 @@ public static class LocalizationConstants
         },
         new()
         {
-            Code = "de-DE",
-            DisplayName = "Deutsch (Deutschland)"
+            Code = "pt-BR",
+            DisplayName = "Português (Brazil)"
         },
         new()
         {
-            Code = "ru-RU",
-            DisplayName = "русский (Россия)"
-        },
-        new()
-        {
-            Code = "fr-FR",
-            DisplayName = "français (France)"
-        },
-        new()
-        {
-            Code = "ja-JP",
-            DisplayName = "日本語 (日本)"
-        },
-        new()
-        {
-            Code = "km-KH",
-            DisplayName = "ខ្មែរ (កម្ពុជា)"
-        },
-        new()
-        {
-            Code = "ca-ES",
-            DisplayName = "català (Espanya)"
-        },
-        new()
-        {
-            Code = "es-ES",
-            DisplayName = "español (España)"
-        },
-        new()
-        {
-            Code = "zh-CN",
-            DisplayName = "中文（简体，中国）"
-        },
-        new()
-        {
-            Code = "ar-iq",
-            DisplayName = "Arabic"
-        },
-        new()
-        {
-            Code = "ko-kr",
-            DisplayName = "한국어(대한민국)"
+            Code = "es-AR",
+            DisplayName = "español (Argentina)"
         }
     };
 }

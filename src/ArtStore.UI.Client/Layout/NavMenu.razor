@@ -5,8 +5,7 @@
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">Order New</MudNavLink>
 
-    <MudNavLink Href="product-menu-chatgpt" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Primary">Menu ChatGPT</MudNavLink>
-    <MudNavLink Href="product-menu-claude" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Primary">Menu Claude</MudNavLink>
+    <MudNavLink Href="products-menu" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Primary">Menu</MudNavLink>
     
     <MudNavLink Href="order-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts" IconColor="Color.Primary">Order Manager</MudNavLink>
     
@@ -17,6 +16,7 @@
     <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Weather</MudNavLink>
 
     <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Lock">Auth Required</MudNavLink>
+    
     <AuthorizeView>
         <Authorized>
             <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">@context.User.Identity?.Name</MudNavLink>

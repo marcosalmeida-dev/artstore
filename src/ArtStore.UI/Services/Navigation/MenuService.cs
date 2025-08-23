@@ -69,74 +69,136 @@ public class MenuService : IMenuService
         },
         new MenuSectionModel
         {
-            Title = "MANAGEMENT",
+            Title = "ADMIN DASHBOARD",
+            Roles = new[] { RoleName.Admin },
+            SectionItems = new List<MenuSectionItemModel>
+            {
+                new()
+                {
+                    Title = "Dashboard",
+                    Icon = Icons.Material.Filled.Dashboard,
+                    Href = "/admin",
+                    PageStatus = PageStatus.Completed
+                }
+            }
+        },
+        new MenuSectionModel
+        {
+            Title = "USER MANAGEMENT",
             Roles = new[] { RoleName.Admin },
             SectionItems = new List<MenuSectionItemModel>
             {
                 new()
                 {
                     IsParent = true,
-                    Title = "Authorization",
+                    Title = "Users & Roles",
                     Icon = Icons.Material.Filled.ManageAccounts,
                     MenuItems = new List<MenuSectionSubItemModel>
                     {
                         new()
                         {
-                            Title = "Multi-Tenant",
-                            Href = "/system/tenants",
-                            PageStatus = PageStatus.Completed
-                        },
-                        new()
-                        {
                             Title = "Users",
-                            Href = "/identity/users",
+                            Href = "/admin/users",
                             PageStatus = PageStatus.Completed
                         },
                         new()
                         {
                             Title = "Roles",
-                            Href = "/identity/roles",
-                            PageStatus = PageStatus.Completed
-                        },
-                        new()
-                        {
-                            Title = "Profile",
-                            Href = "/user/profile",
+                            Href = "/admin/roles",
                             PageStatus = PageStatus.Completed
                         }
                     }
-                },
+                }
+            }
+        },
+        new MenuSectionModel
+        {
+            Title = "PRODUCT MANAGEMENT",
+            Roles = new[] { RoleName.Admin },
+            SectionItems = new List<MenuSectionItemModel>
+            {
                 new()
                 {
                     IsParent = true,
-                    Title = "System",
-                    Icon = Icons.Material.Filled.Devices,
+                    Title = "Products",
+                    Icon = Icons.Material.Filled.Inventory,
                     MenuItems = new List<MenuSectionSubItemModel>
                     {
                         new()
                         {
-                            Title = "Picklist",
-                            Href = "/system/picklistset",
+                            Title = "Products",
+                            Href = "/admin/products",
                             PageStatus = PageStatus.Completed
                         },
+                        new()
+                        {
+                            Title = "Categories",
+                            Href = "/admin/categories",
+                            PageStatus = PageStatus.New
+                        }
+                    }
+                }
+            }
+        },
+        new MenuSectionModel
+        {
+            Title = "ORDER MANAGEMENT",
+            Roles = new[] { RoleName.Admin },
+            SectionItems = new List<MenuSectionItemModel>
+            {
+                new()
+                {
+                    IsParent = true,
+                    Title = "Orders",
+                    Icon = Icons.Material.Filled.ShoppingBag,
+                    MenuItems = new List<MenuSectionSubItemModel>
+                    {
+                        new()
+                        {
+                            Title = "Orders",
+                            Href = "/admin/orders",
+                            PageStatus = PageStatus.New
+                        },
+                        new()
+                        {
+                            Title = "Order Status",
+                            Href = "/admin/order-status",
+                            PageStatus = PageStatus.New
+                        }
+                    }
+                }
+            }
+        },
+        new MenuSectionModel
+        {
+            Title = "SYSTEM",
+            Roles = new[] { RoleName.Admin },
+            SectionItems = new List<MenuSectionItemModel>
+            {
+                new()
+                {
+                    IsParent = true,
+                    Title = "System Management",
+                    Icon = Icons.Material.Filled.Settings,
+                    MenuItems = new List<MenuSectionSubItemModel>
+                    {
                         new()
                         {
                             Title = "Audit Trails",
-                            Href = "/system/audittrails",
-                            PageStatus = PageStatus.Completed
+                            Href = "/admin/audit-trails",
+                            PageStatus = PageStatus.New
                         },
                         new()
                         {
-                            Title = "Logs",
-                            Href = "/system/logs",
-                            PageStatus = PageStatus.Completed
+                            Title = "System Logs",
+                            Href = "/admin/logs",
+                            PageStatus = PageStatus.New
                         },
                         new()
                         {
-                            Title = "Jobs",
-                            Href = "/jobs",
-                            PageStatus = PageStatus.Completed,
-                            Target = "_blank"
+                            Title = "Tenants",
+                            Href = "/admin/tenants",
+                            PageStatus = PageStatus.New
                         }
                     }
                 }

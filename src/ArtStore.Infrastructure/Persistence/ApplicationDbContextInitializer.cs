@@ -48,7 +48,7 @@ public class ApplicationDbContextInitializer
             await SeedRolesAsync();
             await SeedUsersAsync();
             await SeedDataAsync();
-            await SeedProductsAndCategoriesAsync();
+            await SeedCategoriesAndProductsAsync();
             _context.ChangeTracker.Clear();
         }
         catch (Exception ex)
@@ -140,12 +140,12 @@ public class ApplicationDbContextInitializer
         _logger.LogInformation("Seeding users...");
         var adminUser = new ApplicationUser
         {
-            UserName = UserName.Administrator,
+            UserName = "admin@test.com",
             Provider = "Local",
             IsActive = true,
             TenantId = (await _context.Tenants.FirstAsync()).Id,
             DisplayName = UserName.Administrator,
-            Email = "admin@example.com",
+            Email = "admin@test.com",
             EmailConfirmed = true,
             ProfilePictureDataUrl = "https://s.gravatar.com/avatar/78be68221020124c23c665ac54e07074?s=80",
             LanguageCode = "en-US",
@@ -174,7 +174,7 @@ public class ApplicationDbContextInitializer
         await _userManager.AddToRoleAsync(demoUser, RoleName.Basic);
     }
 
-    private async Task SeedProductsAndCategoriesAsync()
+    private async Task SeedCategoriesAndProductsAsync()
     {
         if (await _context.Categories.AnyAsync() || await _context.Products.AnyAsync())
             return;

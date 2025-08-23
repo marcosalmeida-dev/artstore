@@ -6,6 +6,7 @@ using ArtStore.Domain.Identity;
 using ArtStore.Infrastructure.Configurations;
 using ArtStore.Infrastructure.Constants.ClaimTypes;
 using ArtStore.Infrastructure.Constants.Database;
+using ArtStore.Infrastructure.Constants.Role;
 using ArtStore.Infrastructure.Constants.User;
 using ArtStore.Infrastructure.PermissionSet;
 using ArtStore.Infrastructure.Persistence.Interceptors;
@@ -265,6 +266,7 @@ public static class DependencyInjection
             .AddAuthorizationCore(options =>
             {
                 options.AddPolicy("CanPurge", policy => policy.RequireUserName(UserName.Administrator));
+                options.AddPolicy("AdminPolicy", policy => policy.RequireRole(RoleName.Admin));
                 // Here I stored necessary permissions/roles in a constant
                 foreach (var prop in typeof(Permissions).GetNestedTypes().SelectMany(c =>
                              c.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)))

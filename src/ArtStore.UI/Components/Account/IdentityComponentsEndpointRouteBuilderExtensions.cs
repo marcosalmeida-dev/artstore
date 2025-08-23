@@ -1,13 +1,9 @@
-﻿using System.Security.Claims;
-using System.Text.Json;
+﻿using System.Text.Json;
 using ArtStore.Domain.Identity;
 using ArtStore.UI.Components.Account.Pages;
 using ArtStore.UI.Components.Account.Pages.Manage;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 
 namespace ArtStore.UI.Components.Account;
