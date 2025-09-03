@@ -72,6 +72,9 @@ public static class DependencyInjection
         }
         var baseUrlAddress = new Uri(baseUrl);
 
+        // Add this after retrieving baseUrlAddress
+        services.AddScoped(sp => new HttpClient { BaseAddress = baseUrlAddress });
+
         services.AddHttpClient<OrderService>(c =>
         {
             c.BaseAddress = baseUrlAddress;

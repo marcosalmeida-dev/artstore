@@ -5,7 +5,7 @@ namespace ArtStore.Shared.DTOs.Order.Commands;
 
 public class UpdateOrderStatusCommand : ICommand<Result>
 {
-    public int OrderId { get; set; }
+    public long OrderId { get; set; }
     public OrderStatus Status { get; set; }
     public string? Notes { get; set; }
 }

@@ -2,9 +2,9 @@
 
 namespace ArtStore.Domain.Entities;
 
-public class OrderStatusHistory : BaseEntity
+public class OrderStatusHistory : BaseEntity<long>
 {
-    public int OrderId { get; set; }
+    public long OrderId { get; set; }
     public OrderStatus? OldStatus { get; set; }
     public OrderStatus NewStatus { get; set; }
     public DateTime ChangedAt { get; set; }

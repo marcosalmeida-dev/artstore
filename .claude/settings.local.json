@@ -3,7 +3,9 @@
     "allow": [
       "WebFetch(domain:mudblazor.com)",
       "WebFetch(domain:github.com)",
-      "Bash(dotnet build)"
+      "Bash(dotnet build)",
+      "Bash(del \"C:\\GitHub-marcosmusk\\artstore\\src\\ArtStore.UI\\Components\\Pages\\Categories\\SampleDataGrid.razor\")",
+      "Bash(dotnet build:*)"
     ],
     "deny": [],
     "ask": []

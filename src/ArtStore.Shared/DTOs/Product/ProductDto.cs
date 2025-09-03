@@ -1,19 +1,26 @@
-﻿namespace ArtStore.Shared.DTOs.Product;
+namespace ArtStore.Shared.DTOs.Product;
 
-[Description("Products")]
 public class ProductDto
 {
-    [Description("Id")] public int Id { get; set; }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Brand { get; set; }
+    public string? Unit { get; set; }
+    public decimal Price { get; set; }
+    public bool IsActive { get; set; } = true;
+    public int CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public int? TenantId { get; set; }
+    public string? TenantName { get; set; }
+    public List<ProductImageDto> Pictures { get; set; } = new();
+    public DateTime? Created { get; set; }
+    public DateTime? LastModified { get; set; }
+}
 
-    [Description("Product Name")] public string? Name { get; set; }
-
-    [Description("Description")] public string? Description { get; set; }
-
-    [Description("Unit")] public string? Unit { get; set; }
-
-    [Description("Brand Name")] public string? Brand { get; set; }
-
-    [Description("Price")] public decimal Price { get; set; }
-
-    [Description("ImageUrl")] public string ImageUrl { get; set; }
+public class ProductImageDto
+{
+    public string Name { get; set; } = string.Empty;
+    public decimal Size { get; set; }
+    public string Url { get; set; } = string.Empty;
 }

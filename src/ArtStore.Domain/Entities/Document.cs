@@ -6,7 +6,7 @@ using ArtStore.Shared.Models.Enums;
 
 namespace ArtStore.Domain.Entities;
 
-public class Document : BaseAuditableEntity, IMayHaveTenant, IAuditTrial
+public class Document : BaseAuditableEntity<long>, IMayHaveTenant, IAuditTrial
 {
     public string? Title { get; set; }
     public string? Description { get; set; }

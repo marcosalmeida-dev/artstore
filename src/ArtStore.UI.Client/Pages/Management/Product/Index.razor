@@ -1,0 +1,202 @@
+﻿@page "/management/products"
+@using ArtStore.Shared.DTOs.Product
+@using ArtStore.Shared.DTOs.Category
+@using Microsoft.AspNetCore.Authorization
+
+@* @attribute [Authorize(Roles = "Admin")] *@
+
+<PageTitle>Product Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Product Management</MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenCreateDialog">
+            Add Product
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-4">
+        <div class="d-flex gap-4 mb-4">
+            <MudTextField @bind-Value="_searchString" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyDown="@(async (e) => { if (e.Key == "Enter") await SearchProducts(); })" />
+            <MudSelect @bind-Value="_isActiveFilter" Label="Status" Clearable="true" T="bool?">
+                <MudSelectItem Value="@((bool?)true)">Active</MudSelectItem>
+                <MudSelectItem Value="@((bool?)false)">Inactive</MudSelectItem>
+            </MudSelect>
+            <MudSelect @bind-Value="_categoryFilter" Label="Category" Clearable="true" T="int?">
+                @foreach (var category in _categories)
+                {
+                    <MudSelectItem Value="@((int?)category.Id)">@category.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Color="Color.Primary" OnClick="SearchProducts">Search</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear</MudButton>
+        </div>
+
+        <MudDataGrid T="ProductDto" Items="@_products" Loading="@_loading">
+            <Columns>
+                <PropertyColumn Property="x => x.Name" Title="Name" />
+                <PropertyColumn Property="x => x.Description" Title="Description" />
+                <PropertyColumn Property="x => x.Brand" Title="Brand" />
+                <PropertyColumn Property="x => x.CategoryName" Title="Category" />
+                <PropertyColumn Property="x => x.Price" Title="Price" Format="C" />
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        <MudChip Color="@(context.Item.IsActive? Color.Success: Color.Error)" Size="Size.Small">
+                            @(context.Item.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Created" Title="Created" Format="dd/MM/yyyy" />
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <div class="d-flex gap-2">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@((e) => OpenEditDialog(context.Item))">
+                                Edit
+                            </MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@((e) => DeleteProduct(context.Item))">
+                                Delete
+                            </MudButton>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    private List<ProductDto> _products = new();
+    private List<CategoryDto> _categories = new();
+    private bool _loading = false;
+    private string _searchString = "";
+    private bool? _isActiveFilter = null;
+    private int? _categoryFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        _loading = true;
+        try
+        {
+            StateHasChanged();
+            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/products");
+            _products = response ?? new List<ProductDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading products: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            var response = await HttpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+            _categories = response ?? new List<CategoryDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading categories: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SearchProducts()
+    {
+        _loading = true;
+        try
+        {
+            var query = $"/api/products/search?searchString={_searchString}";
+            if (_isActiveFilter.HasValue)
+                query += $"&isActive={_isActiveFilter.Value}";
+            if (_categoryFilter.HasValue)
+                query += $"&categoryId={_categoryFilter.Value}";
+
+            var response = await HttpClient.GetFromJsonAsync<PaginatedDataDto<ProductDto>>(query);
+            _products = response?.Items?.ToList() ?? new List<ProductDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching products: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchString = "";
+        _isActiveFilter = null;
+        _categoryFilter = null;
+        await LoadProducts();
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<ProductDialog>("Add Product");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadProducts();
+            Snackbar.Add("Product created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(ProductDto product)
+    {
+        try
+        {
+            Snackbar.Add($"Opening edit dialog for: {product.Name}", Severity.Info);
+
+            var parameters = new DialogParameters { ["Product"] = product };
+            var dialog = await DialogService.ShowAsync<ProductDialog>("Edit Product", parameters);
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await LoadProducts();
+                Snackbar.Add("Product updated successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteProduct(ProductDto product)
+    {
+        var parameters = new DialogParameters { ["Product"] = product };
+        var dialog = await DialogService.ShowAsync<DeleteProductDialog>("Delete Product", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadProducts();
+            Snackbar.Add("Product deleted successfully", Severity.Success);
+        }
+    }
+}

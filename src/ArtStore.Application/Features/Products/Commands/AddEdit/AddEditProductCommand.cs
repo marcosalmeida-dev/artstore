@@ -1,21 +1,8 @@
 ﻿using ArtStore.Application.Common.Interfaces;
+using ArtStore.Shared.DTOs.Product.Commands;
 using ArtStore.Shared.Interfaces.Command;
-using Microsoft.AspNetCore.Components.Forms;
 
 namespace ArtStore.Application.Features.Products.Commands.AddEdit;
-
-public class AddEditProductCommand : ICommand<Result<int>>
-{
-    public int Id { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Unit { get; set; }
-    public string? Brand { get; set; }
-    public decimal Price { get; set; }
-    public List<ProductImage>? Pictures { get; set; }
-
-    public IReadOnlyList<IBrowserFile>? UploadPictures { get; set; }
-}
 
 public class AddEditProductCommandHandler : ICommandHandler<AddEditProductCommand, Result<int>>
 {
@@ -35,18 +22,27 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
             var item = await _context.Products.SingleOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
             if (item == null)
             {
-                return await Result<int>.FailureAsync($"Prduct with id: [{request.Id}] not found.");
+                return await Result<int>.FailureAsync($"Product with id: [{request.Id}] not found.");
             }
-            item = new Product
+            
+            item.Name = request.Name;
+            item.Description = request.Description;
+            item.Brand = request.Brand;
+            item.Unit = request.Unit;
+            item.Price = request.Price;
+            item.IsActive = request.IsActive;
+            item.CategoryId = request.CategoryId;
+
+            if (request.Pictures?.Any() == true)
             {
-                Id = request.Id,
-                Name = request.Name,
-                Description = request.Description,
-                Unit = request.Unit,
-                Brand = request.Brand,
-                Price = request.Price,
-                Pictures = request.Pictures ?? new List<ProductImage>()
-            };
+                item.Pictures = request.Pictures.Select(p => new ProductImage
+                {
+                    Name = p.Name,
+                    Size = p.Size,
+                    Url = p.Url
+                }).ToList();
+            }
+
             item.AddDomainEvent(new UpdatedEvent<Product>(item));
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -59,11 +55,23 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
             {
                 Name = request.Name,
                 Description = request.Description,
-                Unit = request.Unit,
                 Brand = request.Brand,
+                Unit = request.Unit,
                 Price = request.Price,
-                Pictures = request.Pictures ?? new List<ProductImage>()
+                IsActive = request.IsActive,
+                CategoryId = request.CategoryId
             };
+
+            if (request.Pictures?.Any() == true)
+            {
+                item.Pictures = request.Pictures.Select(p => new ProductImage
+                {
+                    Name = p.Name,
+                    Size = p.Size,
+                    Url = p.Url
+                }).ToList();
+            }
+
             item.AddDomainEvent(new CreatedEvent<Product>(item));
 
             _context.Products.Add(item);

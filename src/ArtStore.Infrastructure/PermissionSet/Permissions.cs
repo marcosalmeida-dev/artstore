@@ -188,6 +188,31 @@ public static partial class Permissions
         public const string View = "Permissions.Dashboards.View";
     }
 
+    [DisplayName("Category Permissions")]
+    [Description("Set permissions for category operations.")]
+    public static class Categories
+    {
+        [Description("Allows viewing category details.")]
+        public const string View = "Permissions.Categories.View";
+
+        [Description("Allows creating new categories.")]
+        public const string Create = "Permissions.Categories.Create";
+
+        [Description("Allows modifying existing category details.")]
+        public const string Edit = "Permissions.Categories.Edit";
+
+        [Description("Allows deleting categories.")]
+        public const string Delete = "Permissions.Categories.Delete";
+
+        [Description("Allows searching for category records.")]
+        public const string Search = "Permissions.Categories.Search";
+
+        [Description("Allows exporting category records.")]
+        public const string Export = "Permissions.Categories.Export";
+
+        [Description("Allows importing category records.")]
+        public const string Import = "Permissions.Categories.Import";
+    }
 
 }
 
@@ -256,4 +281,15 @@ public class TenantsAccessRights
 public class DashboardsAccessRights
 {
     public bool View { get; set; }
+}
+
+public class CategoriesAccessRights
+{
+    public bool View { get; set; }
+    public bool Create { get; set; }
+    public bool Edit { get; set; }
+    public bool Delete { get; set; }
+    public bool Search { get; set; }
+    public bool Export { get; set; }
+    public bool Import { get; set; }
 }

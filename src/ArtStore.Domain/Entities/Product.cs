@@ -1,6 +1,6 @@
 ﻿namespace ArtStore.Domain.Entities;
 
-public class Product : BaseTenantEntity
+public class Product : BaseTenantEntity<int>
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
@@ -8,6 +8,7 @@ public class Product : BaseTenantEntity
     public string? Unit { get; set; }
     public decimal Price { get; set; }
     public List<ProductImage>? Pictures { get; set; }
+    public int CategoryId { get; set; }
 
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;

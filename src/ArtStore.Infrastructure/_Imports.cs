@@ -4,7 +4,6 @@
 global using System.Security.Claims;
 global using ArtStore.Application.Common.Interfaces;
 global using ArtStore.Application.Common.Interfaces.Identity;
-global using ArtStore.Application.Common.Models;
 global using ArtStore.Infrastructure.Persistence;
 global using ArtStore.Infrastructure.Persistence.Extensions;
 global using ArtStore.Infrastructure.Services;

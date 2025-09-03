@@ -2,7 +2,7 @@
 
 namespace ArtStore.Domain.Entities;
 
-public class PicklistSet : BaseAuditableEntity, IAuditTrial
+public class PicklistSet : BaseAuditableEntity<long>, IAuditTrial
 {
     public Picklist Name { get; set; } = Picklist.Brand;
     public string? Value { get; set; }

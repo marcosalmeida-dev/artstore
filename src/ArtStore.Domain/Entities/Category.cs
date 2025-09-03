@@ -1,5 +1,5 @@
 ﻿namespace ArtStore.Domain.Entities;
-public class Category : BaseTenantEntity
+public class Category : BaseTenantEntity<int>
 {
     public string Name { get; set; } = string.Empty;
 

@@ -3,7 +3,7 @@
 
 namespace ArtStore.Domain.Common.Entities;
 
-public abstract class BaseAuditableEntity : BaseEntity, IAuditableEntity
+public abstract class BaseAuditableEntity<T> : BaseEntity<T>, IAuditableEntity
 {
     public virtual DateTime? Created { get; set; }
 

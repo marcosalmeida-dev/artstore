@@ -12,9 +12,9 @@ public static class ProductCacheKey
     {
         return $"GetProductById,{id}";
     }
-    public static string GetPaginationCacheKey(string parameters)
+    public static string GetSearchCacheKey(string parameters)
     {
-        return $"ProductsWithPaginationQuery,{parameters}";
+        return $"SearchProductsQuery,{parameters}";
     }
     public static IEnumerable<string>? Tags => new string[] { "product" };
     public static void Refresh()

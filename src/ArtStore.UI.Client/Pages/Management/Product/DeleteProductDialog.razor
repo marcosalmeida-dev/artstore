@@ -1,0 +1,102 @@
+﻿@using ArtStore.Shared.DTOs.Product
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Delete" Class="mr-3" Color="Color.Error" /> Delete Product
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <div class="d-flex align-center mb-4">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large" Class="mr-3" />
+            <div>
+                <MudText Typo="Typo.body1">Are you sure you want to delete the product <strong>"@Product?.Name"</strong>?</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-1">
+                    This action will permanently remove the product from the system.
+                </MudText>
+            </div>
+        </div>
+
+        @if (Product?.Price > 0)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-3">
+                <MudText>Product Price: <strong>@Product.Price.ToString("C")</strong></MudText>
+                <MudText Class="mt-1">Category: <strong>@Product.CategoryName</strong></MudText>
+                @if (!string.IsNullOrEmpty(Product.Brand))
+                {
+                    <MudText Class="mt-1">Brand: <strong>@Product.Brand</strong></MudText>
+                }
+            </MudAlert>
+        }
+
+        <MudAlert Severity="Severity.Warning" Class="mb-3">
+            <MudText><strong>Warning:</strong> This action cannot be undone.</MudText>
+            <MudText Class="mt-1">Make sure this product is not referenced in any existing orders before deleting.</MudText>
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Delete" 
+                   Disabled="@deleting">
+            @if (deleting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Deleting...</MudText>
+            }
+            else
+            {
+                <MudText>Delete</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ProductDto? Product { get; set; }
+
+    private bool deleting = false;
+
+    private async Task Delete()
+    {
+        if (Product == null) return;
+
+        deleting = true;
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"/api/products/{Product.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Result<int>>();
+                if (result?.Succeeded == true)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"Error: {errorContent}", Severity.Error);
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error deleting product: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting product: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            deleting = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

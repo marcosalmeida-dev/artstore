@@ -3,13 +3,13 @@ using ArtStore.Shared.Events.Base;
 
 namespace ArtStore.Domain.Common.Entities;
 
-public abstract class BaseEntity : IEntity<int>
+public abstract class BaseEntity<T> : IEntity<T>
 {
     private readonly List<BaseDomainEvent> _domainEvents = new();
 
     [NotMapped] public IReadOnlyCollection<BaseDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
-    public virtual int Id { get; set; }
+    public virtual T Id { get; set; }
 
     public void AddDomainEvent(BaseDomainEvent domainEvent)
     {

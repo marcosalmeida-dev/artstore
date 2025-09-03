@@ -5,7 +5,7 @@ namespace ArtStore.Shared.DTOs.Order.Events;
 
 public class OrderStatusChangedEvent : BaseDomainEvent
 {
-    public OrderStatusChangedEvent(int orderId, string orderNumber, OrderStatus oldStatus, OrderStatus newStatus, DateTime changedAt, string? notes = null)
+    public OrderStatusChangedEvent(long orderId, string orderNumber, OrderStatus oldStatus, OrderStatus newStatus, DateTime changedAt, string? notes = null)
     {
         OrderId = orderId;
         OrderNumber = orderNumber;
@@ -14,7 +14,7 @@ public class OrderStatusChangedEvent : BaseDomainEvent
         ChangedAt = changedAt;
         Notes = notes;
     }
-    public int OrderId { get; set; }
+    public long OrderId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public OrderStatus OldStatus { get; set; }
     public OrderStatus NewStatus { get; set; }

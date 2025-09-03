@@ -29,7 +29,7 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var domainEventEntities = context.ChangeTracker
-            .Entries<BaseEntity>()
+            .Entries<BaseEntity<object>>()
             .Where(e => e.Entity.DomainEvents.Any() && e.State == EntityState.Deleted)
             .Select(e => e.Entity)
             .ToList();
@@ -73,7 +73,7 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
             return await base.SavedChangesAsync(eventData, result, cancellationToken);
 
         var domainEventEntities = context.ChangeTracker
-            .Entries<BaseEntity>()
+            .Entries<BaseEntity<object>>()
             .Where(e => e.Entity.DomainEvents.Any() && e.State != EntityState.Deleted)
             .Select(e => e.Entity)
             .ToList();

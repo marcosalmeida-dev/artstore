@@ -1,0 +1,207 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Product
+@using ArtStore.Shared.DTOs.Product.Commands
+@using ArtStore.Shared.DTOs.Category
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="mr-3" /> @(IsEditMode ? "Edit Product" : "Add Product")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+            
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Name" @bind-Value="model.Name" For="@(() => model.Name)" 
+                                  Required="true" Counter="200" MaxLength="200" />
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudSelect Label="Category" @bind-Value="model.CategoryId" Required="true" T="int">
+                        @foreach (var category in categories)
+                        {
+                            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField Label="Description" @bind-Value="model.Description" For="@(() => model.Description)"
+                                  Lines="3" Counter="1000" MaxLength="1000" />
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Brand" @bind-Value="model.Brand" For="@(() => model.Brand)" 
+                                  Counter="100" MaxLength="100" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Unit" @bind-Value="model.Unit" For="@(() => model.Unit)" 
+                                  Counter="50" MaxLength="50" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="Price" @bind-Value="model.Price" For="@(() => model.Price)" 
+                                     Required="true" Min="0" Format="F2" />
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudSwitch Label="Active" @bind-Value="model.IsActive" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+            
+            <ValidationSummary />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@saving">
+            @if (saving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">@(IsEditMode ? "Updating..." : "Creating...")</MudText>
+            }
+            else
+            {
+                <MudText>@(IsEditMode ? "Update" : "Create")</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ProductDto? Product { get; set; }
+
+    private ProductModel model = new();
+    private List<CategoryDto> categories = new();
+    private bool saving = false;
+    
+    private bool IsEditMode => Product != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+        
+        if (IsEditMode && Product != null)
+        {
+            model = new ProductModel
+            {
+                Id = Product.Id,
+                Name = Product.Name,
+                Description = Product.Description,
+                Brand = Product.Brand,
+                Unit = Product.Unit,
+                Price = Product.Price,
+                IsActive = Product.IsActive,
+                CategoryId = Product.CategoryId
+            };
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        try
+        {
+            var response = await httpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+            categories = response ?? new List<CategoryDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading categories: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Submit()
+    {
+        saving = true;
+        try
+        {
+            var command = new AddEditProductCommand
+            {
+                Id = model.Id,
+                Name = model.Name,
+                Description = model.Description,
+                Brand = model.Brand,
+                Unit = model.Unit,
+                Price = model.Price,
+                IsActive = model.IsActive,
+                CategoryId = model.CategoryId
+            };
+
+            HttpResponseMessage response;
+            
+            if (IsEditMode)
+            {
+                response = await httpClient.PutAsJsonAsync($"/api/products/{model.Id}", command);
+            }
+            else
+            {
+                response = await httpClient.PostAsJsonAsync("/api/products", command);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Result<int?>>();
+                if (result?.Succeeded == true)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    var errorMessage = result?.ErrorMessage ?? "Unknown error occurred";
+                    Snackbar.Add($"Error: {errorMessage}", Severity.Error);
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving product: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public class ProductModel
+    {
+        public int Id { get; set; }
+        
+        [Required]
+        [StringLength(200)]
+        public string Name { get; set; } = string.Empty;
+        
+        [StringLength(1000)]
+        public string? Description { get; set; }
+        
+        [StringLength(100)]
+        public string? Brand { get; set; }
+        
+        [StringLength(50)]
+        public string? Unit { get; set; }
+        
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal Price { get; set; }
+        
+        public bool IsActive { get; set; } = true;
+        
+        [Required]
+        public int CategoryId { get; set; }
+    }
+}

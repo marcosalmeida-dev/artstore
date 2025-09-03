@@ -1,6 +1,6 @@
 ﻿namespace ArtStore.Domain.Entities;
 
-public class Contact : BaseAuditableEntity
+public class Contact : BaseAuditableEntity<int>
 {
     public string? Name { get; set; }
     public string? Description { get; set; }

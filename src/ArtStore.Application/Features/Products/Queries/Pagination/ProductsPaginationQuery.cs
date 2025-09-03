@@ -10,7 +10,7 @@ namespace ArtStore.Application.Features.Products.Queries.Pagination;
 public class ProductsWithPaginationQuery : ProductAdvancedFilter, IQuery<PaginatedData<ProductDto>>
 {
     public ProductAdvancedSpecification Specification => new(this);
-    public string CacheKey => ProductCacheKey.GetPaginationCacheKey($"{this}");
+    public string CacheKey => ProductCacheKey.GetSearchCacheKey($"{this}");
 
     public IEnumerable<string>? Tags => ProductCacheKey.Tags;
 

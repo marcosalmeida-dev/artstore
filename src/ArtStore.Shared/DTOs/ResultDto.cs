@@ -24,8 +24,9 @@ public class Result
 public class Result<T>
 {
     public bool Succeeded { get; set; }
-    public IReadOnlyList<string> Errors { get; set; } = [];
     public T? Data { get; set; }
+    public IReadOnlyList<string> Errors { get; set; } = [];
+    public string ErrorMessage => string.Join(", ", Errors);
 
     [JsonConstructor]
     private Result() { }

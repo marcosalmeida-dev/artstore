@@ -2,7 +2,7 @@
 
 namespace ArtStore.Domain.Entities;
 
-public class Order : BaseTenantEntity
+public class Order : BaseTenantEntity<long>
 {
     public string OrderSource { get; set; } = string.Empty;
     public string OrderNumber { get; set; } = string.Empty;

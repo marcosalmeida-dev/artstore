@@ -1,6 +1,4 @@
-﻿using System.Data;
-using ArtStore.Shared.Interfaces;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using Microsoft.Extensions.Localization;
 
 namespace ArtStore.Infrastructure.Services;
@@ -89,89 +87,6 @@ public class ExcelService : IExcelService
         }
 
         return Task.FromResult(SaveWorkbookToByteArray(workbook));
-    }
-
-    public async Task<IResult<IEnumerable<TEntity>>> ImportAsync<TEntity>(
-        byte[] data,
-        Dictionary<string, Func<DataRow, TEntity, object?>> mappers,
-        string sheetName = "Sheet1")
-    {
-        using var workbook = new XLWorkbook(new MemoryStream(data));
-        if (!workbook.Worksheets.TryGetWorksheet(sheetName, out var ws))
-        {
-            var msg = string.Format(_localizer["Sheet with name {0} does not exist!"], sheetName);
-            return await Result<IEnumerable<TEntity>>.FailureAsync(msg);
-        }
-
-        // Check if the worksheet contains any cells.
-        var lastCellUsed = ws.LastCellUsed()?.Address.ColumnNumber ?? 0;
-        if (lastCellUsed == 0)
-        {
-            var msg = string.Format(_localizer["Sheet with name {0} is empty!"], sheetName);
-            return await Result<IEnumerable<TEntity>>.FailureAsync(msg);
-        }
-
-        // Create a DataTable from the header row.
-        var dt = new DataTable();
-        var titlesInFirstRow = true;
-        foreach (var cell in ws.Range(1, 1, 1, lastCellUsed).Cells())
-        {
-            var colName = titlesInFirstRow ? cell.GetString() : $"Column {cell.Address.ColumnNumber}";
-            dt.Columns.Add(colName);
-        }
-        var startRow = titlesInFirstRow ? 2 : 1;
-
-        // Validate that all expected headers exist.
-        var headers = mappers.Keys.ToList();
-        var errors = new List<string>();
-        foreach (var header in headers)
-        {
-            if (!dt.Columns.Contains(header))
-            {
-                errors.Add(string.Format(_localizer["Header '{0}' does not exist in table!"], header));
-            }
-        }
-        if (errors.Any())
-        {
-            return await Result<IEnumerable<TEntity>>.FailureAsync(errors.ToArray());
-        }
-
-        var lastRowNumber = ws.LastRowUsed()?.RowNumber() ?? 0;
-        var list = new List<TEntity>();
-
-        // Process each row in the worksheet.
-        for (var rowIndex = startRow; rowIndex <= lastRowNumber; rowIndex++)
-        {
-            var row = ws.Row(rowIndex);
-            try
-            {
-                var dataRow = dt.NewRow();
-                // Populate the DataRow with cell values.
-                foreach (var cell in row.Cells(1, dt.Columns.Count))
-                {
-                    int colIndex = cell.Address.ColumnNumber - 1;
-                    dataRow[colIndex] = cell.DataType == XLDataType.DateTime
-                        ? cell.GetDateTime().ToString("yyyy-MM-dd HH:mm:ss")
-                        : cell.Value.ToString();
-                }
-                dt.Rows.Add(dataRow);
-
-                // Create an instance of TEntity and apply the mapping functions.
-                var item = (TEntity)Activator.CreateInstance(typeof(TEntity))!; // using null-forgiving operator
-                foreach (var header in headers)
-                {
-                    mappers[header](dataRow, item);
-                }
-                list.Add(item);
-            }
-            catch (Exception e)
-            {
-                var errorMsg = string.Format(_localizer["Error in sheet {0}: {1}"], sheetName, e.Message);
-                return await Result<IEnumerable<TEntity>>.FailureAsync(errorMsg);
-            }
-        }
-
-        return await Result<IEnumerable<TEntity>>.SuccessAsync(list);
     }
 }
 

@@ -1,7 +1,4 @@
-﻿using System.Data;
-using ArtStore.Shared.Interfaces;
-
-namespace ArtStore.Application.Common.Interfaces;
+﻿namespace ArtStore.Application.Common.Interfaces;
 
 public interface IExcelService
 {
@@ -9,9 +6,5 @@ public interface IExcelService
 
     Task<byte[]> ExportAsync<TData>(IEnumerable<TData> data
         , Dictionary<string, Func<TData, object?>> mappers
-        , string sheetName = "Sheet1");
-
-    Task<IResult<IEnumerable<TEntity>>> ImportAsync<TEntity>(byte[] data
-        , Dictionary<string, Func<DataRow, TEntity, object?>> mappers
         , string sheetName = "Sheet1");
 }

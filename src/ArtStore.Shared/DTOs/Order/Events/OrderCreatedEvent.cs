@@ -4,7 +4,7 @@ namespace ArtStore.Shared.DTOs.Order.Events;
 
 public class OrderCreatedEvent : BaseDomainEvent
 {
-    public OrderCreatedEvent(int orderId, string orderNumber, string customerEmail, decimal totalAmount, DateTime orderDate)
+    public OrderCreatedEvent(long orderId, string orderNumber, string customerEmail, decimal totalAmount, DateTime orderDate)
     {
         OrderId = orderId;
         OrderNumber = orderNumber;
@@ -12,7 +12,7 @@ public class OrderCreatedEvent : BaseDomainEvent
         TotalAmount = totalAmount;
         OrderDate = orderDate;
     }
-    public int OrderId { get; set; }
+    public long OrderId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string CustomerEmail { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }

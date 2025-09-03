@@ -5,17 +5,22 @@
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">Order New</MudNavLink>
 
-    <MudNavLink Href="products-menu" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Primary">Menu</MudNavLink>
+    <MudNavLink Href="/products-menu" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.MenuBook" IconColor="Color.Primary">Menu</MudNavLink>
     
-    <MudNavLink Href="order-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts" IconColor="Color.Primary">Order Manager</MudNavLink>
+    <MudNavLink Href="/order-management" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ManageAccounts" IconColor="Color.Primary">Order Manager</MudNavLink>
     
-    <MudNavLink Href="order-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ViewList" IconColor="Color.Primary">Order List</MudNavLink>
+    <MudNavLink Href="/order-list" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ViewList" IconColor="Color.Primary">Order List</MudNavLink>
 
-    <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
+    @* <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add">Counter</MudNavLink>
     
-    <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Weather</MudNavLink>
+    <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Weather</MudNavLink> *@
 
-    <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Lock">Auth Required</MudNavLink>
+    @* <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Lock">Auth Required</MudNavLink> *@
+
+    <MudNavGroup Title="Management" Expanded=true>
+        <MudNavLink Href="/management/categories" Icon="@Icons.Material.Filled.Add">Categories</MudNavLink>
+        <MudNavLink Href="/management/products" Icon="@Icons.Material.Filled.Add">Products</MudNavLink>
+    </MudNavGroup>
 
     <AuthorizeView>
         <Authorized>
@@ -27,6 +32,10 @@
                     <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
                 </button>
             </form>
+            @* <MudNavGroup Title="Management" Expanded=true>
+                <MudNavLink Href="/management/categories">Categories</MudNavLink>
+                <MudNavLink Href="/management/products">Products</MudNavLink>
+            </MudNavGroup> *@
         </Authorized>
         <NotAuthorized>
             <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Register</MudNavLink>

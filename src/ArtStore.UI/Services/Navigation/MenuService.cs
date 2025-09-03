@@ -109,6 +109,21 @@ public class MenuService : IMenuService
                 new()
                 {
                     IsParent = true,
+                    Title = "Content",
+                    Icon = Icons.Material.Filled.Category,
+                    MenuItems = new List<MenuSectionSubItemModel>
+                    {
+                        new()
+                        {
+                            Title = "Categories",
+                            Href = "/management/categories",
+                            PageStatus = PageStatus.Completed
+                        }
+                    }
+                },
+                new()
+                {
+                    IsParent = true,
                     Title = "System",
                     Icon = Icons.Material.Filled.Devices,
                     MenuItems = new List<MenuSectionSubItemModel>

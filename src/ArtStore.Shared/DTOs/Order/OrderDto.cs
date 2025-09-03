@@ -4,7 +4,7 @@ namespace ArtStore.Shared.DTOs.Order;
 
 public class OrderDto
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public int? TenantId { get; set; }
     public string OrderSource { get; set; } = string.Empty;
     public string OrderNumber { get; set; } = string.Empty;

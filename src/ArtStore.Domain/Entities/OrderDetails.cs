@@ -1,8 +1,8 @@
 ﻿namespace ArtStore.Domain.Entities;
 
-public class OrderDetail : BaseEntity
+public class OrderDetail : BaseEntity<long>
 {
-    public int OrderId { get; set; }
+    public long OrderId { get; set; }
     public int ProductId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
