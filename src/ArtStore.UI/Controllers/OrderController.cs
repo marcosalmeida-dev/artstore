@@ -7,12 +7,12 @@ namespace ArtStore.UI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrderController : ControllerBase   
+public class OrderController : ControllerBase
 {
     private readonly ICommandHandler<CreateOrderCommand, Result<string>> _createOrderCommandHandler;
     private readonly ICommandHandler<UpdateOrderStatusCommand, Result> _updateOrderStatusCommandHandler;
     private readonly IQueryHandler<GetOrdersQuery, IEnumerable<OrderDto>> _getAllOrdersQueryHandler;
-        
+
     public OrderController(
         ICommandHandler<CreateOrderCommand, Result<string>> createOrderCommandHandler,
         ICommandHandler<UpdateOrderStatusCommand, Result> updateOrderStatusCommandHandler,

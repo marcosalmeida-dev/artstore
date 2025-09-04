@@ -22,4 +22,3 @@ public class ProductService
         return await response.Content.ReadFromJsonAsync<ProductModel>();
     }
 }
-

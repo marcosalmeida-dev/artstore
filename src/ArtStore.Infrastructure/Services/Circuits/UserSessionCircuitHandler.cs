@@ -7,7 +7,7 @@ namespace ArtStore.Infrastructure.Services.Circuits;
 /// <summary>
 /// Handles user session tracking and online user tracking for Blazor server circuits.
 /// </summary>
-public class UserSessionCircuitHandler : CircuitHandler,IDisposable
+public class UserSessionCircuitHandler : CircuitHandler, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ICurrentUserContextSetter _currentUserContextSetter;
@@ -62,7 +62,7 @@ public class UserSessionCircuitHandler : CircuitHandler,IDisposable
         _currentUserContextSetter.SetCurrentUser(state.User);
         var usersStateContainer = _serviceProvider.GetRequiredService<IUsersStateContainer>();
         var currentUserContextSetter = _serviceProvider.GetRequiredService<ICurrentUserContextSetter>();
-        if (state.User.Identity?.IsAuthenticated??false)
+        if (state.User.Identity?.IsAuthenticated ?? false)
         {
             var userId = state.User.GetUserId();
             if (!string.IsNullOrEmpty(userId))
@@ -88,7 +88,7 @@ public class UserSessionCircuitHandler : CircuitHandler,IDisposable
         var currentUserContextSetter = _serviceProvider.GetRequiredService<ICurrentUserContextSetter>();
         if (currentUserAccessor.SessionInfo != null)
         {
-            await userSessionTracker.RemoveAllSessions(currentUserAccessor.SessionInfo.UserId??string.Empty, cancellationToken);
+            await userSessionTracker.RemoveAllSessions(currentUserAccessor.SessionInfo.UserId ?? string.Empty, cancellationToken);
             await onlineUserTracker.Clear(currentUserAccessor.SessionInfo.UserId ?? string.Empty, cancellationToken);
             usersStateContainer.Remove(circuit.Id);
         }

@@ -110,4 +110,3 @@ public class UserProfileStateService : IDisposable
 
     public void Dispose() => _scope.Dispose();
 }
-

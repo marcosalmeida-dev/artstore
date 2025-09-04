@@ -49,4 +49,3 @@ public class ContactsAccessRights
     public bool Export { get; set; }
     public bool Import { get; set; }
 }
-

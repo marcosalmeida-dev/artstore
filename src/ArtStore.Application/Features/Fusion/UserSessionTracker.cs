@@ -27,8 +27,9 @@ public class UserSessionTracker : IUserSessionTracker
     public virtual async Task AddUserSession(string pageComponent, SessionInfo sessionInfo, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
-
+        }
 
         ImmutableInterlocked.AddOrUpdate(
             ref _pageUserSessions,
@@ -65,7 +66,9 @@ public class UserSessionTracker : IUserSessionTracker
     public virtual async Task RemoveUserSession(string pageComponent, string userId, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
+        }
 
         if (_pageUserSessions.TryGetValue(pageComponent, out var users) && users.Any(x => x.UserId == userId))
         {
@@ -98,7 +101,9 @@ public class UserSessionTracker : IUserSessionTracker
     public virtual async Task RemoveAllSessions(string userId, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
+        }
 
         foreach (var pageComponent in _pageUserSessions.Keys.ToList())
         {

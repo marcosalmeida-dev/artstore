@@ -8,7 +8,7 @@ namespace ArtStore.Infrastructure.Persistence.Interceptors;
 /// Interceptor for dispatching domain events when saving changes in the database.
 /// </summary>
 public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
-{   
+{
     private readonly IDomainEventDispatcher _eventDispatcher;
 
     /// <summary>
@@ -26,7 +26,9 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
     {
         var context = eventData.Context;
         if (context == null)
+        {
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
 
         var domainEventEntities = context.ChangeTracker
             .Entries<BaseEntity<object>>()
@@ -70,7 +72,9 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
     {
         var context = eventData.Context;
         if (context == null)
+        {
             return await base.SavedChangesAsync(eventData, result, cancellationToken);
+        }
 
         var domainEventEntities = context.ChangeTracker
             .Entries<BaseEntity<object>>()

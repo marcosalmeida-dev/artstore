@@ -11,7 +11,7 @@ public class HistoryGo
         _jsRuntime = jsRuntime;
     }
 
-    public async Task<ValueTask> GoBack(int  value=-1)
+    public async Task<ValueTask> GoBack(int value = -1)
     {
         var jsmodule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/historygo.js").ConfigureAwait(false);
         return jsmodule.InvokeVoidAsync(JSInteropConstants.HistoryGo, value);

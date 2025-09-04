@@ -26,6 +26,7 @@ public class LocalizationCookiesMiddleware : IMiddleware
             var feature = context.Features.Get<IRequestCultureFeature>();
 
             if (feature != null)
+            {
                 // remember culture across request
                 context.Response
                     .Cookies
@@ -34,6 +35,7 @@ public class LocalizationCookiesMiddleware : IMiddleware
                         CookieRequestCultureProvider.MakeCookieValue(feature.RequestCulture),
                         new CookieOptions { Expires = new DateTimeOffset(DateTime.Now.AddMonths(3)) }
                     );
+            }
         }
 
         await next(context);

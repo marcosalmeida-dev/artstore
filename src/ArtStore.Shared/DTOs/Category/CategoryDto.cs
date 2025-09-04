@@ -1,4 +1,4 @@
-namespace ArtStore.Shared.DTOs.Category;
+﻿namespace ArtStore.Shared.DTOs.Category;
 
 public class CategoryDto
 {

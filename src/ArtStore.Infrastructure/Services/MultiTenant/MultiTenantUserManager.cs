@@ -1,5 +1,5 @@
-﻿using ArtStore.Infrastructure.Persistence;
-using ArtStore.Domain.Identity;
+﻿using ArtStore.Domain.Identity;
+using ArtStore.Infrastructure.Persistence;
 
 namespace ArtStore.Infrastructure.Services.MultiTenant;
 
@@ -64,7 +64,7 @@ public class MultiTenantUserManager : UserManager<ApplicationUser>
             });
         }
 
-        foreach (var role in tenantRoles.Where(x=>!string.IsNullOrEmpty(x.Name)))
+        foreach (var role in tenantRoles.Where(x => !string.IsNullOrEmpty(x.Name)))
         {
             var result = await AddToRoleAsync(user, role.Name ?? string.Empty);
             if (!result.Succeeded)
@@ -122,8 +122,15 @@ public class MultiTenantUserManager : UserManager<ApplicationUser>
     /// <returns><c>true</c> if the user is in the role, otherwise <c>false</c>.</returns>
     public override async Task<bool> IsInRoleAsync(ApplicationUser user, string roleName)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        if (string.IsNullOrEmpty(roleName)) throw new ArgumentException("Value cannot be null or empty.", nameof(roleName));
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (string.IsNullOrEmpty(roleName))
+        {
+            throw new ArgumentException("Value cannot be null or empty.", nameof(roleName));
+        }
 
         var normalizedRoleName = NormalizeName(roleName);
         return await _roleManager.Roles.AnyAsync(r =>
@@ -131,7 +138,7 @@ public class MultiTenantUserManager : UserManager<ApplicationUser>
             r.TenantId == user.TenantId &&
             Context.UserRoles.Any(ur => ur.UserId == user.Id && ur.RoleId == r.Id));
     }
-    
+
 
     /// <summary>
     /// Removes the specified user from the given role.

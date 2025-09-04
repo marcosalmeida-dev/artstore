@@ -24,7 +24,7 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
             {
                 return await Result<int>.FailureAsync($"Product with id: [{request.Id}] not found.");
             }
-            
+
             item.Name = request.Name;
             item.Description = request.Description;
             item.Brand = request.Brand;

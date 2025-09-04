@@ -82,11 +82,14 @@ public static class SerilogExtensions
         }
     }
 
-   
+
 
     private static void WriteToSqlServer(LoggerConfiguration serilogConfig, string? connectionString)
     {
-        if (string.IsNullOrEmpty(connectionString)) return;
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            return;
+        }
 
         MSSqlServerSinkOptions sinkOpts = new()
         {
@@ -96,7 +99,7 @@ public static class SerilogExtensions
             AutoCreateSqlTable = false,
             BatchPostingLimit = 100,
             BatchPeriod = new TimeSpan(0, 0, 20),
-            
+
         };
 
         ColumnOptions columnOpts = new()
@@ -142,7 +145,10 @@ public static class SerilogExtensions
 
     private static void WriteToNpgsql(LoggerConfiguration serilogConfig, string? connectionString)
     {
-        if (string.IsNullOrEmpty(connectionString)) return;
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            return;
+        }
 
         const string tableName = "system_logs";
         //Used columns (Key is a column name) 
@@ -178,7 +184,7 @@ public static class SerilogExtensions
 
     public static LoggerConfiguration WithUtcTime(this LoggerEnrichmentConfiguration enrichmentConfiguration)
     {
-        
+
         return enrichmentConfiguration.With<UtcTimestampEnricher>();
     }
     public static LoggerConfiguration WithUserInfo(this LoggerEnrichmentConfiguration enrichmentConfiguration)

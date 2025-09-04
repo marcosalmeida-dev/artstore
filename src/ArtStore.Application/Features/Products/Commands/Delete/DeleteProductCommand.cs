@@ -36,7 +36,7 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand,
 
         _context.Products.Remove(item);
         item.AddDomainEvent(new DeletedEvent<Product>(item));
-        
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return await Result<int>.SuccessAsync(item.Id);

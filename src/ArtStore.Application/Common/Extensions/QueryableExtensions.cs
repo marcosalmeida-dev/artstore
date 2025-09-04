@@ -100,7 +100,9 @@ public static class QueryableExtensions
     public static IQueryable<T> WhereContainsKeyword<T>(this IQueryable<T> source, string keyword)
     {
         if (string.IsNullOrEmpty(keyword))
+        {
             return source;
+        }
 
         var parameter = Expression.Parameter(typeof(T), "x");
         var properties = typeof(T).GetProperties()
@@ -121,7 +123,9 @@ public static class QueryableExtensions
         }
 
         if (predicate == null)
+        {
             return source;
+        }
 
         var lambda = Expression.Lambda<Func<T, bool>>(predicate, parameter);
         return source.Where(lambda);

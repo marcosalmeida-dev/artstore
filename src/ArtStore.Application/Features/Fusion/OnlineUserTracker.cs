@@ -27,8 +27,11 @@ public class OnlineUserTracker : IOnlineUserTracker
     public virtual async Task Initial(SessionInfo? sessionInfo, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
-        if (sessionInfo!=null && !_activeUserSessions.Any(x => x.UserId == sessionInfo.UserId))
+        }
+
+        if (sessionInfo != null && !_activeUserSessions.Any(x => x.UserId == sessionInfo.UserId))
         {
             _activeUserSessions = _activeUserSessions.Add(sessionInfo);
             using var invalidating = Invalidation.Begin();
@@ -46,7 +49,10 @@ public class OnlineUserTracker : IOnlineUserTracker
     public virtual async Task Clear(string userId, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
+        }
+
         var userSessions = _activeUserSessions.Where(s => s.UserId == userId).ToList();
         foreach (var session in userSessions)
         {
@@ -67,7 +73,10 @@ public class OnlineUserTracker : IOnlineUserTracker
     public virtual async Task Update(string userId, string userName, string displayName, string profilePictureDataUrl, CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return;
+        }
+
         var userSessions = _activeUserSessions.Where(s => s.UserId == userId).ToList();
         foreach (var session in userSessions)
         {
@@ -86,7 +95,9 @@ public class OnlineUserTracker : IOnlineUserTracker
     public virtual Task<List<SessionInfo>> GetOnlineUsers(CancellationToken cancellationToken = default)
     {
         if (Invalidation.IsActive)
+        {
             return Task.FromResult(new List<SessionInfo>());
+        }
 
         return Task.FromResult(_activeUserSessions.ToList());
     }

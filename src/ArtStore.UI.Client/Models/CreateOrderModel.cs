@@ -10,6 +10,6 @@ public class CreateOrderModel
     public string? CustomerPhone { get; set; }
     public string ShippingAddress { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
-    public PaymentMethodType PaymentMethod { get; set; } 
+    public PaymentMethodType PaymentMethod { get; set; }
     public List<ProductModel> Items { get; set; } = new List<ProductModel>();
 }

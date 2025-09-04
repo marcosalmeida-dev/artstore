@@ -44,7 +44,10 @@ public class CategoriesController : ControllerBase
     {
         var category = await _getCategoryQueryHandler.Handle(new GetCategoryQuery { Id = id });
         if (category == null)
+        {
             return NotFound();
+        }
+
         return Ok(category);
     }
 
@@ -60,7 +63,7 @@ public class CategoriesController : ControllerBase
             OrderBy = orderBy,
             SortDirection = sortDirection
         };
-        
+
         var result = await _searchCategoriesQueryHandler.Handle(query);
         return Ok(result);
     }
@@ -70,10 +73,12 @@ public class CategoriesController : ControllerBase
     {
         command.Id = 0; // Ensure it's a create operation
         var result = await _addEditCategoryCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 
@@ -82,10 +87,12 @@ public class CategoriesController : ControllerBase
     {
         command.Id = id;
         var result = await _addEditCategoryCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 
@@ -94,10 +101,12 @@ public class CategoriesController : ControllerBase
     {
         var command = new DeleteCategoryCommand { Id = id };
         var result = await _deleteCategoryCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 }

@@ -23,4 +23,3 @@ public class UserProfile
     ? TimeZoneInfo.Local.BaseUtcOffset
     : TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId).BaseUtcOffset;
 }
-

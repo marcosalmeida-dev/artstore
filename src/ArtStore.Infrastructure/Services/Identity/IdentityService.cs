@@ -23,7 +23,7 @@ public class IdentityService : IIdentityService
     {
         var scope = scopeFactory.CreateScope();
         _userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        _userClaimsPrincipalFactory =scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        _userClaimsPrincipalFactory = scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<ApplicationUser>>();
         _authorizationService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
         _fusionCache = fusionCache;
         _localizer = localizer;
@@ -78,7 +78,7 @@ public class IdentityService : IIdentityService
     {
         var key = GetApplicationUserCacheKey(userName);
         var result = await _fusionCache.GetOrSetAsync(key,
-            _ =>  _userManager.Users.Where(x => x.UserName == userName).Include(x => x.UserRoles)
+            _ => _userManager.Users.Where(x => x.UserName == userName).Include(x => x.UserRoles)
                 .FirstOrDefaultAsync(cancellation), RefreshInterval);
         return new ApplicationUserDto()
         {
@@ -108,7 +108,7 @@ public class IdentityService : IIdentityService
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         TenantId = s.TenantId
-                    }) .ToListAsync();
+                    }).ToListAsync();
                 }
                 return await _userManager.Users.Where(x => x.TenantId == tenantId).Include(x => x.UserRoles)
                     .ThenInclude(x => x.Role)
@@ -120,7 +120,7 @@ public class IdentityService : IIdentityService
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         TenantId = s.TenantId
-                    }) .ToListAsync();
+                    }).ToListAsync();
             };
         var result = await _fusionCache.GetOrSetAsync(key, _ => getUsersByTenantId(tenantId, cancellation), RefreshInterval);
         return result;

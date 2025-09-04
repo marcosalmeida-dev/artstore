@@ -1,4 +1,4 @@
-namespace ArtStore.Shared.DTOs.Product;
+﻿namespace ArtStore.Shared.DTOs.Product;
 
 public class ProductDto
 {

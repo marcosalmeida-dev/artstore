@@ -24,7 +24,7 @@ public class AddEditCategoryCommandHandler : ICommandHandler<AddEditCategoryComm
             {
                 return await Result<int>.FailureAsync($"Category with id: [{request.Id}] not found.");
             }
-            
+
             item.Name = request.Name;
             item.Description = request.Description;
             item.IsActive = request.IsActive;

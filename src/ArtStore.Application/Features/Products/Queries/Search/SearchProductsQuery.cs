@@ -39,7 +39,7 @@ public class SearchProductsQueryHandler : IQueryHandler<SearchProductsQuery, Pag
 
         if (!string.IsNullOrWhiteSpace(request.SearchString))
         {
-            query = query.Where(p => p.Name.Contains(request.SearchString) || 
+            query = query.Where(p => p.Name.Contains(request.SearchString) ||
                                    p.Description!.Contains(request.SearchString) ||
                                    p.Brand!.Contains(request.SearchString));
         }

@@ -14,11 +14,11 @@ public class ServerHubWrapper : IApplicationHubWrapper
 
     public async Task JobStarted(int id, string message)
     {
-        await _hubContext.Clients.All.Start(id,message).ConfigureAwait(false);
+        await _hubContext.Clients.All.Start(id, message).ConfigureAwait(false);
     }
 
     public async Task JobCompleted(int id, string message)
     {
-        await _hubContext.Clients.All.Completed(id,message).ConfigureAwait(false); 
+        await _hubContext.Clients.All.Completed(id, message).ConfigureAwait(false);
     }
 }

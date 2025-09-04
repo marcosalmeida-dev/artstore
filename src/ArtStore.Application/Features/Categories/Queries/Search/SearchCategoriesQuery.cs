@@ -37,7 +37,7 @@ public class SearchCategoriesQueryHandler : IQueryHandler<SearchCategoriesQuery,
 
         if (!string.IsNullOrWhiteSpace(request.SearchString))
         {
-            query = query.Where(c => c.Name.Contains(request.SearchString) || 
+            query = query.Where(c => c.Name.Contains(request.SearchString) ||
                                    c.Description!.Contains(request.SearchString));
         }
 

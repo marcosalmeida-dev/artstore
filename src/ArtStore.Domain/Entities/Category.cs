@@ -1,9 +1,14 @@
-﻿namespace ArtStore.Domain.Entities;
+﻿using ArtStore.Domain.Entities.Translations;
+
+namespace ArtStore.Domain.Entities;
 public class Category : BaseTenantEntity<int>
 {
     public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }
+
+    // JSON column for translations
+    public CategoryTranslationsJson? Translations { get; set; }
 
     public bool IsActive { get; set; } = true;
 

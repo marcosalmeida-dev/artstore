@@ -14,5 +14,3 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Ignore(e => e.DomainEvents);
     }
 }
-
-

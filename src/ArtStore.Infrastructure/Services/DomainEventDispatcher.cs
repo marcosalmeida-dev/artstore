@@ -15,7 +15,7 @@ public class DomainEventDispatcher : IDomainEventDispatcher
     {
         using var scope = _serviceProvider.CreateScope();
         var handlers = scope.ServiceProvider.GetServices<IDomainEventHandler>();
-        
+
         foreach (var handler in handlers)
         {
             if (handler.CanHandle(domainEvent))

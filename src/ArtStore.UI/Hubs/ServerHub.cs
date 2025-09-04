@@ -24,7 +24,7 @@ public class ServerHub : Hub<ISignalRHub>
         {
             OnlineUsers.TryAdd(connectionId, username);
         }
-        await base.OnConnectedAsync().ConfigureAwait(false); 
+        await base.OnConnectedAsync().ConfigureAwait(false);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -36,7 +36,7 @@ public class ServerHub : Hub<ISignalRHub>
             if (!OnlineUsers.Any(x => x.Value.Equals(username)))
             {
                 await Clients.All.Disconnect(connectionId, username).ConfigureAwait(false);
-            }    
+            }
         }
         await base.OnConnectedAsync().ConfigureAwait(false);
     }
@@ -58,8 +58,8 @@ public class ServerHub : Hub<ISignalRHub>
         await Clients.All.SendNotification(message).ConfigureAwait(false);
     }
 
-    public async Task Completed(int id,string message)
+    public async Task Completed(int id, string message)
     {
-        await Clients.All.Completed(id,message).ConfigureAwait(false);
+        await Clients.All.Completed(id, message).ConfigureAwait(false);
     }
 }

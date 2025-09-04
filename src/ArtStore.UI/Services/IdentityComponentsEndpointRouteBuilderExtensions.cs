@@ -82,7 +82,7 @@
 //            return TypedResults.Challenge(properties, [provider]);
 //        });
 
- 
+
 
 //        manageGroup.MapPost("/DownloadPersonalData", async (
 //            HttpContext context,

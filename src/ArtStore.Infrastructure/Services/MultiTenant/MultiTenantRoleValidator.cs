@@ -1,5 +1,5 @@
-﻿using ArtStore.Infrastructure.Persistence;
-using ArtStore.Domain.Identity;
+﻿using ArtStore.Domain.Identity;
+using ArtStore.Infrastructure.Persistence;
 
 namespace ArtStore.Infrastructure.Services.MultiTenant;
 /// <summary>

@@ -58,7 +58,10 @@ public class Colour : ValueObject
     {
         var colour = new Colour { Code = code };
 
-        if (!SupportedColours.Contains(colour)) throw new UnsupportedColourException(code);
+        if (!SupportedColours.Contains(colour))
+        {
+            throw new UnsupportedColourException(code);
+        }
 
         return colour;
     }

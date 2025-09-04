@@ -1,7 +1,7 @@
-﻿using ArtStore.Shared.DTOs.Order.Events;
-using Microsoft.Extensions.Logging;
+﻿using ArtStore.Application.Hubs;
+using ArtStore.Shared.DTOs.Order.Events;
 using Microsoft.AspNetCore.SignalR;
-using ArtStore.Application.Hubs;
+using Microsoft.Extensions.Logging;
 
 namespace ArtStore.Application.Common.EventHandlers;
 
@@ -17,7 +17,7 @@ public class OrderStatusChangedEventHandler : IDomainEventHandler
         _logger = logger;
         _hubContext = hubContext;
     }
-        
+
     public bool CanHandle(object domainEvent)
     {
         return domainEvent is OrderStatusChangedEvent;
@@ -26,7 +26,9 @@ public class OrderStatusChangedEventHandler : IDomainEventHandler
     public async Task HandleAsync(object domainEvent, CancellationToken cancellationToken = default)
     {
         if (domainEvent is not OrderStatusChangedEvent statusChangedEvent)
+        {
             return;
+        }
 
         _logger.LogInformation(
             "Order status changed: Id={OrderId}, OldStatus={OldStatus}, NewStatus={NewStatus}, Reason={Reason}",

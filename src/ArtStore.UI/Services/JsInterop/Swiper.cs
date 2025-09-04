@@ -11,7 +11,7 @@ public sealed class Swiper
         _jsRuntime = jsRuntime;
     }
 
-    public async Task<ValueTask> Initialize(string elment,bool reverse=false)
+    public async Task<ValueTask> Initialize(string elment, bool reverse = false)
     {
         var jsmodule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "/js/carousel.js").ConfigureAwait(false);
         return jsmodule.InvokeVoidAsync("initializeSwiper", elment, reverse);

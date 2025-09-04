@@ -18,7 +18,9 @@ public static class DataGridExtensions
         var sourceQuery = source;
 
         if (sortDefinitions.Count == 0)
+        {
             return sourceQuery;
+        }
 
         IOrderedQueryable<T>? orderedQuery = null;
 

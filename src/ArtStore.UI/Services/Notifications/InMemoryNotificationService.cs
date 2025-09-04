@@ -35,10 +35,16 @@ public class InMemoryNotificationService : INotificationService
     public async Task MarkNotificationsAsRead(string id)
     {
         var message = await GetMessageById(id).ConfigureAwait(false);
-        if (message == null) return;
+        if (message == null)
+        {
+            return;
+        }
 
         var timestamp = await _localStorageService.GetAsync<DateTime>(LocalStorageKey).ConfigureAwait(false);
-        if (timestamp.Success) await _localStorageService.SetAsync(LocalStorageKey, message.PublishDate).ConfigureAwait(false);
+        if (timestamp.Success)
+        {
+            await _localStorageService.SetAsync(LocalStorageKey, message.PublishDate).ConfigureAwait(false);
+        }
     }
 
     public Task<NotificationMessage> GetMessageById(string id)
@@ -64,7 +70,9 @@ public class InMemoryNotificationService : INotificationService
         try
         {
             if ((await _localStorageService.GetAsync<DateTime>(LocalStorageKey)).Success == false)
+            {
                 return DateTime.MinValue;
+            }
 
             var timestamp = await _localStorageService.GetAsync<DateTime>(LocalStorageKey).ConfigureAwait(false);
             return timestamp.Value;

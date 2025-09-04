@@ -132,7 +132,7 @@ public static class DependencyInjection
 
     private static DbContextOptionsBuilder UseExceptionProcessor(this DbContextOptionsBuilder builder, string dbProvider)
     {
-     
+
         switch (dbProvider.ToLowerInvariant())
         {
             //case DbProviderKeys.Npgsql:
@@ -259,7 +259,7 @@ public static class DependencyInjection
             // User settings
             options.User.RequireUniqueEmail = true;
             //options.Tokens.EmailConfirmationTokenProvider = "Email";
-            
+
         });
 
         services.AddScoped<IIdentityService, IdentityService>()
@@ -273,8 +273,10 @@ public static class DependencyInjection
                 {
                     var propertyValue = prop.GetValue(null);
                     if (propertyValue is not null)
+                    {
                         options.AddPolicy((string)propertyValue,
                             policy => policy.RequireClaim(ApplicationClaimTypes.Permission, (string)propertyValue));
+                    }
                 }
             })
             .AddAuthentication(options =>
@@ -327,7 +329,7 @@ public static class DependencyInjection
             // FACTORY TIMEOUTS
             FactorySoftTimeout = TimeSpan.FromSeconds(10),
             FactoryHardTimeout = TimeSpan.FromSeconds(30),
-            AllowTimedOutFactoryBackgroundCompletion = true,    
+            AllowTimedOutFactoryBackgroundCompletion = true,
         });
         return services;
     }

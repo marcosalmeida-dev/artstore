@@ -43,4 +43,3 @@ public class CurrentUserContextSetter : ICurrentUserContextSetter
         _currentUserContext.SessionInfo = null;
     }
 }
-

@@ -146,7 +146,9 @@ public class UserPreference
     private string AdjustBrightness(string hexColor, double factor)
     {
         if (string.IsNullOrWhiteSpace(hexColor))
+        {
             throw new ArgumentException("Color code cannot be null or empty.", nameof(hexColor));
+        }
 
         // Parse the hex color using ColorTranslator
         var color = ColorTranslator.FromHtml(hexColor);
@@ -193,11 +195,17 @@ public class UserPreference
             s = l > 0.5 ? delta / (2.0 - max - min) : delta / (max + min);
 
             if (max == r)
+            {
                 h = (g - b) / delta + (g < b ? 6.0 : 0.0);
+            }
             else if (max == g)
+            {
                 h = (b - r) / delta + 2.0;
+            }
             else
+            {
                 h = (r - g) / delta + 4.0;
+            }
 
             h /= 6.0;
         }
@@ -223,11 +231,31 @@ public class UserPreference
         {
             double HueToRgb(double p, double q, double t)
             {
-                if (t < 0.0) t += 1.0;
-                if (t > 1.0) t -= 1.0;
-                if (t < 1.0 / 6.0) return p + (q - p) * 6.0 * t;
-                if (t < 1.0 / 2.0) return q;
-                if (t < 2.0 / 3.0) return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+                if (t < 0.0)
+                {
+                    t += 1.0;
+                }
+
+                if (t > 1.0)
+                {
+                    t -= 1.0;
+                }
+
+                if (t < 1.0 / 6.0)
+                {
+                    return p + (q - p) * 6.0 * t;
+                }
+
+                if (t < 1.0 / 2.0)
+                {
+                    return q;
+                }
+
+                if (t < 2.0 / 3.0)
+                {
+                    return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+                }
+
                 return p;
             }
 

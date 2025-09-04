@@ -28,7 +28,9 @@ public static class SpecificationBuilderExtensions
     {
         // If the condition is false or the keyword is null or empty, return the original builder without modifications
         if (!condition || string.IsNullOrEmpty(keyword))
+        {
             return builder;
+        }
 
         // If no properties are specified, search all string properties by default
         if (properties == null || properties.Length == 0)
@@ -46,7 +48,9 @@ public static class SpecificationBuilderExtensions
         foreach (var propertyExpression in properties)
         {
             if (propertyExpression.Body is not MemberExpression memberExpression)
+            {
                 continue; // Skip if the expression is not a member expression
+            }
 
             var propertyAccess = Expression.Property(parameter, (memberExpression.Member as PropertyInfo)!);
 
@@ -89,4 +93,3 @@ public static class SpecificationBuilderExtensions
         return Expression.Lambda<Func<T, string?>>(propertyAccess, parameter);
     }
 }
-

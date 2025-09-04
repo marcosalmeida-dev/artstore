@@ -1,5 +1,5 @@
-﻿using ArtStore.Infrastructure.Persistence;
-using ArtStore.Domain.Identity;
+﻿using ArtStore.Domain.Identity;
+using ArtStore.Infrastructure.Persistence;
 
 namespace ArtStore.Infrastructure.Services.MultiTenant;
 
@@ -41,15 +41,28 @@ public class MultiTenantUserStore : UserStore<
         ThrowIfDisposed();
 
         // Validate the user and role name parameters
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedRoleName))
+        {
+            throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        }
 
         // Retrieve the role entity for the given tenant and role name
         var roleEntity = await GetRoleAsync(normalizedRoleName, user.TenantId ?? 0, cancellationToken);
-        if (roleEntity == null) throw new InvalidOperationException($"Role '{normalizedRoleName}' does not exist in the user's tenant.");
+        if (roleEntity == null)
+        {
+            throw new InvalidOperationException($"Role '{normalizedRoleName}' does not exist in the user's tenant.");
+        }
 
         // Check if the user is already assigned to the role
-        if (await IsUserInRoleAsync(user.Id, roleEntity.Id, cancellationToken)) return;
+        if (await IsUserInRoleAsync(user.Id, roleEntity.Id, cancellationToken))
+        {
+            return;
+        }
 
         // Add the user-role relationship to the context
         Context.UserRoles.Add(new ApplicationUserRole
@@ -74,8 +87,15 @@ public class MultiTenantUserStore : UserStore<
         ThrowIfDisposed();
 
         // Validate the user and role name parameters
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedRoleName))
+        {
+            throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        }
 
         // Retrieve the role entity for the given tenant and role name
         var role = await GetRoleAsync(normalizedRoleName, user.TenantId ?? 0, cancellationToken);
@@ -98,8 +118,15 @@ public class MultiTenantUserStore : UserStore<
         ThrowIfDisposed();
 
         // Validate the user and role name parameters
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        if (string.IsNullOrWhiteSpace(normalizedRoleName)) throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedRoleName))
+        {
+            throw new ArgumentException("Value cannot be null or empty.", nameof(normalizedRoleName));
+        }
 
         // Retrieve the role entity for the given tenant and role name
         var role = await GetRoleAsync(normalizedRoleName, user.TenantId ?? 0, cancellationToken);
@@ -116,20 +143,20 @@ public class MultiTenantUserStore : UserStore<
     }
 
     // Retrieve a role entity based on the normalized role name and tenant ID
-    private  Task<ApplicationRole?> GetRoleAsync(string normalizedRoleName, int tenantId, CancellationToken cancellationToken)
+    private Task<ApplicationRole?> GetRoleAsync(string normalizedRoleName, int tenantId, CancellationToken cancellationToken)
     {
-        return  Context.Roles.FirstOrDefaultAsync(r => r.NormalizedName == normalizedRoleName && r.TenantId == tenantId, cancellationToken);
+        return Context.Roles.FirstOrDefaultAsync(r => r.NormalizedName == normalizedRoleName && r.TenantId == tenantId, cancellationToken);
     }
 
     // Retrieve a user-role relationship based on user ID and role ID
-    private  Task<ApplicationUserRole?> GetUserRoleAsync(string userId, string roleId, CancellationToken cancellationToken)
+    private Task<ApplicationUserRole?> GetUserRoleAsync(string userId, string roleId, CancellationToken cancellationToken)
     {
-        return  Context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken);
+        return Context.UserRoles.FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken);
     }
 
     // Check if a user is in a given role
-    private  Task<bool> IsUserInRoleAsync(string userId, string roleId, CancellationToken cancellationToken)
+    private Task<bool> IsUserInRoleAsync(string userId, string roleId, CancellationToken cancellationToken)
     {
-        return  Context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken);
+        return Context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == roleId, cancellationToken);
     }
 }

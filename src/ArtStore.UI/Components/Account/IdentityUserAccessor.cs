@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
-using ArtStore.Domain.Identity;
+﻿using ArtStore.Domain.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace ArtStore.UI.Components.Account;
 

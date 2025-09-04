@@ -43,7 +43,7 @@ public class DeleteCategoryCommandHandler : ICommandHandler<DeleteCategoryComman
 
         _context.Categories.Remove(item);
         item.AddDomainEvent(new DeletedEvent<Category>(item));
-        
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return await Result<int>.SuccessAsync(item.Id);

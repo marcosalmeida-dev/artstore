@@ -18,11 +18,16 @@ public static class StringExtensions
             Span<byte> hashBytes = stackalloc byte[16];
             md5.TryComputeHash(data, hashBytes, out var written);
             if (written != hashBytes.Length)
+            {
                 throw new OverflowException();
-
+            }
 
             Span<char> stringBuffer = stackalloc char[32];
-            for (var i = 0; i < hashBytes.Length; i++) hashBytes[i].TryFormat(stringBuffer.Slice(2 * i), out _, "x2");
+            for (var i = 0; i < hashBytes.Length; i++)
+            {
+                hashBytes[i].TryFormat(stringBuffer.Slice(2 * i), out _, "x2");
+            }
+
             return new string(stringBuffer);
         }
     }

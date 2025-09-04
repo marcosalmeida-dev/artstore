@@ -1,4 +1,4 @@
-//using ArtStore.Application.Features.Categories.Caching;
+﻿//using ArtStore.Application.Features.Categories.Caching;
 
 //namespace ArtStore.Application.Features.Categories.EventHandlers;
 

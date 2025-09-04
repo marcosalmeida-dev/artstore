@@ -42,7 +42,11 @@ public class UserPreferencesService : IUserPreferencesService
         try
         {
             var result = await _localStorage.GetAsync<UserPreference>(Key).ConfigureAwait(false);
-            if (result.Success && result.Value is not null) return result.Value;
+            if (result.Success && result.Value is not null)
+            {
+                return result.Value;
+            }
+
             return new UserPreference();
         }
         catch (CryptographicException)

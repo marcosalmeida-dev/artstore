@@ -30,11 +30,11 @@ public class RoleService : IRoleService
                          _ => _roleManager.Roles
                              .Select(s => new ApplicationRoleDto()
                              {
-                                    Id = s.Id,
-                                    Name = s.Name,
-                                    NormalizedName = s.NormalizedName,
-                                    Description = s.Description,
-                                    TenantId = s.TenantId
+                                 Id = s.Id,
+                                 Name = s.Name,
+                                 NormalizedName = s.NormalizedName,
+                                 Description = s.Description,
+                                 TenantId = s.TenantId
                              }).OrderBy(x => x.TenantId).ThenBy(x => x.Name)
                              .ToList())
                      ?? new List<ApplicationRoleDto>();

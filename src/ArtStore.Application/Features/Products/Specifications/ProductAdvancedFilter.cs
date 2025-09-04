@@ -13,5 +13,6 @@ public class ProductAdvancedFilter : PaginationFilter
         ProductListView.All; //<-- When the user selects a different ListView,
 
     public UserProfile?
-        CurrentUser { get; set; } // <-- This CurrentUser property gets its value from the information of
+        CurrentUser
+    { get; set; } // <-- This CurrentUser property gets its value from the information of
 }

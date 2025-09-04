@@ -9,7 +9,10 @@ public static class ValidationExtensions
         this IEnumerable<IValidator<TRequest>> validators, ValidationContext<TRequest> validationContext,
         CancellationToken cancellationToken = default)
     {
-        if (!validators.Any()) return new List<ValidationFailure>();
+        if (!validators.Any())
+        {
+            return new List<ValidationFailure>();
+        }
 
         var validationResults = await Task.WhenAll(
             validators.Select(v => v.ValidateAsync(validationContext, cancellationToken)));

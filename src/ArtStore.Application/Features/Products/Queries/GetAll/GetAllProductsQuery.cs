@@ -1,5 +1,6 @@
 ﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Features.Products.Caching;
+using ArtStore.Domain.Extensions;
 using ArtStore.Shared.DTOs.Product;
 using ArtStore.Shared.Interfaces.Query;
 
@@ -7,15 +8,18 @@ namespace ArtStore.Application.Features.Products.Queries.GetAll;
 
 public class GetAllProductsQuery : IQuery<IEnumerable<ProductDto>>
 {
-    public string CacheKey => ProductCacheKey.GetAllCacheKey;
+    public string Culture { get; set; } = "pt-BR";
+
+    public string CacheKey => ProductCacheKey.GetAllCacheKey + $"_{Culture}";
     public IEnumerable<string>? Tags => ProductCacheKey.Tags;
 }
 
 public class GetProductQuery : IQuery<ProductDto>
 {
     public required int Id { get; set; }
+    public string Culture { get; set; } = "pt-BR";
 
-    public string CacheKey => ProductCacheKey.GetProductByIdCacheKey(Id);
+    public string CacheKey => ProductCacheKey.GetProductByIdCacheKey(Id) + $"_{Culture}";
     public IEnumerable<string>? Tags => ProductCacheKey.Tags;
 }
 
@@ -43,14 +47,14 @@ public class GetAllProductsQueryHandler :
         return data.Select(x => new ProductDto
         {
             Id = x.Id,
-            Name = x.Name,
-            Description = x.Description,
+            Name = x.GetLocalizedName(request.Culture) ?? x.Name ?? string.Empty,
+            Description = x.GetLocalizedDescription(request.Culture) ?? x.Description,
             Brand = x.Brand,
-            Unit = x.Unit,
+            Unit = x.GetLocalizedUnit(request.Culture) ?? x.Unit,
             Price = x.Price,
             IsActive = x.IsActive,
             CategoryId = x.CategoryId,
-            CategoryName = x.Category?.Name,
+            CategoryName = x.Category?.GetLocalizedName(request.Culture) ?? x.Category?.Name,
             TenantId = x.TenantId,
             TenantName = x.Tenant?.Name,
             Pictures = x.Pictures?.Select(p => new ProductImageDto
@@ -75,14 +79,14 @@ public class GetAllProductsQueryHandler :
         return data == null ? null : new ProductDto
         {
             Id = data.Id,
-            Name = data.Name,
-            Description = data.Description,
+            Name = data.GetLocalizedName(request.Culture) ?? data.Name ?? string.Empty,
+            Description = data.GetLocalizedDescription(request.Culture) ?? data.Description,
             Brand = data.Brand,
-            Unit = data.Unit,
+            Unit = data.GetLocalizedUnit(request.Culture) ?? data.Unit,
             Price = data.Price,
             IsActive = data.IsActive,
             CategoryId = data.CategoryId,
-            CategoryName = data.Category?.Name,
+            CategoryName = data.Category?.GetLocalizedName(request.Culture) ?? data.Category?.Name,
             TenantId = data.TenantId,
             TenantName = data.Tenant?.Name,
             Pictures = data.Pictures?.Select(p => new ProductImageDto

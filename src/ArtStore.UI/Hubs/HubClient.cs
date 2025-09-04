@@ -47,12 +47,12 @@ public sealed class HubClient : IAsyncDisposable
 
         _hubConnection.On<string>(nameof(ISignalRHub.SendNotification), OnNotificationReceivedEventAsync);
 
-        _hubConnection.On<string, string>(nameof(ISignalRHub.SendMessage),OnMessageReceivedEventAsync);
+        _hubConnection.On<string, string>(nameof(ISignalRHub.SendMessage), OnMessageReceivedEventAsync);
 
         _hubConnection.On<string, string, string>(nameof(ISignalRHub.SendPrivateMessage),
             async (from, to, message) => await OnMessageReceivedEventAsync(from, message).ConfigureAwait(false));
 
-   
+
     }
 
     // Handle the result of async event invocations
@@ -72,7 +72,7 @@ public sealed class HubClient : IAsyncDisposable
         }
     }
 
-    private async Task OnJobStartedEventAsync( int id, string message)
+    private async Task OnJobStartedEventAsync(int id, string message)
     {
         if (JobStartedEvent != null)
         {
@@ -80,7 +80,7 @@ public sealed class HubClient : IAsyncDisposable
         }
     }
 
-    private async Task OnJobCompletedEventAsync( int id, string message)
+    private async Task OnJobCompletedEventAsync(int id, string message)
     {
         if (JobCompletedEvent != null)
         {
@@ -88,7 +88,7 @@ public sealed class HubClient : IAsyncDisposable
         }
     }
 
-    private async Task OnNotificationReceivedEventAsync( string message)
+    private async Task OnNotificationReceivedEventAsync(string message)
     {
         if (NotificationReceivedEvent != null)
         {
@@ -96,14 +96,14 @@ public sealed class HubClient : IAsyncDisposable
         }
     }
 
-    private async Task OnMessageReceivedEventAsync( string from,string message)
+    private async Task OnMessageReceivedEventAsync(string from, string message)
     {
         if (MessageReceivedEvent != null)
         {
             await Task.Run(() => MessageReceivedEvent?.Invoke(this, new MessageReceivedEventArgs(from, message))).ConfigureAwait(false);
         }
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         try
@@ -115,7 +115,7 @@ public sealed class HubClient : IAsyncDisposable
             await _hubConnection.DisposeAsync().ConfigureAwait(false);
         }
     }
-    
+
     // Event handlers
     public event EventHandler<UserStateChangeEventArgs>? LoginEvent;
     public event EventHandler<UserStateChangeEventArgs>? LogoutEvent;
@@ -126,7 +126,11 @@ public sealed class HubClient : IAsyncDisposable
 
     public async Task StartAsync(CancellationToken cancellation = default)
     {
-        if (_started) return;
+        if (_started)
+        {
+            return;
+        }
+
         _started = true;
         await _hubConnection.StartAsync(cancellation).ConfigureAwait(false);
     }
@@ -168,17 +172,17 @@ public class UserStateChangeEventArgs : EventArgs
 
 public class JobStartedEventArgs : EventArgs
 {
-    public JobStartedEventArgs(int id,string message)
+    public JobStartedEventArgs(int id, string message)
     {
         Message = message;
-        Id=id;
+        Id = id;
     }
     public string Message { get; }
     public int Id { get; }
 }
 public class JobCompletedEventArgs : EventArgs
 {
-    public JobCompletedEventArgs(int id,string message)
+    public JobCompletedEventArgs(int id, string message)
     {
         Message = message;
         Id = id;

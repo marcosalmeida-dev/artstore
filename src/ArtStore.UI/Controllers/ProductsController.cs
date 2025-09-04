@@ -44,7 +44,10 @@ public class ProductsController : ControllerBase
     {
         var product = await _getProductQueryHandler.Handle(new GetProductQuery { Id = id });
         if (product == null)
+        {
             return NotFound();
+        }
+
         return Ok(product);
     }
 
@@ -61,7 +64,7 @@ public class ProductsController : ControllerBase
             OrderBy = orderBy,
             SortDirection = sortDirection
         };
-        
+
         var result = await _searchProductsQueryHandler.Handle(query);
         return Ok(result);
     }
@@ -71,10 +74,12 @@ public class ProductsController : ControllerBase
     {
         command.Id = 0; // Ensure it's a create operation
         var result = await _addEditProductCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 
@@ -83,10 +88,12 @@ public class ProductsController : ControllerBase
     {
         command.Id = id;
         var result = await _addEditProductCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 
@@ -95,10 +102,12 @@ public class ProductsController : ControllerBase
     {
         var command = new DeleteProductCommand { Id = id };
         var result = await _deleteProductCommandHandler.Handle(command);
-        
+
         if (result.Succeeded)
+        {
             return Ok(result);
-        
+        }
+
         return BadRequest(result.Errors);
     }
 }

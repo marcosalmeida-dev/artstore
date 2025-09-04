@@ -198,7 +198,9 @@ public class LayoutService
     public async Task SetRightToLeft()
     {
         if (!IsRTL)
+        {
             await ToggleRightToLeft().ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -207,7 +209,9 @@ public class LayoutService
     public async Task SetLeftToRight()
     {
         if (IsRTL)
+        {
             await ToggleRightToLeft().ConfigureAwait(false);
+        }
     }
 
     /// <summary>

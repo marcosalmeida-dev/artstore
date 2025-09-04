@@ -15,4 +15,3 @@ global using ArtStore.Shared.Interfaces;
 global using FluentValidation;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Localization;
-

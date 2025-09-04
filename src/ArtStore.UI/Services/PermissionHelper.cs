@@ -189,8 +189,16 @@ public class PermissionHelper
     {
         public bool Equals(Claim? x, Claim? y)
         {
-            if (ReferenceEquals(x, y)) return true;
-            if (x is null || y is null) return false;
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (x is null || y is null)
+            {
+                return false;
+            }
+
             return x.Type.Equals(y.Type) && x.Value.Equals(y.Value);
         }
 

@@ -17,6 +17,6 @@ public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
         builder.Property(x => x.LogEvent).HasMaxLength(int.MaxValue);
         builder.HasIndex(x => new { x.Level });
         builder.HasIndex(x => x.TimeStamp);
-       
+
     }
 }

@@ -20,7 +20,9 @@ public static partial class Permissions
         {
             var propertyValue = prop.GetValue(null);
             if (propertyValue is not null)
+            {
                 permissions.Add((string)propertyValue);
+            }
         }
 
         return permissions;

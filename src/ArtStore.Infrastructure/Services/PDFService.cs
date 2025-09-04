@@ -53,7 +53,9 @@ public class PDFService : IPDFService
                                     Math.Min($"{headers[(int)c]}".Length, MaxCharsPerCell));
 
                                 if (columnsWidth[c] < cellWidth)
+                                {
                                     columnsWidth[c] = cellWidth;
+                                }
                             }
 
                             foreach (var item in dataList)
@@ -66,7 +68,10 @@ public class PDFService : IPDFService
                                     var cellWidth = Math.Max(MinCharsPerCell,
                                         Math.Min($"{value}".Length, MaxCharsPerCell));
                                     if (columnsWidth[c] < cellWidth)
+                                    {
                                         columnsWidth[c] = cellWidth;
+                                    }
+
                                     c += 1;
                                 }
                             }
@@ -74,7 +79,9 @@ public class PDFService : IPDFService
                             var sumWidth = columnsWidth.Sum();
                             var ratio = tableWidth / (float)sumWidth;
                             for (var i = 0; i < columnsWidth.Length; i++)
+                            {
                                 columnsWidth[i] = (int)(columnsWidth[i] * ratio);
+                            }
 
                             // Create columns
                             table.ColumnsDefinition(columns =>
@@ -98,11 +105,16 @@ public class PDFService : IPDFService
                                 foreach (var value in result)
                                 {
                                     if (IsNumber(value))
+                                    {
                                         table.Cell().Row(rowIndex).Column(colIndex).Element(BlockCell).AlignRight()
                                             .Text($"{value}");
+                                    }
                                     else
+                                    {
                                         table.Cell().Row(rowIndex).Column(colIndex).Element(BlockCell).AlignLeft()
                                             .Text($"{value}");
+                                    }
+
                                     ;
 
                                     colIndex += 1;
@@ -129,7 +141,10 @@ public class PDFService : IPDFService
     private static bool IsNumber(object? value)
     {
         if (value == null)
+        {
             return false;
+        }
+
         return value is sbyte or byte or short or ushort or int or uint or long or ulong or float or double or decimal;
     }
 

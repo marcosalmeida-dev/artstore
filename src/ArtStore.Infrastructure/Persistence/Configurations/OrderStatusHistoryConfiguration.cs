@@ -25,7 +25,7 @@ public class OrderStatusHistoryConfiguration : IEntityTypeConfiguration<OrderSta
             .HasMaxLength(1000);
 
         builder.HasOne(x => x.Order)
-            .WithMany(x => x.OrderStatusHistories) 
+            .WithMany(x => x.OrderStatusHistories)
             .HasForeignKey(x => x.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
     }

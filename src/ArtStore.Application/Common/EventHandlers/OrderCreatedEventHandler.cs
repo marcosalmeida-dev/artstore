@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.SignalR;
-using ArtStore.Application.Hubs;
+﻿using ArtStore.Application.Hubs;
 using ArtStore.Shared.DTOs.Order.Events;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
 namespace ArtStore.Application.Common.EventHandlers;
 
@@ -26,7 +26,9 @@ public class OrderCreatedEventHandler : IDomainEventHandler
     public async Task HandleAsync(object domainEvent, CancellationToken cancellationToken = default)
     {
         if (domainEvent is not OrderCreatedEvent orderCreatedEvent)
+        {
             return;
+        }
 
         _logger.LogInformation(
             "Order created: Id={OrderId}, Number={OrderNumber}, Email={CustomerEmail}, Amount={TotalAmount}, Date={OrderDate}",

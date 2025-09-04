@@ -12,8 +12,10 @@ public class BlazorContextFactory<TContext> : IDbContextFactory<TContext> where 
     public TContext CreateDbContext()
     {
         if (_provider == null)
+        {
             throw new InvalidOperationException(
                 "You must configure an instance of IServiceProvider");
+        }
 
         return ActivatorUtilities.CreateInstance<TContext>(_provider);
     }

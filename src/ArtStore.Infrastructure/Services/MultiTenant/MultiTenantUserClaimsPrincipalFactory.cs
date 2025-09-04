@@ -1,8 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable warnings
-using ArtStore.Infrastructure.Constants.ClaimTypes;
 using ArtStore.Domain.Identity;
+using ArtStore.Infrastructure.Constants.ClaimTypes;
 
 namespace ArtStore.Infrastructure.Services.MultiTenant;
 /// <summary>
@@ -23,7 +23,10 @@ public class MultiTenantUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<
     /// <returns>The created ClaimsPrincipal.</returns>
     public override async Task<ClaimsPrincipal> CreateAsync(ApplicationUser user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
 
         var identity = await GenerateClaimsAsync(user).ConfigureAwait(false);
 
@@ -44,7 +47,7 @@ public class MultiTenantUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<
 
         if (user.Tenant is not null)
         {
-            identity.AddClaim(new Claim(ApplicationClaimTypes.TenantName, user.Tenant.Name??""));
+            identity.AddClaim(new Claim(ApplicationClaimTypes.TenantName, user.Tenant.Name ?? ""));
         }
     }
 

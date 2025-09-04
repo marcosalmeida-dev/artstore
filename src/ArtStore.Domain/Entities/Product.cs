@@ -1,4 +1,6 @@
-﻿namespace ArtStore.Domain.Entities;
+﻿using ArtStore.Domain.Entities.Translations;
+
+namespace ArtStore.Domain.Entities;
 
 public class Product : BaseTenantEntity<int>
 {
@@ -9,6 +11,9 @@ public class Product : BaseTenantEntity<int>
     public decimal Price { get; set; }
     public List<ProductImage>? Pictures { get; set; }
     public int CategoryId { get; set; }
+
+    // JSON column for translations
+    public ProductTranslationsJson? Translations { get; set; }
 
     // Navigation properties
     public virtual Tenant Tenant { get; set; } = null!;
