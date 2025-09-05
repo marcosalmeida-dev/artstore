@@ -13,30 +13,8 @@ public class OrderService
         _httpClient = httpClient;
     }
 
-    public async Task<string> CreateOrderAsync(CreateOrderModel orderModel)
+    public async Task<string> CreateOrderAsync(CreateOrderCommand createOrderCommand)
     {
-        // Map CreateOrderModel to CreateOrderCommand
-        var createOrderCommand = new CreateOrderCommand
-        {
-            OrderSource = "Web", // Assuming web as the order source
-            TotalAmount = orderModel.TotalAmount,
-            PaymentMethod = orderModel.PaymentMethod,
-            CustomerId = null, // Assuming guest orders for now
-            CustomerEmail = orderModel.CustomerEmail,
-            CustomerName = orderModel.CustomerName,
-            CustomerPhone = orderModel.CustomerPhone,
-            ShippingAddress = orderModel.ShippingAddress,
-            Notes = null, // Assuming no notes for now
-            OrderDetails = orderModel.Items.Select(item => new OrderDetailDto
-            {
-                ProductId = item.Id,
-                Quantity = item.Quantity,
-                UnitPrice = item.Price,
-                TotalPrice = item.Price * item.Quantity
-            }).ToList()
-        };
-
-        // Send the mapped command to the API
         var response = await _httpClient.PostAsJsonAsync("api/order/create-order", createOrderCommand);
         response.EnsureSuccessStatusCode();
 

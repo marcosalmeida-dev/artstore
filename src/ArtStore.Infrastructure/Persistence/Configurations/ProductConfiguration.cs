@@ -13,17 +13,28 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> builder)
     {
+        builder.HasKey(x => x.Id);
+
         builder.HasIndex(x => x.Name).IsUnique();
-        builder.Property(x => x.Name).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(80).IsRequired(false);
+        
+        builder.Property(x => x.Description).HasMaxLength(2000);
+        builder.Property(x => x.Brand).HasMaxLength(100);
+        builder.Property(x => x.Unit).HasMaxLength(50);
+
+        // Configure relationship with Category
+        builder.HasOne(x => x.Category)
+            .WithMany(x => x.Products)
+            .HasForeignKey(x => x.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure relationship with ProductImages
+        builder.HasMany(x => x.Pictures)
+            .WithOne(x => x.Product)
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(e => e.DomainEvents);
-        builder.Property(e => e.Pictures)
-            .HasConversion(
-                v => JsonSerializer.Serialize(v, DefaultJsonSerializerOptions.Options),
-                v => JsonSerializer.Deserialize<List<ProductImage>>(v, DefaultJsonSerializerOptions.Options),
-                new ValueComparer<List<ProductImage>>(
-                    (c1, c2) => c1.SequenceEqual(c2),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
 
         // Configure JSON column for translations
         builder.Property(e => e.Translations)

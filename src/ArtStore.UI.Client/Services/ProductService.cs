@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using ArtStore.Shared.DTOs.Product;
 
 namespace ArtStore.UI.Client.Services;
 
@@ -9,16 +10,16 @@ public class ProductService
     {
         _httpClient = httpClient;
     }
-    public async Task<List<ProductModel>> GetProductsAsync()
+    public async Task<List<ProductDto>> GetProductsAsync()
     {
         var response = await _httpClient.GetAsync("api/product/get-all-products");
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<ProductModel>>();
+        return await response.Content.ReadFromJsonAsync<List<ProductDto>>();
     }
-    public async Task<ProductModel> GetProductByIdAsync(int id)
+    public async Task<ProductDto> GetProductByIdAsync(int id)
     {
         var response = await _httpClient.GetAsync($"api/product/{id}");
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<ProductModel>();
+        return await response.Content.ReadFromJsonAsync<ProductDto>();
     }
 }

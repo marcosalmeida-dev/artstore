@@ -208,37 +208,27 @@ public class ApplicationDbContextInitializer
         drinks.SetTranslation("pt-BR", "Bebidas", "Bebidas normais");
         drinks.SetTranslation("es-AR", "Bebidas", "Bebidas normales");
 
-        var slushDrinks = new Category
+        var iceSlushDrinks = new Category
         {
-            Name = "Slush Drinks",
-            Description = "Refreshing slush beverages",
+            Name = "Ice Slush Drinks",
+            Description = "Refreshing ice slush beverages",
             TenantId = tenant.Id,
             IsActive = true,
         };
-        slushDrinks.SetTranslation("pt-BR", "Bebidas Geladas", "Bebidas refrescantes geladas");
-        slushDrinks.SetTranslation("es-AR", "Bebidas Heladas", "Bebidas refrescantes heladas");
+        iceSlushDrinks.SetTranslation("pt-BR", "Bebidas Geladas", "Bebidas refrescantes geladas");
+        iceSlushDrinks.SetTranslation("es-AR", "Bebidas Heladas", "Bebidas refrescantes heladas");
 
-        var frozenDrinks = new Category
+        var roastPastry = new Category
         {
-            Name = "Frozen Drinks",
-            Description = "Frozen beverages",
+            Name = "Roast Pastry",
+            Description = "Freshly baked roast pastries",
             TenantId = tenant.Id,
             IsActive = true,
         };
-        frozenDrinks.SetTranslation("pt-BR", "Bebidas Congeladas", "Bebidas congeladas");
-        frozenDrinks.SetTranslation("es-AR", "Bebidas Congeladas", "Bebidas congeladas");
+        roastPastry.SetTranslation("pt-BR", "Assados", "Assados frescos");
+        roastPastry.SetTranslation("es-AR", "Asados", "Asados frescos");
 
-        var savoryPastry = new Category
-        {
-            Name = "Savory Pastry",
-            Description = "Freshly baked savory pastries",
-            TenantId = tenant.Id,
-            IsActive = true,
-        };
-        savoryPastry.SetTranslation("pt-BR", "Salgados", "Salgados frescos assados");
-        savoryPastry.SetTranslation("es-AR", "Pastelería Salada", "Pastelería salada recién horneada");
-
-        var categories = new[] { drinks, slushDrinks, frozenDrinks, savoryPastry };
+        var categories = new[] { drinks, iceSlushDrinks, roastPastry };
         await _context.Categories.AddRangeAsync(categories);
         await _context.SaveChangesAsync();
 
@@ -252,6 +242,7 @@ public class ApplicationDbContextInitializer
             ("Passion Fruit", "Maracujá", "Maracuyá", 9.50m),
             ("Strawberry", "Morango", "Fresa", 9.50m),
             ("Lemon", "Limão", "Limón", 9.00m),
+            ("Sicilian Lemon", "Limão Siciliano", "Limón Siciliano", 9.50m),
             ("Açaí", "Açaí", "Açaí", 12.00m),
             ("Cocoa", "Cacau", "Cacao", 10.50m),
             ("Coffee", "Café", "Café", 10.00m),
@@ -262,8 +253,7 @@ public class ApplicationDbContextInitializer
         var categoryTypes = new[]
         {
             (drinks, "Regular", "Normal", "Normal"),
-            (slushDrinks, "Slush", "Gelada", "Helada"),
-            (frozenDrinks, "Frozen", "Congelada", "Congelada")
+            (iceSlushDrinks, "Ice Slush", "Gelada", "Helada")
         };
 
         // Generate all combinations
@@ -275,8 +265,7 @@ public class ApplicationDbContextInitializer
                 var price = type switch
                 {
                     "Regular" => basePrice,
-                    "Slush" => basePrice + 2.00m,
-                    "Frozen" => basePrice + 3.50m,
+                    "Ice Slush" => basePrice + 2.00m,
                     _ => basePrice
                 };
 
@@ -288,6 +277,7 @@ public class ApplicationDbContextInitializer
                         "Passion Fruit" => 125,
                         "Strawberry" => 128,
                         "Lemon" => 108,
+                        "Sicilian Lemon" => 110,
                         "Açaí" => 160,
                         "Cocoa" => 145,
                         "Coffee" => 118,
@@ -323,6 +313,7 @@ public class ApplicationDbContextInitializer
                             "Passion Fruit" => 30,
                             "Strawberry" => 35,
                             "Lemon" => 45,
+                            "Sicilian Lemon" => 48,
                             "Detox" => 40,
                             _ => 20
                         },
@@ -337,9 +328,22 @@ public class ApplicationDbContextInitializer
                     }
                 };
 
+                // Map to actual image files in wwwroot/images
+                var flavorFileName = flavorEn.ToLower().Replace(" ", "-") switch
+                {
+                    "passion-fruit" => "passion-fruit",
+                    "sicilian-lemon" => "sicilian-lemon", 
+                    "coffee" => "coffe", // Note: file has single 'e'
+                    _ => flavorEn.ToLower().Replace(" ", "-")
+                };
+                
+                var imageFileName = type == "Regular" 
+                    ? $"sugarcane-{flavorFileName}.png"
+                    : $"sugarcane-{flavorFileName}-ice-slush.png";
+
                 var product = new Product
                 {
-                    Name = $"{type} Sugarcane Juice - {flavorEn}",
+                    Name = type == "Regular" ? $"Sugarcane Juice - {flavorEn}" : $"Ice Slush Sugarcane Juice - {flavorEn}",
                     Description = $"Fresh {type.ToLower()} sugarcane juice with {flavorEn.ToLower()} flavor",
                     Brand = "Cana Brasil",
                     Unit = "300ml Cup",
@@ -350,22 +354,32 @@ public class ApplicationDbContextInitializer
                     {
                         new ProductImage
                         {
-                            Name = $"cana-{type.ToLower()}-{flavorEn.ToLower().Replace(" ", "-")}.jpg",
-                            Url = $"/images/products/cana-{type.ToLower()}-{flavorEn.ToLower().Replace(" ", "-")}.jpg",
-                            Size = 200
+                            Name = $"{flavorEn} Sugarcane Juice",
+                            FileName = imageFileName,
+                            Url = $"/images/{imageFileName}",
+                            AltText = $"{type} sugarcane juice with {flavorEn.ToLower()} flavor",
+                            Size = 1024 * 200, // 200KB in bytes
+                            Width = 400,
+                            Height = 400,
+                            MimeType = "image/png",
+                            IsPrimary = true,
+                            SortOrder = 0
                         }
                     }
                 };
 
                 // Add translations
+                var translatedNamePtBr = type == "Regular" ? $"Caldo de Cana - {flavorPtBr}" : $"Caldo de Cana Gelado - {flavorPtBr}";
+                var translatedNameEsAr = type == "Regular" ? $"Jugo de Caña - {flavorEsAr}" : $"Jugo de Caña Helado - {flavorEsAr}";
+
                 product.SetTranslation("pt-BR",
-                    $"Caldo de Cana {typePtBr} - {flavorPtBr}",
+                    translatedNamePtBr,
                     $"Caldo de cana fresco {typePtBr.ToLower()} com sabor {flavorPtBr.ToLower()}",
                     "Copo 300ml",
                     nutritionFacts);
 
                 product.SetTranslation("es-AR",
-                    $"Jugo de Caña {typeEsAr} - {flavorEsAr}",
+                    translatedNameEsAr,
                     $"Jugo de caña fresco {typeEsAr.ToLower()} con sabor {flavorEsAr.ToLower()}",
                     "Vaso 300ml",
                     nutritionFacts);
@@ -374,45 +388,69 @@ public class ApplicationDbContextInitializer
             }
         }
 
-        // Add some savory pastries
+        // Add some roast pastries
         var pastryProducts = new[]
         {
             new Product
             {
-                Name = "Cheese Pastry",
-                Description = "Crispy pastry filled with melted cheese",
-                Brand = "Salgados da Casa",
+                Name = "Roast Pastry - Chicken",
+                Description = "Crispy roast pastry filled with seasoned chicken",
+                Brand = "Assados da Casa",
                 Unit = "Piece",
-                Price = 6.50m,
+                Price = 8.50m,
                 TenantId = tenant.Id,
-                Category = savoryPastry,
+                Category = roastPastry,
                 Pictures = new List<ProductImage>
                 {
-                    new ProductImage { Name = "pastel-queijo.jpg", Url = "/images/products/pastel-queijo.jpg", Size = 180 }
+                    new ProductImage 
+                    { 
+                        Name = "Chicken Roast Pastry",
+                        FileName = "roast-pasty-chicken.png", 
+                        Url = "/images/roast-pasty-chicken.png", 
+                        AltText = "Crispy roast pastry filled with seasoned chicken",
+                        Size = 1024 * 180, // 180KB in bytes
+                        Width = 400,
+                        Height = 300,
+                        MimeType = "image/png",
+                        IsPrimary = true,
+                        SortOrder = 0
+                    }
                 }
             },
             new Product
             {
-                Name = "Meat Pastry",
-                Description = "Traditional pastry with seasoned ground beef",
-                Brand = "Salgados da Casa",
+                Name = "Roast Pastry - Meat",
+                Description = "Traditional roast pastry with chicken and seasoned ground beef",
+                Brand = "Assados da Casa",
                 Unit = "Piece",
-                Price = 7.50m,
+                Price = 9.50m,
                 TenantId = tenant.Id,
-                Category = savoryPastry,
+                Category = roastPastry,
                 Pictures = new List<ProductImage>
                 {
-                    new ProductImage { Name = "pastel-carne.jpg", Url = "/images/products/pastel-carne.jpg", Size = 180 }
+                    new ProductImage 
+                    { 
+                        Name = "Meat Roast Pastry",
+                        FileName = "roast-pasty-chicken-meat.png", 
+                        Url = "/images/roast-pasty-chicken-meat.png", 
+                        AltText = "Traditional roast pastry with chicken and seasoned ground beef",
+                        Size = 1024 * 180, // 180KB in bytes
+                        Width = 400,
+                        Height = 300,
+                        MimeType = "image/png",
+                        IsPrimary = true,
+                        SortOrder = 0
+                    }
                 }
             }
         };
 
-        // Add translations to pastries
-        pastryProducts[0].SetTranslation("pt-BR", "Pastel de Queijo", "Pastel crocante recheado com queijo derretido", "Unidade");
-        pastryProducts[0].SetTranslation("es-AR", "Empanada de Queso", "Empanada crujiente rellena de queso derretido", "Unidad");
+        // Add translations to roast pastries
+        pastryProducts[0].SetTranslation("pt-BR", "Assado de Frango", "Assado crocante recheado com frango temperado", "Unidade");
+        pastryProducts[0].SetTranslation("es-AR", "Asado de Pollo", "Asado crujiente relleno de pollo condimentado", "Unidad");
 
-        pastryProducts[1].SetTranslation("pt-BR", "Pastel de Carne", "Pastel tradicional com carne moída temperada", "Unidade");
-        pastryProducts[1].SetTranslation("es-AR", "Empanada de Carne", "Empanada tradicional con carne picada condimentada", "Unidad");
+        pastryProducts[1].SetTranslation("pt-BR", "Assado de Carne", "Assado tradicional carne moída temperada", "Unidade");
+        pastryProducts[1].SetTranslation("es-AR", "Asado de Carne", "Asado tradicional carne picada condimentada", "Unidad");
 
         products.AddRange(pastryProducts);
 

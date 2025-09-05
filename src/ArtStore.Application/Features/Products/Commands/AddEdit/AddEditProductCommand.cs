@@ -38,8 +38,16 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
                 item.Pictures = request.Pictures.Select(p => new ProductImage
                 {
                     Name = p.Name,
+                    FileName = p.FileName,
                     Size = p.Size,
-                    Url = p.Url
+                    Url = p.Url,
+                    AltText = p.AltText,
+                    Caption = p.Caption,
+                    Width = p.Width,
+                    Height = p.Height,
+                    MimeType = p.MimeType,
+                    IsPrimary = p.IsPrimary,
+                    SortOrder = p.SortOrder
                 }).ToList();
             }
 
@@ -67,8 +75,16 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
                 item.Pictures = request.Pictures.Select(p => new ProductImage
                 {
                     Name = p.Name,
+                    FileName = p.FileName,
                     Size = p.Size,
-                    Url = p.Url
+                    Url = p.Url,
+                    AltText = p.AltText,
+                    Caption = p.Caption,
+                    Width = p.Width,
+                    Height = p.Height,
+                    MimeType = p.MimeType,
+                    IsPrimary = p.IsPrimary,
+                    SortOrder = p.SortOrder
                 }).ToList();
             }
 

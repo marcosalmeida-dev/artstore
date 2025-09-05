@@ -80,7 +80,7 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public ProductDto? Product { get; set; }
 
-    private ProductModel model = new();
+    private ProductDto model = new();
     private List<CategoryDto> categories = new();
     private bool saving = false;
     
@@ -92,7 +92,7 @@
         
         if (IsEditMode && Product != null)
         {
-            model = new ProductModel
+            model = new ProductDto
             {
                 Id = Product.Id,
                 Name = Product.Name,
@@ -178,7 +178,7 @@
 
     private void Cancel() => MudDialog.Cancel();
 
-    public class ProductModel
+    public class ProductDto
     {
         public int Id { get; set; }
         

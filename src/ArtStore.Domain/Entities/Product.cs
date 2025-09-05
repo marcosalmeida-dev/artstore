@@ -9,7 +9,7 @@ public class Product : BaseTenantEntity<int>
     public string? Brand { get; set; }
     public string? Unit { get; set; }
     public decimal Price { get; set; }
-    public List<ProductImage>? Pictures { get; set; }
+    public virtual ICollection<ProductImage> Pictures { get; set; } = new List<ProductImage>();
     public int CategoryId { get; set; }
 
     // JSON column for translations
@@ -19,11 +19,4 @@ public class Product : BaseTenantEntity<int>
     public virtual Tenant Tenant { get; set; } = null!;
     public virtual Category Category { get; set; } = null!;
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
-}
-
-public class ProductImage
-{
-    public required string Name { get; set; }
-    public decimal Size { get; set; }
-    public required string Url { get; set; }
 }

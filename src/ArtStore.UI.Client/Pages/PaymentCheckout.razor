@@ -1,6 +1,7 @@
 ﻿@using ArtStore.Shared.DTOs.Common
-@using ArtStore.Shared.Models.Enums
-@using ArtStore.UI.Client.Models
+@using ArtStore.Shared.DTOs.Order
+@using ArtStore.Shared.DTOs.Order.Commands
+@using ArtStore.Shared.DTOs.Product
 @using ArtStore.UI.Client.Services
 
 <MudDialog @bind-IsVisible="checkoutDialogVisible" Options="dialogOptions">
@@ -478,7 +479,7 @@
 
 @code {
     [Parameter]
-    public List<ProductModel> OrderItems { get; set; } = new List<ProductModel>();
+    public List<ProductDto> OrderItems { get; set; } = new List<ProductDto>();
 
     [Parameter]
     public HashSet<int> SelectedOrderItems { get; set; } = new HashSet<int>();
@@ -560,10 +561,10 @@
     {
         // Set loading state
         isProcessingPayment = true;
-        
+
         // Move to the order complete step first to show the loading spinner
         checkoutStep = CheckoutStep.OrderComplete;
-        
+
         // Force UI update
         StateHasChanged();
 
@@ -572,24 +573,26 @@
             // Call your payment processing method
             await ProcessPayment(selectedPaymentMethod, paymentInfo);
 
-            // Map selected items and total amount to CreateOrderModel
-            var orderModel = new CreateOrderModel
+            // Map selected items and total amount to CreateOrderCommand
+            var orderModel = new CreateOrderCommand
             {
+                OrderSource = "Web",
                 TotalAmount = CalculateTotalPrice(),
                 PaymentMethod = selectedPaymentMethod,
                 CustomerEmail = "customer@example.com", // Replace with actual customer email
                 CustomerName = "John Doe", // Replace with actual customer name
                 CustomerPhone = "123-456-7890", // Replace with actual customer phone
                 ShippingAddress = "123 Main St, City, Country", // Replace with actual shipping address
-                Items = SelectedOrderItems
+                OrderDetails = SelectedOrderItems
                     .Select(id => OrderItems.FirstOrDefault(item => item.Id == id))
                     .Where(item => item != null)
-                    .Select(item => new ProductModel
+                    .Select(item => new OrderDetailDto
                     {
-                        Id = item.Id,
-                        Name = item.Name,
-                        Price = item.Price,
-                        Quantity = item.Quantity
+                        ProductId = item.Id,
+                        ProductName = item.Name,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Price,
+                        TotalPrice = item.Price * item.Quantity
                     })
                     .ToList()
             };

@@ -16,11 +16,22 @@ public class ProductDto
     public List<ProductImageDto> Pictures { get; set; } = new();
     public DateTime? Created { get; set; }
     public DateTime? LastModified { get; set; }
+
+    public int Quantity { get; set; }
 }
 
 public class ProductImageDto
 {
+    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public decimal Size { get; set; }
+    public string FileName { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
+    public string? AltText { get; set; }
+    public string? Caption { get; set; }
+    public long Size { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public string MimeType { get; set; } = "image/jpeg";
+    public bool IsPrimary { get; set; }
+    public int SortOrder { get; set; }
 }

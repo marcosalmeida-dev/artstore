@@ -121,7 +121,7 @@
     private const string SPANISH = "es-AR";
 
     private string currentLanguage = ENGLISH;
-    private List<ProductModel> products = new();
+    private List<ProductDto> products = new();
 
     protected override void OnInitialized()
     {
@@ -130,10 +130,10 @@
 
     private void InitializeTestData()
     {
-        products = new List<ProductModel>
+        products = new List<ProductDto>
         {
             // Appetizers
-            new ProductModel
+            new ProductDto
             {
                 Id = 1,
                 Name = "Classic Caesar Salad",
@@ -145,7 +145,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=300&fit=crop",
                 Quantity = 15
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 2,
                 Name = "Bruschetta Trio",
@@ -156,7 +156,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1572441713132-51c75654db73?w=400&h=300&fit=crop",
                 Quantity = 8
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 3,
                 Name = "Buffalo Wings",
@@ -169,7 +169,7 @@
             },
 
             // Main Courses
-            new ProductModel
+            new ProductDto
             {
                 Id = 4,
                 Name = "Grilled Salmon",
@@ -180,7 +180,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop",
                 Quantity = 6
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 5,
                 Name = "Ribeye Steak",
@@ -192,7 +192,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=300&fit=crop",
                 Quantity = 4
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 6,
                 Name = "Chicken Parmesan",
@@ -203,7 +203,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?w=400&h=300&fit=crop",
                 Quantity = 10
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 7,
                 Name = "Vegetarian Pasta",
@@ -216,7 +216,7 @@
             },
 
             // Desserts
-            new ProductModel
+            new ProductDto
             {
                 Id = 8,
                 Name = "Chocolate Lava Cake",
@@ -227,7 +227,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop",
                 Quantity = 8
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 9,
                 Name = "Tiramisu",
@@ -239,7 +239,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop",
                 Quantity = 6
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 10,
                 Name = "Cheesecake",
@@ -252,7 +252,7 @@
             },
 
             // Beverages
-            new ProductModel
+            new ProductDto
             {
                 Id = 11,
                 Name = "House Wine Red",
@@ -264,7 +264,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&h=300&fit=crop",
                 Quantity = 20
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 12,
                 Name = "Craft Beer IPA",
@@ -276,7 +276,7 @@
                 ImageUrl = "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=300&fit=crop",
                 Quantity = 15
             },
-            new ProductModel
+            new ProductDto
             {
                 Id = 13,
                 Name = "Fresh Lemonade",
@@ -324,7 +324,7 @@
         return products.Select(p => p.Category).Distinct().ToList();
     }
 
-    private List<ProductModel> GetProductsByCategory(string category)
+    private List<ProductDto> GetProductsByCategory(string category)
     {
         return products.Where(p => p.Category == category).ToList();
     }
@@ -387,7 +387,7 @@
         _ => category // en-US (default)
     };
 
-    private string GetLocalizedProductName(ProductModel product) => currentLanguage switch
+    private string GetLocalizedProductName(ProductDto product) => currentLanguage switch
     {
         "pt-BR" => product.Id switch
         {
@@ -426,7 +426,7 @@
         _ => product.Name ?? "" // en-US (default)
     };
 
-    private string GetLocalizedProductDescription(ProductModel product) => currentLanguage switch
+    private string GetLocalizedProductDescription(ProductDto product) => currentLanguage switch
     {
         "pt-BR" => product.Id switch
         {
@@ -472,7 +472,7 @@
         _ => price.ToString("C", new CultureInfo("en-US"))
     };
 
-    public class ProductModel
+    public class ProductDto
     {
         public int Id { get; set; }
         public string? Name { get; set; }

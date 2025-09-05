@@ -3,7 +3,7 @@
 
 @using System.Collections.Generic
 @using System.Linq
-@using ArtStore.UI.Client.Models
+@using ArtStore.Shared.DTOs.Product
 @using ArtStore.UI.Client.Services
 
 <div class="multi-select-card-container">
@@ -22,7 +22,7 @@
                         </div>
                     }
                     <div @onclick="() => ToggleSelection(item)">
-                        <MudCardMedia Image="@item.ImageUrl" Height="200" />
+                        <MudCardMedia Image="@item.Pictures[0].Url" Height="200" />
                         <MudCardContent>
                             <MudText Typo="Typo.h6" Class="mb-1">@item.Name</MudText>
                             <MudText Typo="Typo.body2" Class="mb-3" Style="min-height: 60px;">@item.Description</MudText>
@@ -157,7 +157,7 @@
 
 @code {
     [Parameter]
-    public List<ProductModel> Items { get; set; } = new List<ProductModel>();
+    public List<ProductDto> Items { get; set; } = new List<ProductDto>();
 
     [Parameter]
     public HashSet<int> SelectedItems { get; set; } = new HashSet<int>();
@@ -187,7 +187,7 @@
         base.OnAfterRender(firstRender);
     }
 
-    private void ToggleSelection(ProductModel item)
+    private void ToggleSelection(ProductDto item)
     {
         if (SelectedItems.Contains(item.Id))
         {
@@ -203,7 +203,7 @@
         SelectedItemsChanged.InvokeAsync(SelectedItems);
     }
 
-    private bool IsSelected(ProductModel item) => SelectedItems.Contains(item.Id);
+    private bool IsSelected(ProductDto item) => SelectedItems.Contains(item.Id);
 
     private async Task ClearSelections()
     {
@@ -227,15 +227,15 @@
         return total;
     }
 
-    private int GetItemCount(ProductModel item) => item.Quantity;
+    private int GetItemCount(ProductDto item) => item.Quantity;
 
-    private void IncreaseItemCount(ProductModel item)
+    private void IncreaseItemCount(ProductDto item)
     {
         item.Quantity++;
         StateHasChanged();
     }
 
-    private void DecreaseItemCount(ProductModel item)
+    private void DecreaseItemCount(ProductDto item)
     {
         item.Quantity--;
         if (item.Quantity < 1)
@@ -243,7 +243,7 @@
         StateHasChanged();
     }
 
-    private void UpdateItemCount(ProductModel item, int value)
+    private void UpdateItemCount(ProductDto item, int value)
     {
         if (value < 1) value = 1;
         else if (value > 99) value = 99;

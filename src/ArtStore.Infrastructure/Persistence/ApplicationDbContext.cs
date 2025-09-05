@@ -32,6 +32,7 @@ public class ApplicationDbContext : IdentityDbContext<
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<ProductImage> ProductImages { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
@@ -45,6 +46,7 @@ public class ApplicationDbContext : IdentityDbContext<
         builder.ApplyConfiguration(new TenantConfiguration());
         builder.ApplyConfiguration(new CategoryConfiguration());
         builder.ApplyConfiguration(new ProductConfiguration());
+        builder.ApplyConfiguration(new ProductImageConfiguration());
         builder.ApplyConfiguration(new OrderConfiguration());
         builder.ApplyConfiguration(new OrderDetailConfiguration());
         builder.ApplyConfiguration(new OrderStatusHistoryConfiguration());

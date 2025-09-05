@@ -42,6 +42,7 @@ public class GetAllProductsQueryHandler :
         var data = await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Tenant)
+            .Include(p => p.Pictures)
             .ToListAsync(cancellationToken);
 
         return data.Select(x => new ProductDto
@@ -59,10 +60,19 @@ public class GetAllProductsQueryHandler :
             TenantName = x.Tenant?.Name,
             Pictures = x.Pictures?.Select(p => new ProductImageDto
             {
+                Id = p.Id,
                 Name = p.Name,
+                FileName = p.FileName,
+                Url = p.Url,
+                AltText = p.AltText,
+                Caption = p.Caption,
                 Size = p.Size,
-                Url = p.Url
-            }).ToList() ?? new List<ProductImageDto>(),
+                Width = p.Width,
+                Height = p.Height,
+                MimeType = p.MimeType,
+                IsPrimary = p.IsPrimary,
+                SortOrder = p.SortOrder
+            }).OrderBy(p => p.SortOrder).ToList() ?? new List<ProductImageDto>(),
             Created = x.Created,
             LastModified = x.LastModified
         });
@@ -73,6 +83,7 @@ public class GetAllProductsQueryHandler :
         var data = await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Tenant)
+            .Include(p => p.Pictures)
             .Where(x => x.Id == request.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -91,10 +102,19 @@ public class GetAllProductsQueryHandler :
             TenantName = data.Tenant?.Name,
             Pictures = data.Pictures?.Select(p => new ProductImageDto
             {
+                Id = p.Id,
                 Name = p.Name,
+                FileName = p.FileName,
+                Url = p.Url,
+                AltText = p.AltText,
+                Caption = p.Caption,
                 Size = p.Size,
-                Url = p.Url
-            }).ToList() ?? new List<ProductImageDto>(),
+                Width = p.Width,
+                Height = p.Height,
+                MimeType = p.MimeType,
+                IsPrimary = p.IsPrimary,
+                SortOrder = p.SortOrder
+            }).OrderBy(p => p.SortOrder).ToList() ?? new List<ProductImageDto>(),
             Created = data.Created,
             LastModified = data.LastModified
         };

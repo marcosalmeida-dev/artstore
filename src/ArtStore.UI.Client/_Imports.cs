@@ -1,1 +1,1 @@
-﻿global using ArtStore.UI.Client.Models;
+﻿
