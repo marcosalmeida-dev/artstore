@@ -359,3 +359,23 @@ MigrationBackup/
 
 **/Files/
 src/Server.UI/appsettings.development.json
+/src/ArtStore.UI/wwwroot/images/roast-pasty-chicken-meat.png
+/src/ArtStore.UI/wwwroot/images/roast-pasty-chicken.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-açaí-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-açaí.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-cocoa-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-cocoa.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-coffe-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-coffe.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-detox-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-detox.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-lemon-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-lemon.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-passion-fruit-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-passion-fruit.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-pure-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-pure.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-sicilian-lemon-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-sicilian-lemon.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-strawberry-ice-slush.png
+/src/ArtStore.UI/wwwroot/images/sugarcane-strawberry.png
