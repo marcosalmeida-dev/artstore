@@ -1,70 +1,182 @@
-﻿@* @page "/order" *@
-@page "/"
+﻿@page "/"
 
 @using System.Collections.Generic
 @using System.Linq
+@using System.Globalization
 @using ArtStore.Shared.DTOs.Product
+@using ArtStore.Shared.DTOs.Category
 @using ArtStore.UI.Client.Services
+@inject IJSRuntime JSRuntime
+@inject ProductService ProductService
+@inject IDialogService DialogService
 
-<div class="multi-select-card-container">
-    <MudText Typo="Typo.h5" Class="mb-4">Item list</MudText>
+<PageTitle>@GetLocalizedText("PageTitle")</PageTitle>
 
-    <MudGrid>
-        @foreach (var item in Items)
-        {
-            <MudItem xs="12" sm="6" md="@ItemSize">
-                <MudCard Style="transition: all 0.2s ease; cursor: pointer; height: 100%;"
-                         Class="@(IsSelected(item) ? "selected-card mud-elevation-8" : "hover-card mud-elevation-2")">
-                    @if (IsSelected(item))
-                    {
-                        <div class="selected-indicator">
-                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
-                        </div>
-                    }
-                    <div @onclick="() => ToggleSelection(item)">
-                        <MudCardMedia Image="@item.Pictures[0].Url" Height="200" />
-                        <MudCardContent>
-                            <MudText Typo="Typo.h6" Class="mb-1">@item.Name</MudText>
-                            <MudText Typo="Typo.body2" Class="mb-3" Style="min-height: 60px;">@item.Description</MudText>
-                        </MudCardContent>
-                    </div>
-                    <MudCardActions>
-                        <div class="d-flex align-center justify-space-between" style="width: 100%;">
-                            <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
-                                @item.Price.ToString("C")
-                            </MudText>
-
-                            @if (IsSelected(item))
-                            {
-                                <div class="d-flex align-center" @onclick:stopPropagation>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Remove"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => DecreaseItemCount(item))"
-                                                   Disabled="@(GetItemCount(item) < 1)" />
-
-                                    <MudTextField T="int"
-                                                  Value="@GetItemCount(item)"
-                                                  ValueChanged="@((int val) => UpdateItemCount(item, val))"
-                                                  Style="width: 60px; margin: 0 8px; text-align: center;"
-                                                  Variant="Variant.Outlined"
-                                                  Adornment="Adornment.None"
-                                                  InputMode="InputMode.numeric" />
-
-                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => IncreaseItemCount(item))"
-                                                   Disabled="@(GetItemCount(item) > 9)" />
-                                </div>
-                            }
-                        </div>
-                    </MudCardActions>
-                </MudCard>
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-8">
+    <!-- Language Selector -->
+    <MudPaper Elevation="2" Class="pa-4 mb-6">
+        <MudGrid AlignItems="Center" Justify="Justify.SpaceBetween">
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h3" Color="Color.Primary" Class="fw-bold">
+                    @GetLocalizedText("RestaurantName")
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+                    @GetLocalizedText("RestaurantTagline")
+                </MudText>
             </MudItem>
+            <MudItem xs="12" md="6">
+                <MudGrid Justify="Justify.FlexEnd">
+                    <MudItem>
+                        <MudText Typo="Typo.body2" Class="mb-2">@GetLocalizedText("SelectLanguage")</MudText>
+                        <MudButtonGroup @key="currentLanguage" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Medium"
+                                        OverrideStyles="false">
+                            <MudButton OnClick="@(() => ChangeLanguage(PORTUGUESE))"
+                                       Color="@(currentLanguage == PORTUGUESE ? Color.Primary : Color.Default)"
+                                       Variant="@(currentLanguage == PORTUGUESE ? Variant.Filled : Variant.Outlined)"
+                                       StartIcon="@GetFlagIcon(PORTUGUESE)" Size="Size.Medium">
+                                BR
+                            </MudButton>
+                            <MudButton OnClick="@(() => ChangeLanguage(ENGLISH))"
+                                      Color="@(currentLanguage == ENGLISH ? Color.Primary : Color.Default)"
+                                      Variant="@(currentLanguage == ENGLISH ? Variant.Filled : Variant.Outlined)"
+                                      StartIcon="@GetFlagIcon(ENGLISH)" Size="Size.Medium">
+                                EN
+                            </MudButton>
+                            <MudButton OnClick="@(() => ChangeLanguage(SPANISH))"
+                                      Color="@(currentLanguage == SPANISH ? Color.Primary : Color.Default)"
+                                      Variant="@(currentLanguage == SPANISH ? Variant.Filled : Variant.Outlined)"
+                                      StartIcon="@GetFlagIcon(SPANISH)" Size="Size.Medium">
+                                AR
+                            </MudButton>
+                        </MudButtonGroup>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Category Filter -->
+    <MudPaper Elevation="1" Class="pa-4 mb-6">
+        <MudText Typo="Typo.h6" Class="mb-3">@GetLocalizedText("FilterByCategory")</MudText>
+        <MudChipSet @bind-SelectedValues="selectedCategories" SelectionMode="SelectionMode.MultiSelection" CheckMark="true" Variant="Variant.Text" Color="Color.Info">
+            @foreach (var category in GetCategories())
+            {
+                <MudChip Text="@GetLocalizedCategory(category)" Value="@category" />
+            }
+        </MudChipSet>
+    </MudPaper>
+
+    <!-- Menu Categories -->
+    @foreach (var category in GetVisibleCategories())
+    {
+        var categoryProducts = GetProductsByCategory(category);
+        if (categoryProducts.Any())
+        {
+            <MudPaper Elevation="1" Class="pa-6 mb-6">
+                <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-4 text-center">
+                    <MudIcon Icon="@GetCategoryIcon(category)" Class="mr-2" />
+                    @GetLocalizedCategory(category)
+                </MudText>
+                
+                <MudGrid>
+                    @foreach (var product in categoryProducts)
+                    {
+                        <MudItem xs="12" md="6" lg="4">
+                            <MudCard Elevation="2" Class="h-100" Style="transition: all 0.2s ease; cursor: pointer;"
+                                     @onclick="() => ToggleSelection(product)">
+                                @if (IsSelected(product))
+                                {
+                                    <div class="selected-indicator">
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                                    </div>
+                                }
+                                <div Class="@(IsSelected(product) ? "selected-card" : "hover-card")">
+                                    @if (product.Pictures?.Any() == true)
+                                    {
+                                        <MudCardMedia Image="@product.Pictures.First().Url" Height="256" />
+                                    }
+                                    else
+                                    {
+                                        <div style="height: 200px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported" Size="Size.Large" Color="Color.Tertiary" />
+                                        </div>
+                                    }
+                                    <MudCardContent>
+                                        <MudGrid>
+                                            <MudItem xs="9">
+                                                <MudText Typo="Typo.h6" Class="fw-bold">
+                                                    @product.Name
+                                                </MudText>
+                                            </MudItem>
+                                            <MudItem xs="3" Class="text-right">
+                                                <MudText Typo="Typo.h6" Color="Color.Success" Class="fw-bold">
+                                                    @FormatPrice(product.Price)
+                                                </MudText>
+                                            </MudItem>
+                                        </MudGrid>
+                                        
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                                            @product.Description
+                                        </MudText>
+                                        
+                                        @if (product.Unit != null)
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mt-1">
+                                                @GetLocalizedText("Unit"): @product.Unit
+                                            </MudText>
+                                        }
+                                    </MudCardContent>
+                                    
+                                    <MudCardActions>
+                                        @if (IsSelected(product))
+                                        {
+                                            <div class="d-flex align-center justify-space-between" style="width: 100%;" @onclick:stopPropagation>
+                                                <MudText Typo="Typo.body2" Color="Color.Primary" Class="fw-bold">
+                                                    @GetLocalizedText("Selected")
+                                                </MudText>
+                                                <div class="d-flex align-center">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => DecreaseItemCount(product))"
+                                                                   Disabled="@(GetItemCount(product) < 1)" />
+
+                                                    <MudTextField T="int"
+                                                                  Value="@GetItemCount(product)"
+                                                                  ValueChanged="@((int val) => UpdateItemCount(product, val))"
+                                                                  Style="width: 60px; margin: 0 8px; text-align: center;"
+                                                                  Variant="Variant.Outlined"
+                                                                  Adornment="Adornment.None"
+                                                                  InputMode="InputMode.numeric" />
+
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => IncreaseItemCount(product))"
+                                                                   Disabled="@(GetItemCount(product) > 9)" />
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <MudButton Variant="Variant.Filled" 
+                                                      Color="Color.Primary" 
+                                                      FullWidth="true"
+                                                      StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                                      @onclick="() => ToggleSelection(product)">
+                                                @GetLocalizedText("AddToOrder")
+                                            </MudButton>
+                                        }
+                                    </MudCardActions>
+                                </div>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
         }
-    </MudGrid>
-</div>
+    }
+</MudContainer>
 
 @if (SelectedItems.Count > 0)
 {
@@ -74,13 +186,13 @@
                 <div class="d-flex flex-column">
                     <!-- Selected-item summary -->
                     <MudText Typo="Typo.body1">
-                        <strong>@SelectedItems.Count</strong> @(SelectedItems.Count == 1 ? "item" : "items") selected
+                        <strong>@SelectedItems.Count</strong> @GetLocalizedText(SelectedItems.Count == 1 ? "Item" : "Items") @GetLocalizedText("Selected")
                     </MudText>
                     <MudText Typo="Typo.body2" Class="mt-1 mb-2">
-                        Total quantity: @GetTotalQuantity()
+                        @GetLocalizedText("TotalQuantity"): @GetTotalQuantity()
                     </MudText>
                     <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-3">
-                        Total: @CalculateTotalPrice().ToString("C")
+                        @GetLocalizedText("Total"): @FormatPrice(CalculateTotalPrice())
                     </MudText>
 
                     <MudDivider />
@@ -92,12 +204,12 @@
                                    StartIcon="@Icons.Material.Filled.Payment"
                                    OnClick="OpenPaymentDialog"
                                    Class="mr-2">
-                            Buy Now
+                            @GetLocalizedText("BuyNow")
                         </MudButton>
                         <MudButton Variant="Variant.Text"
                                    Color="Color.Dark"
                                    OnClick="ClearSelections">
-                            Cancel
+                            @GetLocalizedText("Cancel")
                         </MudButton>
                     </div>
                 </div>
@@ -152,40 +264,51 @@
     }
 </style>
 
-@inject IDialogService DialogService
-@inject ProductService ProductService
-
 @code {
-    [Parameter]
-    public List<ProductDto> Items { get; set; } = new List<ProductDto>();
+    // Language constants
+    private const string ENGLISH = "en-US";
+    private const string PORTUGUESE = "pt-BR";
+    private const string SPANISH = "es-AR";
 
-    [Parameter]
-    public HashSet<int> SelectedItems { get; set; } = new HashSet<int>();
-
-    [Parameter]
-    public EventCallback<HashSet<int>> SelectedItemsChanged { get; set; }
-
-    [Parameter]
-    public int MinSelections { get; set; } = 1;
-
-    [Parameter]
-    public int ItemSize { get; set; } = 3; // Defaults to 3 items per row on md screens
+    private string currentLanguage = PORTUGUESE; // Default to Portuguese
+    private List<ProductDto> allProducts = new();
+    private HashSet<int> SelectedItems = new HashSet<int>();
+    private IReadOnlyCollection<string> selectedCategories = new HashSet<string>();
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
+        await LoadProducts();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task LoadProducts()
     {
-        if (firstRender)
+        try
         {
-            Items = await ProductService.GetProductsAsync();
+            allProducts = await ProductService.GetProductsAsync(GetCultureCode(currentLanguage));
             StateHasChanged();
         }
-
-        base.OnAfterRender(firstRender);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading products: {ex.Message}");
+            // Fallback to empty list
+            allProducts = new List<ProductDto>();
+        }
     }
+
+    private async Task ChangeLanguage(string language)
+    {
+        currentLanguage = language;
+        selectedCategories = new HashSet<string>(); // Reset category filter
+        await LoadProducts();
+        StateHasChanged();
+    }
+
+    private string GetCultureCode(string language) => language switch
+    {
+        "pt-BR" => "pt-BR",
+        "es-AR" => "es-AR",
+        _ => "en-US"
+    };
 
     private void ToggleSelection(ProductDto item)
     {
@@ -197,10 +320,9 @@
         else
         {
             SelectedItems.Add(item.Id);
-            IncreaseItemCount(item);
+            item.Quantity = 1; // Start with quantity 1
         }
-
-        SelectedItemsChanged.InvokeAsync(SelectedItems);
+        StateHasChanged();
     }
 
     private bool IsSelected(ProductDto item) => SelectedItems.Contains(item.Id);
@@ -208,11 +330,11 @@
     private async Task ClearSelections()
     {
         SelectedItems.Clear();
-        foreach (var item in Items)
+        foreach (var item in allProducts)
         {
             item.Quantity = 0;
         }
-        await SelectedItemsChanged.InvokeAsync(SelectedItems);
+        StateHasChanged();
     }
 
     private decimal CalculateTotalPrice()
@@ -220,7 +342,7 @@
         decimal total = 0;
         foreach (var id in SelectedItems)
         {
-            var item = Items.FirstOrDefault(i => i.Id == id);
+            var item = allProducts.FirstOrDefault(i => i.Id == id);
             if (item != null)
                 total += item.Price * GetItemCount(item);
         }
@@ -231,15 +353,21 @@
 
     private void IncreaseItemCount(ProductDto item)
     {
-        item.Quantity++;
-        StateHasChanged();
+        if (item.Quantity < 99)
+        {
+            item.Quantity++;
+            StateHasChanged();
+        }
     }
 
     private void DecreaseItemCount(ProductDto item)
     {
         item.Quantity--;
         if (item.Quantity < 1)
+        {
+            item.Quantity = 0;
             SelectedItems.Remove(item.Id);
+        }
         StateHasChanged();
     }
 
@@ -256,14 +384,139 @@
         int total = 0;
         foreach (var id in SelectedItems)
         {
-            var item = Items.FirstOrDefault(i => i.Id == id);
+            var item = allProducts.FirstOrDefault(i => i.Id == id);
             if (item != null)
                 total += item.Quantity;
         }
         return total;
     }
 
-    private IDialogReference _paymentDialogReference;
+    private List<string> GetCategories()
+    {
+        return allProducts.Where(p => !string.IsNullOrEmpty(p.CategoryName))
+                         .Select(p => p.CategoryName!)
+                         .Distinct()
+                         .ToList();
+    }
+
+    private List<string> GetVisibleCategories()
+    {
+        if (selectedCategories == null || !selectedCategories.Any())
+        {
+            return GetCategories();
+        }
+        return selectedCategories.ToList();
+    }
+
+    private List<ProductDto> GetProductsByCategory(string category)
+    {
+        return allProducts.Where(p => p.CategoryName == category).ToList();
+    }
+
+    private string GetFlagIcon(string language) => language switch
+    {
+        "en-US" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#b22234'/><g><rect y='2' width='24' height='2' fill='#fff'/><rect y='6' width='24' height='2' fill='#fff'/><rect y='10' width='24' height='2' fill='#fff'/><rect y='14' width='24' height='2' fill='#fff'/></g><rect width='10' height='8' fill='#3c3b6e'/></svg>",
+        "pt-BR" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#009739'/><path d='M 3,8 L 12,2 L 21,8 L 12,14 Z' fill='#FEDD00'/><circle cx='12' cy='8' r='3.5' fill='#002776'/></svg>",
+        "es-AR" => "<svg width='24' height='16' viewBox='0 0 24 16'><rect width='24' height='16' fill='#74acdf'/><rect y='5' width='24' height='6' fill='#fff'/><circle cx='12' cy='8' r='2' fill='#f6b40e'/></svg>",
+        _ => "<svg width='24' height='16' viewBox='0 0 24 16'><circle cx='12' cy='8' r='7' fill='#bbb'/></svg>"
+    };
+
+    private string GetCategoryIcon(string category) => category switch
+    {
+        "Drinks" or "Bebidas" => Icons.Material.Filled.LocalBar,
+        "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Icons.Material.Filled.AcUnit,
+        "Roast Pastry" or "Assados" or "Asados" => Icons.Material.Filled.LocalDining,
+        _ => Icons.Material.Filled.MenuBook
+    };
+
+    private string GetLocalizedText(string key) => currentLanguage switch
+    {
+        "pt-BR" => key switch
+        {
+            "PageTitle" => "Faça seu Pedido",
+            "RestaurantName" => "Cana Brasil",
+            "RestaurantTagline" => "Sabores autênticos do Brasil",
+            "SelectLanguage" => "Selecionar Idioma",
+            "FilterByCategory" => "Filtrar por Categoria",
+            "AllCategories" => "Todas as Categorias",
+            "AddToOrder" => "Adicionar ao Pedido",
+            "Selected" => "Selecionado",
+            "Unit" => "Unidade",
+            "Item" => "item",
+            "Items" => "itens",
+            "TotalQuantity" => "Quantidade total",
+            "Total" => "Total",
+            "BuyNow" => "Comprar Agora",
+            "Cancel" => "Cancelar",
+            _ => key
+        },
+        "es-AR" => key switch
+        {
+            "PageTitle" => "Haga su Pedido",
+            "RestaurantName" => "Caña Argentina",
+            "RestaurantTagline" => "Sabores auténticos de Argentina",
+            "SelectLanguage" => "Seleccionar Idioma",
+            "FilterByCategory" => "Filtrar por Categoría",
+            "AllCategories" => "Todas las Categorías",
+            "AddToOrder" => "Agregar al Pedido",
+            "Selected" => "Seleccionado",
+            "Unit" => "Unidad",
+            "Item" => "artículo",
+            "Items" => "artículos",
+            "TotalQuantity" => "Cantidad total",
+            "Total" => "Total",
+            "BuyNow" => "Comprar Ahora",
+            "Cancel" => "Cancelar",
+            _ => key
+        },
+        _ => key switch // en-US (default)
+        {
+            "PageTitle" => "Place Your Order",
+            "RestaurantName" => "Sugarcane Express",
+            "RestaurantTagline" => "Fresh flavors, authentic taste",
+            "SelectLanguage" => "Select Language",
+            "FilterByCategory" => "Filter by Category",
+            "AllCategories" => "All Categories",
+            "AddToOrder" => "Add to Order",
+            "Selected" => "Selected",
+            "Unit" => "Unit",
+            "Item" => "item",
+            "Items" => "items",
+            "TotalQuantity" => "Total quantity",
+            "Total" => "Total",
+            "BuyNow" => "Buy Now",
+            "Cancel" => "Cancel",
+            _ => key
+        }
+    };
+
+    private string GetLocalizedCategory(string category) => currentLanguage switch
+    {
+        "pt-BR" => category switch
+        {
+            "Drinks" => "Bebidas",
+            "Ice Slush Drinks" => "Bebidas Geladas",
+            "Roast Pastry" => "Assados",
+            _ => category
+        },
+        "es-AR" => category switch
+        {
+            "Drinks" => "Bebidas",
+            "Ice Slush Drinks" => "Bebidas Heladas",
+            "Roast Pastry" => "Asados",
+            _ => category
+        },
+        _ => category // en-US (default)
+    };
+
+    private string FormatPrice(decimal price) => currentLanguage switch
+    {
+        "pt-BR" => price.ToString("C", new CultureInfo("pt-BR")),
+        "es-AR" => price.ToString("C", new CultureInfo("es-AR")),
+        _ => price.ToString("C", new CultureInfo("en-US"))
+    };
+
+    private IDialogReference? _paymentDialogReference;
 
     private async Task OpenPaymentDialog()
     {
@@ -271,7 +524,7 @@
         var parameters = new DialogParameters<PaymentCheckout>
         {
             { x => x.SelectedOrderItems, SelectedItems },
-            { x => x.OrderItems, Items },
+            { x => x.OrderItems, allProducts },
         };
         _paymentDialogReference = await DialogService.ShowAsync<PaymentCheckout>("Choose Payment Method", parameters, options);
 
@@ -279,8 +532,6 @@
 
         if (!result.Canceled && result.Data is bool success && success)
         {
-            // Handle successful payment here
-            // For example, you might want to clear selections or navigate to a confirmation page
             await ClearSelections();
         }
     }

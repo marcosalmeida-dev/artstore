@@ -343,7 +343,7 @@ public class ApplicationDbContextInitializer
 
                 var product = new Product
                 {
-                    Name = type == "Regular" ? $"Sugarcane Juice - {flavorEn}" : $"Ice Slush Sugarcane Juice - {flavorEn}",
+                    Name = type == "Regular" ? $"{flavorEn}" : $"Ice Slush - {flavorEn}",
                     Description = $"Fresh {type.ToLower()} sugarcane juice with {flavorEn.ToLower()} flavor",
                     Brand = "Cana Brasil",
                     Unit = "300ml Cup",
@@ -354,7 +354,7 @@ public class ApplicationDbContextInitializer
                     {
                         new ProductImage
                         {
-                            Name = $"{flavorEn} Sugarcane Juice",
+                            Name = $"{flavorEn}",
                             FileName = imageFileName,
                             Url = $"/images/{imageFileName}",
                             AltText = $"{type} sugarcane juice with {flavorEn.ToLower()} flavor",
@@ -369,8 +369,8 @@ public class ApplicationDbContextInitializer
                 };
 
                 // Add translations
-                var translatedNamePtBr = type == "Regular" ? $"Caldo de Cana - {flavorPtBr}" : $"Caldo de Cana Gelado - {flavorPtBr}";
-                var translatedNameEsAr = type == "Regular" ? $"Jugo de Caña - {flavorEsAr}" : $"Jugo de Caña Helado - {flavorEsAr}";
+                var translatedNamePtBr = type == "Regular" ? $"Cana - {flavorPtBr}" : $"Cana Gelado - {flavorPtBr}";
+                var translatedNameEsAr = type == "Regular" ? $"Caña - {flavorEsAr}" : $"Caña Helado - {flavorEsAr}";
 
                 product.SetTranslation("pt-BR",
                     translatedNamePtBr,

@@ -10,11 +10,11 @@ public class ProductService
     {
         _httpClient = httpClient;
     }
-    public async Task<List<ProductDto>> GetProductsAsync()
+    public async Task<List<ProductDto>> GetProductsAsync(string? culture = "pt-BR")
     {
-        var response = await _httpClient.GetAsync("api/product/get-all-products");
+        var response = await _httpClient.GetAsync($"api/product/get-all-products?culture={culture ?? "pt-BR"}");
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<ProductDto>>();
+        return await response.Content.ReadFromJsonAsync<List<ProductDto>>() ?? new List<ProductDto>();
     }
     public async Task<ProductDto> GetProductByIdAsync(int id)
     {

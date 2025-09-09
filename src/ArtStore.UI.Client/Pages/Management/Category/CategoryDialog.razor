@@ -64,7 +64,7 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public CategoryDto? Category { get; set; }
 
-    private CategoryModel model = new();
+    private CategoryDto model = new();
     private List<CategoryDto> parentCategories = new();
     private bool saving = false;
     
@@ -76,7 +76,7 @@
         
         if (IsEditMode && Category != null)
         {
-            model = new CategoryModel
+            model = new CategoryDto
             {
                 Id = Category.Id,
                 Name = Category.Name,
@@ -163,21 +163,5 @@
         
         var parent = parentCategories.FirstOrDefault(c => c.Id == category.ParentCategoryId);
         return parent != null ? $"{parent.Name} > {category.Name}" : category.Name;
-    }
-
-    public class CategoryModel
-    {
-        public int Id { get; set; }
-        
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
-        
-        [StringLength(500)]
-        public string? Description { get; set; }
-        
-        public bool IsActive { get; set; } = true;
-        
-        public int? ParentCategoryId { get; set; }
     }
 }
