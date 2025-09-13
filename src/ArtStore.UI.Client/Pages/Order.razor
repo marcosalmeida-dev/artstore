@@ -122,7 +122,7 @@
                                         @if (product.Unit != null)
                                         {
                                             <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="mt-1">
-                                                @GetLocalizedText("Unit"): @product.Unit
+                                                @product.Unit
                                             </MudText>
                                         }
                                     </MudCardContent>
@@ -520,7 +520,7 @@
 
     private async Task OpenPaymentDialog()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = false };
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, BackdropClick = false };
         var parameters = new DialogParameters<PaymentCheckout>
         {
             { x => x.SelectedOrderItems, SelectedItems },
