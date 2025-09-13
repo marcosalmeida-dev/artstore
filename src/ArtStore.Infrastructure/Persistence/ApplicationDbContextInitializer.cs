@@ -346,7 +346,7 @@ public class ApplicationDbContextInitializer
                     Name = type == "Regular" ? $"{flavorEn}" : $"Ice Slush - {flavorEn}",
                     Description = $"Fresh {type.ToLower()} sugarcane juice with {flavorEn.ToLower()} flavor",
                     Brand = "Cana Brasil",
-                    Unit = "300ml Cup",
+                    Unit = "500ml Cup",
                     Price = price,
                     TenantId = tenant.Id,
                     Category = category,
@@ -375,13 +375,13 @@ public class ApplicationDbContextInitializer
                 product.SetTranslation("pt-BR",
                     translatedNamePtBr,
                     $"Caldo de cana fresco {typePtBr.ToLower()} com sabor {flavorPtBr.ToLower()}",
-                    "Copo 300ml",
+                    "Copo 500ml",
                     nutritionFacts);
 
                 product.SetTranslation("es-AR",
                     translatedNameEsAr,
                     $"Jugo de caña fresco {typeEsAr.ToLower()} con sabor {flavorEsAr.ToLower()}",
-                    "Vaso 300ml",
+                    "Vaso 500ml",
                     nutritionFacts);
 
                 products.Add(product);
