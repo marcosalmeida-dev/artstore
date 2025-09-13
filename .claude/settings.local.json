@@ -6,7 +6,9 @@
       "Bash(dotnet build)",
       "Bash(del \"C:\\GitHub-marcosmusk\\artstore\\src\\ArtStore.UI\\Components\\Pages\\Categories\\SampleDataGrid.razor\")",
       "Bash(dotnet build:*)",
-      "Bash(dotnet format:*)"
+      "Bash(dotnet format:*)",
+      "Bash(dir:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []
