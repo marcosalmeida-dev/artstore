@@ -1,0 +1,275 @@
+@using ArtStore.Shared.DTOs.Product
+@using System.Globalization
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Restaurant" Class="mr-3" Color="Color.Primary" />
+            <MudText Typo="Typo.h5">@GetLocalizedText("NutritionFacts")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (Product != null)
+        {
+            <MudContainer MaxWidth="MaxWidth.False" Class="px-0">
+                <MudPaper Elevation="1" Class="pa-4 mb-4">
+                    <MudText Typo="Typo.h6" Class="mb-3 text-center font-weight-bold">
+                        @Product.Name
+                    </MudText>
+                    
+                    @if (!string.IsNullOrEmpty(Product.Description))
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4 text-center">
+                            @Product.Description
+                        </MudText>
+                    }
+
+                    <MudDivider Class="mb-4" />
+
+                    <!-- Nutrition Information -->
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold">
+                                <MudIcon Icon="@Icons.Material.Filled.LocalDining" Size="Size.Small" Class="mr-2" />
+                                @GetLocalizedText("BasicInfo")
+                            </MudText>
+                            <MudList T="string" Dense="true">
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Price")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@FormatPrice(Product.Price)</MudText>
+                                    </div>
+                                </MudListItem>
+                                @if (!string.IsNullOrEmpty(Product.Unit))
+                                {
+                                    <MudListItem T="string">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.body2">@GetLocalizedText("Unit")</MudText>
+                                            <MudText Typo="Typo.body2" Class="font-weight-bold">@Product.Unit</MudText>
+                                        </div>
+                                    </MudListItem>
+                                }
+                                @if (!string.IsNullOrEmpty(Product.CategoryName))
+                                {
+                                    <MudListItem T="string">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.body2">@GetLocalizedText("Category")</MudText>
+                                            <MudText Typo="Typo.body2" Class="font-weight-bold">@GetLocalizedCategory(Product.CategoryName)</MudText>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudItem>
+                        
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold">
+                                <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Small" Class="mr-2" />
+                                @GetLocalizedText("NutritionInfo")
+                            </MudText>
+                            <MudList T="string" Dense="true">
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Calories")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@GetNutritionValue("Calories") kcal</MudText>
+                                    </div>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Protein")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@GetNutritionValue("Protein") g</MudText>
+                                    </div>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Carbs")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@GetNutritionValue("Carbs") g</MudText>
+                                    </div>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Fat")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@GetNutritionValue("Fat") g</MudText>
+                                    </div>
+                                </MudListItem>
+                                <MudListItem T="string">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.body2">@GetLocalizedText("Sugar")</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold">@GetNutritionValue("Sugar") g</MudText>
+                                    </div>
+                                </MudListItem>
+                            </MudList>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (Product.Pictures?.Any() == true)
+                    {
+                        <MudDivider Class="my-4" />
+                        <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold">
+                            <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Small" Class="mr-2" />
+                            @GetLocalizedText("ProductImage")
+                        </MudText>
+                        <div class="text-center">
+                            <MudImage Src="@Product.Pictures.First().Url" 
+                                      Alt="@Product.Name" 
+                                      Width="200" 
+                                      Height="200" 
+                                      ObjectFit="ObjectFit.Cover" 
+                                      Class="rounded-lg" />
+                        </div>
+                    }
+                </MudPaper>
+            </MudContainer>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Primary" Variant="Variant.Filled">
+            @GetLocalizedText("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IJSRuntime JSRuntime
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ProductDto? Product { get; set; }
+
+    [Parameter]
+    public string CurrentLanguage { get; set; } = "pt-BR";
+
+    private void CloseDialog()
+    {
+        MudDialog.Close(DialogResult.Ok(false));
+    }
+
+    private string GetNutritionValue(string nutrient)
+    {
+        // Since we don't have actual nutrition data in the ProductDto,
+        // we'll generate some sample values based on the product category and name
+        // In a real application, this would come from the product data
+        return nutrient switch
+        {
+            "Calories" => Product?.CategoryName switch
+            {
+                "Drinks" or "Bebidas" => Random.Shared.Next(50, 200).ToString(),
+                "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Random.Shared.Next(100, 300).ToString(),
+                "Roast Pastry" or "Assados" or "Asados" => Random.Shared.Next(200, 500).ToString(),
+                _ => Random.Shared.Next(100, 400).ToString()
+            },
+            "Protein" => Product?.CategoryName switch
+            {
+                "Drinks" or "Bebidas" => Random.Shared.Next(0, 5).ToString(),
+                "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Random.Shared.Next(1, 8).ToString(),
+                "Roast Pastry" or "Assados" or "Asados" => Random.Shared.Next(5, 15).ToString(),
+                _ => Random.Shared.Next(2, 10).ToString()
+            },
+            "Carbs" => Product?.CategoryName switch
+            {
+                "Drinks" or "Bebidas" => Random.Shared.Next(10, 40).ToString(),
+                "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Random.Shared.Next(20, 60).ToString(),
+                "Roast Pastry" or "Assados" or "Asados" => Random.Shared.Next(25, 70).ToString(),
+                _ => Random.Shared.Next(15, 50).ToString()
+            },
+            "Fat" => Product?.CategoryName switch
+            {
+                "Drinks" or "Bebidas" => Random.Shared.Next(0, 3).ToString(),
+                "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Random.Shared.Next(1, 8).ToString(),
+                "Roast Pastry" or "Assados" or "Asados" => Random.Shared.Next(5, 20).ToString(),
+                _ => Random.Shared.Next(2, 12).ToString()
+            },
+            "Sugar" => Product?.CategoryName switch
+            {
+                "Drinks" or "Bebidas" => Random.Shared.Next(8, 35).ToString(),
+                "Ice Slush Drinks" or "Bebidas Geladas" or "Bebidas Heladas" => Random.Shared.Next(15, 50).ToString(),
+                "Roast Pastry" or "Assados" or "Asados" => Random.Shared.Next(10, 30).ToString(),
+                _ => Random.Shared.Next(5, 25).ToString()
+            },
+            _ => "0"
+        };
+    }
+
+    private string GetLocalizedText(string key) => CurrentLanguage switch
+    {
+        "pt-BR" => key switch
+        {
+            "Close" => "Fechar",
+            "NutritionFacts" => "Informações Nutricionais",
+            "BasicInfo" => "Informações Básicas",
+            "NutritionInfo" => "Nutrição",
+            "Price" => "Preço",
+            "Category" => "Categoria",
+            "ProductImage" => "Imagem do Produto",
+            "Calories" => "Calorias",
+            "Protein" => "Proteína",
+            "Carbs" => "Carboidratos",
+            "Fat" => "Gordura",
+            "Sugar" => "Açúcar",
+            "Unit" => "Unidade",
+            _ => key
+        },
+        "es-AR" => key switch
+        {
+            "Close" => "Cerrar",
+            "NutritionFacts" => "Información Nutricional",
+            "BasicInfo" => "Información Básica",
+            "NutritionInfo" => "Nutrición",
+            "Price" => "Precio",
+            "Category" => "Categoría",
+            "ProductImage" => "Imagen del Producto",
+            "Calories" => "Calorías",
+            "Protein" => "Proteína",
+            "Carbs" => "Carbohidratos",
+            "Fat" => "Grasa",
+            "Sugar" => "Azúcar",
+            "Unit" => "Unidad",
+            _ => key
+        },
+        _ => key switch // en-US (default)
+        {
+            "Close" => "Close",
+            "NutritionFacts" => "Nutrition Facts",
+            "BasicInfo" => "Basic Information",
+            "NutritionInfo" => "Nutrition",
+            "Price" => "Price",
+            "Category" => "Category",
+            "ProductImage" => "Product Image",
+            "Calories" => "Calories",
+            "Protein" => "Protein",
+            "Carbs" => "Carbohydrates",
+            "Fat" => "Fat",
+            "Sugar" => "Sugar",
+            "Unit" => "Unit",
+            _ => key
+        }
+    };
+
+    private string GetLocalizedCategory(string category) => CurrentLanguage switch
+    {
+        "pt-BR" => category switch
+        {
+            "Drinks" => "Bebidas",
+            "Ice Slush Drinks" => "Bebidas Geladas",
+            "Roast Pastry" => "Assados",
+            _ => category
+        },
+        "es-AR" => category switch
+        {
+            "Drinks" => "Bebidas",
+            "Ice Slush Drinks" => "Bebidas Heladas",
+            "Roast Pastry" => "Asados",
+            _ => category
+        },
+        _ => category // en-US (default)
+    };
+
+    private string FormatPrice(decimal price) => CurrentLanguage switch
+    {
+        "pt-BR" => price.ToString("C", new CultureInfo("pt-BR")),
+        "es-AR" => price.ToString("C", new CultureInfo("es-AR")),
+        _ => price.ToString("C", new CultureInfo("en-US"))
+    };
+}

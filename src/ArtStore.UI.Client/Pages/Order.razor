@@ -148,17 +148,29 @@
                                                                    OnClick="@(() => IncreaseItemCount(product))"
                                                                    Disabled="@(GetItemCount(product) > 9)" />
                                                 </div>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Info" 
+                                                             Color="Color.Secondary" 
+                                                             Size="Size.Small"
+                                                             Class="product-info-button"
+                                                             OnClick="@(() => OpenNutritionDialog(product))" />
                                             </div>
                                         }
                                         else
                                         {
-                                            <MudButton Variant="Variant.Filled" 
-                                                      Color="Color.Primary" 
-                                                      FullWidth="false"
-                                                      StartIcon="@Icons.Material.Filled.ShoppingCart"
-                                                      @onclick="() => ToggleSelection(product)">
-                                                @GetLocalizedText("AddToOrder")
-                                            </MudButton>
+                                            <div class="d-flex align-center justify-space-between" style="width: 100%;">
+                                                <MudButton Variant="Variant.Filled" 
+                                                          Color="Color.Primary" 
+                                                          FullWidth="false"
+                                                          StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                                          @onclick="() => ToggleSelection(product)">
+                                                    @GetLocalizedText("AddToOrder")
+                                                </MudButton>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Info" 
+                                                             Color="Color.Secondary" 
+                                                             Size="Size.Small"
+                                                             Class="product-info-button"
+                                                             OnClick="@(() => OpenNutritionDialog(product))" />
+                                            </div>
                                         }
                                     </MudCardActions>
                                 </div>
@@ -210,6 +222,7 @@
         </div>
     </div>
 }
+
 
 <style type="text/css">
     .product-card {
@@ -293,6 +306,15 @@
         align-items: center;
         margin-top: auto;
     }
+
+    .product-info-button {
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    }
+
+        .product-info-button:hover {
+            opacity: 1;
+        }
 
     .selected-card {
         position: relative;
@@ -380,6 +402,9 @@
     private List<ProductDto> allProducts = new();
     private HashSet<int> SelectedItems = new HashSet<int>();
     private IReadOnlyCollection<string> selectedCategories = new HashSet<string>();
+    
+    // Nutrition dialog reference
+    private IDialogReference? _nutritionDialogReference;
 
     protected override async Task OnInitializedAsync()
     {
@@ -640,5 +665,25 @@
         {
             await ClearSelections();
         }
+    }
+
+    // Nutrition Dialog Methods
+    private async Task OpenNutritionDialog(ProductDto product)
+    {
+        var options = new DialogOptions { 
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseOnEscapeKey = true, 
+            CloseButton = true 
+        };
+        var parameters = new DialogParameters<NutritionFacts>
+        {
+            { x => x.Product, product },
+            { x => x.CurrentLanguage, currentLanguage }
+        };
+        _nutritionDialogReference = await DialogService.ShowAsync<NutritionFacts>("Nutrition Facts", parameters, options);
+
+        var result = await _nutritionDialogReference.Result;
+        // No need to handle result for this dialog as it's informational only
     }
 }
