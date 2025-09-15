@@ -12,7 +12,7 @@ public class ProductService
     }
     public async Task<List<ProductDto>> GetProductsAsync(string? culture = "pt-BR")
     {
-        var response = await _httpClient.GetAsync($"api/product/get-all-products?culture={culture ?? "pt-BR"}");
+        var response = await _httpClient.GetAsync($"api/products?culture={culture ?? "pt-BR"}");
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<List<ProductDto>>() ?? new List<ProductDto>();
     }

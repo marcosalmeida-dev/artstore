@@ -61,7 +61,9 @@
         <MudChipSet @bind-SelectedValues="selectedCategories" SelectionMode="SelectionMode.MultiSelection" CheckMark="true" Variant="Variant.Text" Color="Color.Info">
             @foreach (var category in GetCategories())
             {
-                <MudChip Text="@GetLocalizedCategory(category)" Value="@category" />
+                <MudChip Value="@category" Icon="@GetCategoryIcon(category)">
+                    @GetLocalizedCategory(category)
+                </MudChip>
             }
         </MudChipSet>
     </MudPaper>
@@ -226,7 +228,7 @@
 
 <style type="text/css">
     .product-card {
-        height: 400px !important; /* Fixed height for all cards */
+        height: 350px !important; /* Fixed height for all cards */
         display: flex;
         flex-direction: column;
     }
@@ -288,14 +290,6 @@
         margin: 0;
         font-size: 0.95rem !important;
         min-width: fit-content;
-    }
-
-    .product-description {
-        
-    }
-
-    .product-unit {
-
     }
 
     .product-actions {
@@ -363,13 +357,13 @@
     /* Responsive adjustments */
     @@media (max-width: 960px) {
         .product-card {
-            height: 450px !important;
+            height: 425px !important;
         }
     }
 
     @@media (max-width: 600px) {
         .product-card {
-            height: 400px !important;
+            height: 375px !important;
         }
         
         .product-content {

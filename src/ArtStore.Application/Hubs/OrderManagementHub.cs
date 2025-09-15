@@ -2,7 +2,7 @@
 
 namespace ArtStore.Application.Hubs;
 
-public class OrderManagementHub : Hub<IOrderManagementHub>
+public class OrderManagementHub : Hub<IOrderManagementHub>, IOrderManagementHub
 {
     public override Task OnConnectedAsync()
     {

@@ -33,9 +33,10 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts()
+    public async Task<IActionResult> GetAllProducts([FromQuery] string? culture = "pt-BR")
     {
-        var products = await _getAllProductsQueryHandler.Handle(new GetAllProductsQuery());
+        var query = new GetAllProductsQuery { Culture = culture ?? "pt-BR" };
+        var products = await _getAllProductsQueryHandler.Handle(query);
         return Ok(products);
     }
 
