@@ -24,13 +24,16 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
             return await Result.FailureAsync("Order not found.");
         }
 
+        // Capture the old status before making changes
+        var oldStatus = order.Status;
+        
         order.Status = request.Status;
         order.Notes = request.Notes ?? order.Notes;
         order.LastModified = DateTime.UtcNow;
 
         order.OrderStatusHistories.Add(new OrderStatusHistory
         {
-            OldStatus = order.Status,
+            OldStatus = oldStatus,
             NewStatus = request.Status,
             ChangedAt = order.LastModified.Value,
             ChangedBy = "System" // This should ideally be the user making the change, if available
@@ -40,7 +43,7 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
         order.AddDomainEvent(new OrderStatusChangedEvent(
             order.Id,
             order.OrderNumber,
-            order.Status,
+            oldStatus,
             request.Status,
             order.LastModified.Value,
             order.Notes));

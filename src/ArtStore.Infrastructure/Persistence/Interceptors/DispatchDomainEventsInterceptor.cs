@@ -31,9 +31,9 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
         }
 
         var domainEventEntities = context.ChangeTracker
-            .Entries<BaseEntity<object>>()
-            .Where(e => e.Entity.DomainEvents.Any() && e.State == EntityState.Deleted)
-            .Select(e => e.Entity)
+            .Entries()
+            .Where(e => e.Entity is IDomainEventEntity domainEntity && domainEntity.DomainEvents.Any())
+            .Select(e => (IDomainEventEntity)e.Entity)
             .ToList();
 
         var domainEvents = domainEventEntities
@@ -77,9 +77,9 @@ public class DispatchDomainEventsInterceptor : SaveChangesInterceptor
         }
 
         var domainEventEntities = context.ChangeTracker
-            .Entries<BaseEntity<object>>()
-            .Where(e => e.Entity.DomainEvents.Any() && e.State != EntityState.Deleted)
-            .Select(e => e.Entity)
+            .Entries()
+            .Where(e => e.Entity is IDomainEventEntity domainEntity && domainEntity.DomainEvents.Any())
+            .Select(e => (IDomainEventEntity)e.Entity)
             .ToList();
 
         var domainEvents = domainEventEntities

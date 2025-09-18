@@ -3,7 +3,7 @@ using ArtStore.Shared.Events.Base;
 
 namespace ArtStore.Domain.Common.Entities;
 
-public abstract class BaseEntity<T> : IEntity<T>
+public abstract class BaseEntity<T> : IEntity<T>, IDomainEventEntity
 {
     private readonly List<BaseDomainEvent> _domainEvents = new();
 
