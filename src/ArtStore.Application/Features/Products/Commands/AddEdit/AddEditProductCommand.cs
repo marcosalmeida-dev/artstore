@@ -1,4 +1,5 @@
 ﻿using ArtStore.Application.Common.Interfaces;
+using ArtStore.Application.Features.Products.Services;
 using ArtStore.Shared.DTOs.Product.Commands;
 using ArtStore.Shared.Interfaces.Command;
 
@@ -7,12 +8,15 @@ namespace ArtStore.Application.Features.Products.Commands.AddEdit;
 public class AddEditProductCommandHandler : ICommandHandler<AddEditProductCommand, Result<int>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IProductCacheService _cacheService;
 
     public AddEditProductCommandHandler(
-        IApplicationDbContext context
+        IApplicationDbContext context,
+        IProductCacheService cacheService
     )
     {
         _context = context;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<int>> Handle(AddEditProductCommand request, CancellationToken cancellationToken)
@@ -56,6 +60,9 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            // Invalidate cache for the updated product
+            await _cacheService.InvalidateProductCacheAsync(item.Id);
+
             return await Result<int>.SuccessAsync(item.Id);
         }
         else
@@ -94,6 +101,9 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
 
             _context.Products.Add(item);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Invalidate cache for all products since a new product was added
+            await _cacheService.InvalidateAllProductCacheAsync();
 
             return await Result<int>.SuccessAsync(item.Id);
         }

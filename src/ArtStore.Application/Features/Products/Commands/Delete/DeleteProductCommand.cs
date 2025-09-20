@@ -1,4 +1,5 @@
 ﻿using ArtStore.Application.Common.Interfaces;
+using ArtStore.Application.Features.Products.Services;
 using ArtStore.Shared.Interfaces.Command;
 
 namespace ArtStore.Application.Features.Products.Commands.Delete;
@@ -11,12 +12,15 @@ public class DeleteProductCommand : ICommand<Result<int>>
 public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand, Result<int>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IProductCacheService _cacheService;
 
     public DeleteProductCommandHandler(
-        IApplicationDbContext context
+        IApplicationDbContext context,
+        IProductCacheService cacheService
     )
     {
         _context = context;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<int>> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
@@ -38,6 +42,9 @@ public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand,
         item.AddDomainEvent(new DeletedEvent<Product>(item));
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Invalidate cache for all products since a product was deleted
+        await _cacheService.InvalidateAllProductCacheAsync();
 
         return await Result<int>.SuccessAsync(item.Id);
     }

@@ -1,6 +1,8 @@
 ﻿using ArtStore.Application.Common.FusionCache;
+using ArtStore.Application.Features.Products.Services;
 using ArtStore.Shared.Interfaces.Command;
 using ArtStore.Shared.Interfaces.Query;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -12,6 +14,19 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddScoped<UserProfileStateService>();
+
+        // Add HybridCache
+        services.AddHybridCache(options =>
+        {
+            options.DefaultEntryOptions = new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(30),
+                LocalCacheExpiration = TimeSpan.FromMinutes(5)
+            };
+        });
+
+        // Add cache services
+        services.AddScoped<IProductCacheService, ProductCacheService>();
 
         RegisterEventHandlers(services);
         RegisterQueryHandlers(services);
