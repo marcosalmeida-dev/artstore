@@ -40,18 +40,6 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetProduct(int id)
-    {
-        var product = await _getProductQueryHandler.Handle(new GetProductQuery { Id = id });
-        if (product == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(product);
-    }
-
     [HttpGet("search")]
     public async Task<IActionResult> SearchProducts([FromQuery] string? searchString, [FromQuery] bool? isActive, [FromQuery] int? categoryId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? orderBy = "Name", [FromQuery] string? sortDirection = "asc")
     {
@@ -68,6 +56,19 @@ public class ProductsController : ControllerBase
 
         var result = await _searchProductsQueryHandler.Handle(query);
         return Ok(result);
+    }
+
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProduct(int id)
+    {
+        var product = await _getProductQueryHandler.Handle(new GetProductQuery { Id = id });
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(product);
     }
 
     [HttpPost]
