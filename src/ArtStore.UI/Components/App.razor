@@ -24,7 +24,8 @@
 @code {
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
-    private IComponentRenderMode? RenderModeForPage => HttpContext.Request.Path.StartsWithSegments("/management")
+    private IComponentRenderMode? RenderModeForPage => HttpContext.Request.Path.StartsWithSegments("/management") || 
+                                                                           HttpContext.Request.Path.StartsWithSegments("/Account")
         ? null
         : new InteractiveServerRenderMode(false);
 
