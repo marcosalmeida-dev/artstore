@@ -12,5 +12,6 @@ public class AddEditProductCommand : ICommand<Result<int>>
     public decimal Price { get; set; }
     public bool IsActive { get; set; } = true;
     public int CategoryId { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
     public List<ProductImageDto> Pictures { get; set; } = new();
 }

@@ -21,6 +21,12 @@
                 </MudItem>
                 
                 <MudItem xs="12" md="6">
+                    <MudTextField Label="Product Code" @bind-Value="model.ProductCode" For="@(() => model.ProductCode)" 
+                                  Required="true" Counter="50" MaxLength="50" 
+                                  HelperText="Use uppercase letters, numbers, and hyphens only" />
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
                     <MudSelect Label="Category" @bind-Value="model.CategoryId" Required="true" T="int">
                         @foreach (var category in categories)
                         {
@@ -96,6 +102,7 @@
             {
                 Id = Product.Id,
                 Name = Product.Name,
+                ProductCode = Product.ProductCode,
                 Description = Product.Description,
                 Brand = Product.Brand,
                 Unit = Product.Unit,
@@ -128,6 +135,7 @@
             {
                 Id = model.Id,
                 Name = model.Name,
+                ProductCode = model.ProductCode,
                 Description = model.Description,
                 Brand = model.Brand,
                 Unit = model.Unit,

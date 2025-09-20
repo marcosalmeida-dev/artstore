@@ -9,6 +9,7 @@ public class Product : BaseTenantEntity<int>
     public string? Brand { get; set; }
     public string? Unit { get; set; }
     public decimal Price { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
     public virtual ICollection<ProductImage> Pictures { get; set; } = new List<ProductImage>();
     public int CategoryId { get; set; }
 

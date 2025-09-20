@@ -32,6 +32,7 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
             item.Price = request.Price;
             item.IsActive = request.IsActive;
             item.CategoryId = request.CategoryId;
+            item.ProductCode = request.ProductCode;
 
             if (request.Pictures?.Any() == true)
             {
@@ -67,7 +68,8 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
                 Unit = request.Unit,
                 Price = request.Price,
                 IsActive = request.IsActive,
-                CategoryId = request.CategoryId
+                CategoryId = request.CategoryId,
+                ProductCode = request.ProductCode
             };
 
             if (request.Pictures?.Any() == true)

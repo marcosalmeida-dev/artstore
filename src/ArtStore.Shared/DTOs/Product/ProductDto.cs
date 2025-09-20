@@ -10,6 +10,7 @@ public class ProductDto
     public decimal Price { get; set; }
     public bool IsActive { get; set; } = true;
     public int CategoryId { get; set; }
+    public string ProductCode { get; set; } = string.Empty;
     public string? CategoryName { get; set; }
     public int? TenantId { get; set; }
     public string? TenantName { get; set; }

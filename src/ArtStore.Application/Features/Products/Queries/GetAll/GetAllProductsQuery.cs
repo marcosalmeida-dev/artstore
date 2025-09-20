@@ -58,6 +58,7 @@ public class GetAllProductsQueryHandler :
             CategoryName = x.Category?.GetLocalizedName(request.Culture) ?? x.Category?.Name,
             TenantId = x.TenantId,
             TenantName = x.Tenant?.Name,
+            ProductCode = x.ProductCode,
             Pictures = x.Pictures?.Select(p => new ProductImageDto
             {
                 Id = p.Id,
@@ -100,6 +101,7 @@ public class GetAllProductsQueryHandler :
             CategoryName = data.Category?.GetLocalizedName(request.Culture) ?? data.Category?.Name,
             TenantId = data.TenantId,
             TenantName = data.Tenant?.Name,
+            ProductCode = data.ProductCode,
             Pictures = data.Pictures?.Select(p => new ProductImageDto
             {
                 Id = p.Id,

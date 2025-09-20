@@ -24,5 +24,9 @@ public class AddEditProductCommandValidator : AbstractValidator<AddEditProductCo
             .MaximumLength(1024);
         RuleFor(v => v.CategoryId)
             .GreaterThan(0).WithMessage("Please select a category.");
+        RuleFor(v => v.ProductCode)
+            .NotEmpty().WithMessage("Product code is required.")
+            .MaximumLength(50).WithMessage("Product code must not exceed 50 characters.")
+            .Matches("^[A-Z0-9-]+$").WithMessage("Product code must contain only uppercase letters, numbers, and hyphens.");
     }
 }
