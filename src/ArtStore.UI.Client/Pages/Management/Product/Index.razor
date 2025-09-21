@@ -95,7 +95,7 @@
         try
         {
             StateHasChanged();
-            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/products");
+            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/products?noCache=true");
             _products = response ?? new List<ProductDto>();
         }
         catch (Exception ex)

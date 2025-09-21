@@ -60,8 +60,7 @@ public class AddEditProductCommandHandler : ICommandHandler<AddEditProductComman
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Invalidate cache for the updated product
-            await _cacheService.InvalidateProductCacheAsync(item.Id);
+            await _cacheService.InvalidateAllProductCacheAsync();
 
             return await Result<int>.SuccessAsync(item.Id);
         }

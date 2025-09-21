@@ -33,9 +33,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts([FromQuery] string? culture = "pt-BR")
+    public async Task<IActionResult> GetAllProducts([FromQuery] string? culture = "pt-BR", [FromQuery] bool noCache = false)
     {
-        var query = new GetAllProductsQuery { Culture = culture ?? "pt-BR" };
+        var query = new GetAllProductsQuery { Culture = culture ?? "pt-BR", NoCache = noCache };
         var products = await _getAllProductsQueryHandler.Handle(query);
         return Ok(products);
     }
