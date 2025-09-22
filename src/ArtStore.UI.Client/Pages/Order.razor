@@ -6,6 +6,7 @@
 @using ArtStore.Shared.DTOs.Product
 @using ArtStore.Shared.DTOs.Category
 @using ArtStore.UI.Client.Services
+
 @inject IJSRuntime JSRuntime
 @inject ProductService ProductService
 @inject IDialogService DialogService
@@ -93,7 +94,9 @@
                                             <div class="selected-indicator">
                                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Large" />
                                             </div>
-                                            <MudCardMedia Image="@product.Pictures.First().Url" Height="200" />
+                                            <MudAnimate @ref="_animate" Selector=".id2" Duration="1" AnimationType="AnimationType.Fade" Value="_value2" ValueSecondary="0" Infinite="false"
+                                                        KeyframeAdvanced="@KeyframeBuilder.Build(2, new List<string>() {"0", $"{_value2}"}, string.Join(" ", _animationTypes))" />
+                                            <MudCardMedia Class="id2" Image="@product.Pictures.First().Url" Height="200" />
                                         }
                                         else
                                         {
@@ -387,6 +390,11 @@
 </style>
 
 @code {
+    // Animation properties
+    MudAnimate? _animate = new();
+    IEnumerable<string> _animationTypes = new List<string>() { KeyframePreset.Fade };
+    double _value2 = 180;
+
     // Language constants
     private const string ENGLISH = "en-US";
     private const string PORTUGUESE = "pt-BR";
