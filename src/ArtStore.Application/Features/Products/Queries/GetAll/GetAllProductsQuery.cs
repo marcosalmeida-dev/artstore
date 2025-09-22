@@ -47,7 +47,7 @@ public class GetAllProductsQueryHandler :
         // If NoCache is true, execute the query directly without caching
         if (request.NoCache)
         {
-            return await GetProductsDto(request, cancellationToken);
+            return await GetProductsDto(request, cancellationToken, onlyActive: false);
         }
 
         // Use cached version
@@ -67,12 +67,13 @@ public class GetAllProductsQueryHandler :
             cancellationToken: cancellationToken);
     }
 
-    private async Task<List<ProductDto>> GetProductsDto(GetAllProductsQuery request, CancellationToken cancel)
+    private async Task<List<ProductDto>> GetProductsDto(GetAllProductsQuery request, CancellationToken cancel, bool onlyActive = true)
     {
         var data = await _context.Products
                             .Include(p => p.Category)
                             .Include(p => p.Tenant)
                             .Include(p => p.Pictures)
+                            .Where(p => !onlyActive || p.IsActive)
                             .ToListAsync(cancel);
 
         return data.Select(x => new ProductDto

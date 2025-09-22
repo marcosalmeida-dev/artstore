@@ -28,14 +28,40 @@ public static class ProductCacheKey
     
     public static async Task ClearAllAsync(HybridCache cache)
     {
-        await cache.RemoveByTagAsync("products");
+        // Clear all culture-specific cache keys for GetAll
+        var cultures = new[] { "pt-BR", "en-US", "es-AR" };
+        
+        var tasks = new List<ValueTask>();
+        
+        // Clear GetAll cache for all cultures
+        foreach (var culture in cultures)
+        {
+            tasks.Add(cache.RemoveAsync($"{GetAllCacheKey}:{culture}"));
+        }
+        
+        // Clear search and pagination cache - these would need a more sophisticated approach
+        // For now, we'll rely on cache expiration for these
+        
+        await Task.WhenAll(tasks.Select(t => t.AsTask()));
     }
     
     public static async Task ClearProductAsync(HybridCache cache, int productId)
     {
-        await cache.RemoveAsync(GetProductByIdCacheKey(productId, "pt-BR"));
-        await cache.RemoveAsync(GetProductByIdCacheKey(productId, "en-US"));
-        await cache.RemoveAsync(GetProductByIdCacheKey(productId, "es-AR"));
-        await cache.RemoveByTagAsync("products");
+        var cultures = new[] { "pt-BR", "en-US", "es-AR" };
+        var tasks = new List<ValueTask>();
+        
+        // Clear specific product cache for all cultures
+        foreach (var culture in cultures)
+        {
+            tasks.Add(cache.RemoveAsync(GetProductByIdCacheKey(productId, culture)));
+        }
+        
+        // Also clear all GetAll caches since a product was modified
+        foreach (var culture in cultures)
+        {
+            tasks.Add(cache.RemoveAsync($"{GetAllCacheKey}:{culture}"));
+        }
+        
+        await Task.WhenAll(tasks.Select(t => t.AsTask()));
     }
 }
