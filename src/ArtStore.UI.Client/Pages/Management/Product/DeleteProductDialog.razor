@@ -67,7 +67,7 @@
         deleting = true;
         try
         {
-            var response = await HttpClient.DeleteAsync($"/api/products/{Product.Id}");
+            var response = await HttpClient.DeleteAsync($"/api/admin/products/{Product.Id}");
 
             if (response.IsSuccessStatusCode)
             {

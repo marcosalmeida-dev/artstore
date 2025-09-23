@@ -1,31 +1,33 @@
 ﻿using ArtStore.Application.Common.Models;
 using ArtStore.Application.Features.Products.Commands.Delete;
 using ArtStore.Application.Features.Products.Queries.GetAll;
+using ArtStore.Application.Features.Products.Queries.GetAllForManagement;
 using ArtStore.Application.Features.Products.Queries.Search;
 using ArtStore.Shared.DTOs.Product;
 using ArtStore.Shared.DTOs.Product.Commands;
 using ArtStore.Shared.Interfaces.Query;
+using Microsoft.AspNetCore.Mvc;
 
-namespace ArtStore.UI.Controllers;
+namespace ArtStore.UI.Controllers.Admin;
 
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [ApiController]
 public class ProductsController : ControllerBase
 {
-    private readonly IQueryHandler<GetAllProductsQuery, IEnumerable<ProductDto?>> _getAllProductsQueryHandler;
+    private readonly IQueryHandler<GetAllProductsForManagementQuery, IEnumerable<ProductDto?>> _getAllProductsForManagementQueryHandler;
     private readonly IQueryHandler<GetProductQuery, ProductDto?> _getProductQueryHandler;
     private readonly IQueryHandler<SearchProductsQuery, PaginatedData<ProductDto>> _searchProductsQueryHandler;
     private readonly ICommandHandler<AddEditProductCommand, Result<int>> _addEditProductCommandHandler;
     private readonly ICommandHandler<DeleteProductCommand, Result<int>> _deleteProductCommandHandler;
 
     public ProductsController(
-        IQueryHandler<GetAllProductsQuery, IEnumerable<ProductDto?>> getAllProductsQueryHandler,
+        IQueryHandler<GetAllProductsForManagementQuery, IEnumerable<ProductDto?>> getAllProductsForManagementQueryHandler,
         IQueryHandler<GetProductQuery, ProductDto?> getProductQueryHandler,
         IQueryHandler<SearchProductsQuery, PaginatedData<ProductDto>> searchProductsQueryHandler,
         ICommandHandler<AddEditProductCommand, Result<int>> addEditProductCommandHandler,
         ICommandHandler<DeleteProductCommand, Result<int>> deleteProductCommandHandler)
     {
-        _getAllProductsQueryHandler = getAllProductsQueryHandler;
+        _getAllProductsForManagementQueryHandler = getAllProductsForManagementQueryHandler;
         _getProductQueryHandler = getProductQueryHandler;
         _searchProductsQueryHandler = searchProductsQueryHandler;
         _addEditProductCommandHandler = addEditProductCommandHandler;
@@ -33,10 +35,10 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProducts([FromQuery] string? culture = "pt-BR", [FromQuery] bool noCache = false)
+    public async Task<IActionResult> GetAllProducts([FromQuery] string? culture = "pt-BR")
     {
-        var query = new GetAllProductsQuery { Culture = culture ?? "pt-BR", NoCache = noCache };
-        var products = await _getAllProductsQueryHandler.Handle(query);
+        var query = new GetAllProductsForManagementQuery { Culture = culture ?? "pt-BR" };
+        var products = await _getAllProductsForManagementQueryHandler.Handle(query);
         return Ok(products);
     }
 
@@ -57,7 +59,6 @@ public class ProductsController : ControllerBase
         var result = await _searchProductsQueryHandler.Handle(query);
         return Ok(result);
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProduct(int id)

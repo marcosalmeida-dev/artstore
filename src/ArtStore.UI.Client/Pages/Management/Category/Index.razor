@@ -84,7 +84,7 @@
         try
         {
             StateHasChanged();
-            var response = await HttpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+            var response = await HttpClient.GetFromJsonAsync<List<CategoryDto>>("/api/admin/categories");
             _categories = response ?? new List<CategoryDto>();
         }
         catch (Exception ex)
@@ -103,7 +103,7 @@
         _loading = true;
         try
         {
-            var query = $"/api/categories/search?searchString={_searchString}";
+            var query = $"/api/admin/categories/search?searchString={_searchString}";
             if (_isActiveFilter.HasValue)
                 query += $"&isActive={_isActiveFilter.Value}";
 

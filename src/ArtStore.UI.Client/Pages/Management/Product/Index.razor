@@ -95,7 +95,7 @@
         try
         {
             StateHasChanged();
-            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/products?noCache=true");
+            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/admin/products?noCache=true");
             _products = response ?? new List<ProductDto>();
         }
         catch (Exception ex)
@@ -113,7 +113,7 @@
     {
         try
         {
-            var response = await HttpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+            var response = await HttpClient.GetFromJsonAsync<List<CategoryDto>>("/api/admin/categories");
             _categories = response ?? new List<CategoryDto>();
         }
         catch (Exception ex)
@@ -127,7 +127,7 @@
         _loading = true;
         try
         {
-            var query = $"/api/products/search?searchString={_searchString}";
+            var query = $"/api/admin/products/search?searchString={_searchString}";
             if (_isActiveFilter.HasValue)
                 query += $"&isActive={_isActiveFilter.Value}";
             if (_categoryFilter.HasValue)

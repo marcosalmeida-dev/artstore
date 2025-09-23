@@ -117,7 +117,7 @@
     {
         try
         {
-            var response = await httpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+            var response = await httpClient.GetFromJsonAsync<List<CategoryDto>>("/api/admin/categories");
             categories = response ?? new List<CategoryDto>();
         }
         catch (Exception ex)
@@ -148,11 +148,11 @@
             
             if (IsEditMode)
             {
-                response = await httpClient.PutAsJsonAsync($"/api/products/{model.Id}", command);
+                response = await httpClient.PutAsJsonAsync($"/api/admin/products/{model.Id}", command);
             }
             else
             {
-                response = await httpClient.PostAsJsonAsync("/api/products", command);
+                response = await httpClient.PostAsJsonAsync("/api/admin/products", command);
             }
 
             if (response.IsSuccessStatusCode)

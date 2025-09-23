@@ -1,14 +1,15 @@
-﻿using ArtStore.Application.Common.Models;
+using ArtStore.Application.Common.Models;
 using ArtStore.Application.Features.Categories.Commands.Delete;
 using ArtStore.Application.Features.Categories.Queries.GetAll;
 using ArtStore.Application.Features.Categories.Queries.Search;
 using ArtStore.Shared.DTOs.Category;
 using ArtStore.Shared.DTOs.Category.Commands;
 using ArtStore.Shared.Interfaces.Query;
+using Microsoft.AspNetCore.Mvc;
 
-namespace ArtStore.UI.Controllers;
+namespace ArtStore.UI.Controllers.Admin;
 
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 [ApiController]
 public class CategoriesController : ControllerBase
 {

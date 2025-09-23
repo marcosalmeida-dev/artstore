@@ -10,7 +10,6 @@ namespace ArtStore.Application.Features.Products.Queries.GetAll;
 public class GetAllProductsQuery : IQuery<IEnumerable<ProductDto>>
 {
     public string Culture { get; set; } = "pt-BR";
-    public bool NoCache { get; set; } = false;
 
     public string CacheKey => ProductCacheKey.GetAllCacheKey + $"_{Culture}";
     public IEnumerable<string>? Tags => ProductCacheKey.Tags;
@@ -44,15 +43,8 @@ public class GetAllProductsQueryHandler :
 
     public async Task<IEnumerable<ProductDto?>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
-        // If NoCache is true, execute the query directly without caching
-        if (request.NoCache)
-        {
-            return await GetProductsDto(request, cancellationToken, onlyActive: false);
-        }
-
-        // Use cached version
         var cacheKey = $"{ProductCacheKey.GetAllCacheKey}:{request.Culture}";
-        
+
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async cancel =>
@@ -65,49 +57,6 @@ public class GetAllProductsQueryHandler :
                 LocalCacheExpiration = TimeSpan.FromMinutes(5)
             },
             cancellationToken: cancellationToken);
-    }
-
-    private async Task<List<ProductDto>> GetProductsDto(GetAllProductsQuery request, CancellationToken cancel, bool onlyActive = true)
-    {
-        var data = await _context.Products
-                            .Include(p => p.Category)
-                            .Include(p => p.Tenant)
-                            .Include(p => p.Pictures)
-                            .Where(p => !onlyActive || p.IsActive)
-                            .ToListAsync(cancel);
-
-        return data.Select(x => new ProductDto
-        {
-            Id = x.Id,
-            Name = x.GetLocalizedName(request.Culture) ?? x.Name ?? string.Empty,
-            Description = x.GetLocalizedDescription(request.Culture) ?? x.Description,
-            Brand = x.Brand,
-            Unit = x.GetLocalizedUnit(request.Culture) ?? x.Unit,
-            Price = x.Price,
-            IsActive = x.IsActive,
-            CategoryId = x.CategoryId,
-            CategoryName = x.Category?.GetLocalizedName(request.Culture) ?? x.Category?.Name,
-            TenantId = x.TenantId,
-            TenantName = x.Tenant?.Name,
-            ProductCode = x.ProductCode,
-            Pictures = x.Pictures?.Select(p => new ProductImageDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                FileName = p.FileName,
-                Url = p.Url,
-                AltText = p.AltText,
-                Caption = p.Caption,
-                Size = p.Size,
-                Width = p.Width,
-                Height = p.Height,
-                MimeType = p.MimeType,
-                IsPrimary = p.IsPrimary,
-                SortOrder = p.SortOrder
-            }).OrderBy(p => p.SortOrder).ToList() ?? new List<ProductImageDto>(),
-            Created = x.Created,
-            LastModified = x.LastModified
-        }).ToList();
     }
 
     public async Task<ProductDto?> Handle(GetProductQuery request, CancellationToken cancellationToken)
@@ -164,5 +113,49 @@ public class GetAllProductsQueryHandler :
                 LocalCacheExpiration = TimeSpan.FromMinutes(10)
             },
             cancellationToken: cancellationToken);
+    }
+
+
+    private async Task<List<ProductDto>> GetProductsDto(GetAllProductsQuery request, CancellationToken cancel)
+    {
+        var data = await _context.Products
+                            .Include(p => p.Category)
+                            .Include(p => p.Tenant)
+                            .Include(p => p.Pictures)
+                            .Where(p => p.IsActive)
+                            .ToListAsync(cancel);
+
+        return data.Select(x => new ProductDto
+        {
+            Id = x.Id,
+            Name = x.GetLocalizedName(request.Culture) ?? x.Name ?? string.Empty,
+            Description = x.GetLocalizedDescription(request.Culture) ?? x.Description,
+            Brand = x.Brand,
+            Unit = x.GetLocalizedUnit(request.Culture) ?? x.Unit,
+            Price = x.Price,
+            IsActive = x.IsActive,
+            CategoryId = x.CategoryId,
+            CategoryName = x.Category?.GetLocalizedName(request.Culture) ?? x.Category?.Name,
+            TenantId = x.TenantId,
+            TenantName = x.Tenant?.Name,
+            ProductCode = x.ProductCode,
+            Pictures = x.Pictures?.Select(p => new ProductImageDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                FileName = p.FileName,
+                Url = p.Url,
+                AltText = p.AltText,
+                Caption = p.Caption,
+                Size = p.Size,
+                Width = p.Width,
+                Height = p.Height,
+                MimeType = p.MimeType,
+                IsPrimary = p.IsPrimary,
+                SortOrder = p.SortOrder
+            }).OrderBy(p => p.SortOrder).ToList() ?? new List<ProductImageDto>(),
+            Created = x.Created,
+            LastModified = x.LastModified
+        }).ToList();
     }
 }
