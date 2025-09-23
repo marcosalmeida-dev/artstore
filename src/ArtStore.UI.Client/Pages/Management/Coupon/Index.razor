@@ -1,0 +1,250 @@
+@page "/management/coupons"
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Coupon
+@using Microsoft.AspNetCore.Authorization
+
+@* @attribute [Authorize(Roles = "Admin")] *@
+
+<PageTitle>Coupon Management</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Coupon Management</MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenCreateDialog">
+            Add Coupon
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-4">
+        <div class="d-flex gap-4 mb-4">
+            <MudTextField @bind-Value="_searchString" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyDown="@(async (e) => { if (e.Key == "Enter") await SearchCoupons(); })" />
+            <MudSelect @bind-Value="_isActiveFilter" Label="Status" Clearable="true" T="bool?">
+                <MudSelectItem Value="@((bool?)true)">Active</MudSelectItem>
+                <MudSelectItem Value="@((bool?)false)">Inactive</MudSelectItem>
+            </MudSelect>
+            <MudSelect @bind-Value="_typeFilter" Label="Type" Clearable="true" T="CouponType?">
+                <MudSelectItem Value="@((CouponType?)CouponType.Percentage)">Percentage</MudSelectItem>
+                <MudSelectItem Value="@((CouponType?)CouponType.FixedAmount)">Fixed Amount</MudSelectItem>
+                <MudSelectItem Value="@((CouponType?)CouponType.FreeShipping)">Free Shipping</MudSelectItem>
+            </MudSelect>
+            <MudButton Color="Color.Primary" OnClick="SearchCoupons">Search</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear</MudButton>
+        </div>
+
+        <MudDataGrid T="CouponDto" Items="@_coupons" Loading="@_loading">
+            <Columns>
+                <PropertyColumn Property="x => x.Code" Title="Code" />
+                <PropertyColumn Property="x => x.Name" Title="Name" />
+                <TemplateColumn Title="Type">
+                    <CellTemplate>
+                        <MudChip Color="Color.Info" Size="Size.Small">
+                            @context.Item.Type.ToString()
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Value">
+                    <CellTemplate>
+                        @if (context.Item.Type == CouponType.Percentage)
+                        {
+                            <span>@context.Item.Value%</span>
+                        }
+                        else if (context.Item.Type == CouponType.FixedAmount)
+                        {
+                            <span>@context.Item.Value.ToString("C")</span>
+                        }
+                        else
+                        {
+                            <span>Free Shipping</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.MinimumOrderAmount" Title="Min Order" Format="C" />
+                <TemplateColumn Title="Usage">
+                    <CellTemplate>
+                        @if (context.Item.UsageLimit.HasValue)
+                        {
+                            <span>@context.Item.UsedCount / @context.Item.UsageLimit</span>
+                        }
+                        else
+                        {
+                            <span>@context.Item.UsedCount / Unlimited</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.StartDate" Title="Start Date" Format="dd/MM/yyyy" />
+                <PropertyColumn Property="x => x.EndDate" Title="End Date" Format="dd/MM/yyyy" />
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        @if (context.Item.IsExpired)
+                        {
+                            <MudChip Color="Color.Error" Size="Size.Small">Expired</MudChip>
+                        }
+                        else if (!context.Item.IsActive)
+                        {
+                            <MudChip Color="Color.Warning" Size="Size.Small">Inactive</MudChip>
+                        }
+                        else if (context.Item.IsUsageLimitReached)
+                        {
+                            <MudChip Color="Color.Error" Size="Size.Small">Limit Reached</MudChip>
+                        }
+                        else if (context.Item.IsValid)
+                        {
+                            <MudChip Color="Color.Success" Size="Size.Small">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip Color="Color.Default" Size="Size.Small">Not Started</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <div class="d-flex gap-2">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@((e) => OpenEditDialog(context.Item))">
+                                Edit
+                            </MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@((e) => DeleteCoupon(context.Item))"
+                                       Disabled="@(context.Item.UsedCount > 0)">
+                                Delete
+                            </MudButton>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    private List<CouponDto> _coupons = new();
+    private bool _loading = false;
+    private string _searchString = "";
+    private bool? _isActiveFilter = null;
+    private CouponType? _typeFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCoupons();
+    }
+
+    private async Task LoadCoupons()
+    {
+        _loading = true;
+        try
+        {
+            StateHasChanged();
+            var response = await HttpClient.GetFromJsonAsync<List<CouponDto>>("/api/admin/coupons");
+            _coupons = response ?? new List<CouponDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading coupons: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchCoupons()
+    {
+        _loading = true;
+        try
+        {
+            // Apply client-side filtering since we don't have search endpoint
+            var filteredCoupons = _coupons.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                filteredCoupons = filteredCoupons.Where(c =>
+                    c.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    c.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_isActiveFilter.HasValue)
+            {
+                filteredCoupons = filteredCoupons.Where(c => c.IsActive == _isActiveFilter.Value);
+            }
+
+            if (_typeFilter.HasValue)
+            {
+                filteredCoupons = filteredCoupons.Where(c => c.Type == _typeFilter.Value);
+            }
+
+            _coupons = filteredCoupons.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching coupons: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchString = "";
+        _isActiveFilter = null;
+        _typeFilter = null;
+        await LoadCoupons();
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CouponDialog>("Add Coupon");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadCoupons();
+            Snackbar.Add("Coupon created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(CouponDto coupon)
+    {
+        try
+        {
+            Snackbar.Add($"Opening edit dialog for: {coupon.Name}", Severity.Info);
+
+            var parameters = new DialogParameters { ["Coupon"] = coupon };
+            var dialog = await DialogService.ShowAsync<CouponDialog>("Edit Coupon", parameters);
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await LoadCoupons();
+                Snackbar.Add("Coupon updated successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteCoupon(CouponDto coupon)
+    {
+        var parameters = new DialogParameters { ["Coupon"] = coupon };
+        var dialog = await DialogService.ShowAsync<DeleteCouponDialog>("Delete Coupon", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadCoupons();
+            Snackbar.Add("Coupon deleted successfully", Severity.Success);
+        }
+    }
+}

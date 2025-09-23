@@ -1,4 +1,5 @@
-﻿using ArtStore.Shared.Models.Enums;
+﻿using ArtStore.Domain.Common.Entities;
+using ArtStore.Shared.Models.Enums;
 
 namespace ArtStore.Domain.Entities;
 
@@ -9,7 +10,11 @@ public class Order : BaseTenantEntity<long>
     public DateTime OrderDate { get; set; }
     public OrderStatus Status { get; set; }
     public PaymentMethodType PaymentMethod { get; set; }
+    public decimal SubTotal { get; set; }
+    public decimal DiscountAmount { get; set; } = 0;
     public decimal TotalAmount { get; set; }
+    public int? CouponId { get; set; }
+    public string? CouponCode { get; set; }
     public string? CustomerId { get; set; } // Nullable for guest orders
     public string CustomerEmail { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
@@ -20,4 +25,6 @@ public class Order : BaseTenantEntity<long>
     // Navigation properties
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
     public virtual ICollection<OrderStatusHistory> OrderStatusHistories { get; set; } = new List<OrderStatusHistory>();
+    public virtual Coupon? Coupon { get; set; }
+    public virtual ICollection<CouponUsage>? CouponUsages { get; set; }
 }

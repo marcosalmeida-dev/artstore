@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using ActualLab.Fusion;
+using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Features.Fusion;
 using ArtStore.Domain.Common.Events.Dispatcher;
 using ArtStore.Domain.Identity;

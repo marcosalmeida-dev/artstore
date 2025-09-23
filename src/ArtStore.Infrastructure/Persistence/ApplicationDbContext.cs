@@ -36,6 +36,8 @@ public class ApplicationDbContext : IdentityDbContext<
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<CouponUsage> CouponUsages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -50,6 +52,8 @@ public class ApplicationDbContext : IdentityDbContext<
         builder.ApplyConfiguration(new OrderConfiguration());
         builder.ApplyConfiguration(new OrderDetailConfiguration());
         builder.ApplyConfiguration(new OrderStatusHistoryConfiguration());
+        builder.ApplyConfiguration(new CouponConfiguration());
+        builder.ApplyConfiguration(new CouponUsageConfiguration());
     }
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
