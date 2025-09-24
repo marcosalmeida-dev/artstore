@@ -16,5 +16,7 @@ public class CreateOrderCommand : ICommand<Result<string>>
     public string? CustomerPhone { get; set; }
     public string ShippingAddress { get; set; } = string.Empty;
     public string? Notes { get; set; }
+    public string? CouponCode { get; set; }
+    public decimal? CouponDiscount { get; set; }
     public List<OrderDetailDto>? OrderDetails { get; set; }
 }

@@ -2,6 +2,7 @@
 @using ArtStore.Shared.DTOs.Order
 @using ArtStore.Shared.DTOs.Order.Commands
 @using ArtStore.Shared.DTOs.Product
+@using ArtStore.Shared.DTOs.Coupon.Commands
 @using ArtStore.UI.Client.Services
 
 <MudDialog @bind-IsVisible="checkoutDialogVisible" Options="dialogOptions">
@@ -33,15 +34,33 @@
                                         <MudListItem Class="px-0 py-2">
                                             <div class="d-flex justify-space-between align-center w-100">
                                                 <div class="d-flex align-center flex-grow-1">
-                                                    <MudAvatar Size="Size.Small" Class="mr-3" Style="color:black;">
-                                                        <MudText Typo="Typo.caption">@item.Quantity x</MudText>
-                                                    </MudAvatar>
+                                                    <div class="quantity-controls mr-3">
+                                                        <MudButtonGroup Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Remove"
+                                                                           Size="Size.Small"
+                                                                           OnClick="async () => await DecreaseQuantity(item)"
+                                                                           Disabled="item.Quantity <= 1" />
+                                                            <MudButton Class="quantity-display" Variant="Variant.Text">
+                                                                @item.Quantity
+                                                            </MudButton>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                                                           Size="Size.Small"
+                                                                           OnClick="async () => await IncreaseQuantity(item)"
+                                                                           Disabled="GetTotalItemCount() >= 10" />
+                                                        </MudButtonGroup>
+                                                    </div>
                                                     <div class="flex-grow-1">
                                                         <MudText Typo="Typo.body2" Class="mb-0 font-weight-medium">@item.Name</MudText>
                                                         <MudText Typo="Typo.caption" Color="Color.Secondary">@item.Price.ToString("C") each</MudText>
                                                     </div>
                                                 </div>
-                                                <MudText Typo="Typo.body2" Class="font-weight-bold ml-4">@((item.Price * item.Quantity).ToString("C"))</MudText>
+                                                <div class="d-flex align-center">
+                                                    <MudText Typo="Typo.body2" Class="font-weight-bold mr-2">@((item.Price * item.Quantity).ToString("C"))</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                   Size="Size.Small"
+                                                                   Color="Color.Error"
+                                                                   OnClick="async () => await RemoveItem(item)" />
+                                                </div>
                                             </div>
                                         </MudListItem>
                                         <MudDivider Class="my-1" />
@@ -52,9 +71,75 @@
                             <div class="mt-4">
                                 <MudDivider Class="my-3" />
 
-                                <div class="d-flex justify-space-between py-1">
-                                    <MudText Typo="Typo.h6" Class="font-weight-bold">Total</MudText>
-                                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">@CalculateTotalPrice().ToString("C")</MudText>
+                                <!-- Coupon Section -->
+                                <div class="coupon-section mb-4">
+                                    <MudTextField @bind-Value="couponCode"
+                                                  Label="Coupon Code"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="Enter coupon code"
+                                                  Class="mb-2"
+                                                  Disabled="appliedCoupon != null" />
+
+                                    @if (appliedCoupon == null)
+                                    {
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="Color.Primary"
+                                                   OnClick="ApplyCoupon"
+                                                   Disabled="string.IsNullOrWhiteSpace(couponCode) || isValidatingCoupon"
+                                                   FullWidth="true">
+                                            @if (isValidatingCoupon)
+                                            {
+                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                                <span>Validating...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Apply Coupon</span>
+                                            }
+                                        </MudButton>
+                                    }
+                                    else
+                                    {
+                                        <MudAlert Severity="Severity.Success" Class="mb-2">
+                                            <div class="d-flex justify-space-between align-center">
+                                                <span>✓ Coupon "@appliedCoupon.Coupon?.Code" applied</span>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Size="Size.Small"
+                                                               Color="Color.Inherit"
+                                                               OnClick="RemoveCoupon" />
+                                            </div>
+                                        </MudAlert>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(couponErrorMessage))
+                                    {
+                                        <MudAlert Severity="Severity.Error" Class="mt-2">
+                                            @couponErrorMessage
+                                        </MudAlert>
+                                    }
+                                </div>
+
+                                <!-- Order Total -->
+                                <div class="order-totals">
+                                    <div class="d-flex justify-space-between py-1">
+                                        <MudText Typo="Typo.body2">Subtotal</MudText>
+                                        <MudText Typo="Typo.body2">@CalculateSubtotal().ToString("C")</MudText>
+                                    </div>
+
+                                    @if (appliedCoupon != null && couponDiscount > 0)
+                                    {
+                                        <div class="d-flex justify-space-between py-1">
+                                            <MudText Typo="Typo.body2" Color="Color.Success">Discount (@appliedCoupon.Coupon?.Code)</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Success">-@couponDiscount.ToString("C")</MudText>
+                                        </div>
+                                    }
+
+                                    <MudDivider Class="my-2" />
+
+                                    <div class="d-flex justify-space-between py-1">
+                                        <MudText Typo="Typo.h6" Class="font-weight-bold">Total</MudText>
+                                        <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold">@CalculateTotalPrice().ToString("C")</MudText>
+                                    </div>
                                 </div>
                             </div>
                         </MudPaper>
@@ -512,9 +597,34 @@
             opacity: 1;
         }
     }
+
+    .quantity-controls {
+        min-width: 120px;
+    }
+
+    .quantity-display {
+        min-width: 40px !important;
+        font-weight: bold !important;
+        pointer-events: none;
+    }
+
+    .coupon-section {
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 8px;
+        padding: 16px;
+        background: var(--mud-palette-surface);
+    }
+
+    .order-totals {
+        background: var(--mud-palette-background-grey);
+        border-radius: 8px;
+        padding: 16px;
+    }
 </style>
 
 @inject OrderService OrderService
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
 
 @code {
     [Parameter]
@@ -532,6 +642,13 @@
     private string orderNumber = "";
     private PaymentInformationDto paymentInfo = new PaymentInformationDto();
     private bool isProcessingPayment = false;
+
+    // Coupon-related variables
+    private string couponCode = string.Empty;
+    private CouponValidationResult? appliedCoupon = null;
+    private decimal couponDiscount = 0m;
+    private bool isValidatingCoupon = false;
+    private string couponErrorMessage = string.Empty;
 
     // Checkout dialog
     private bool checkoutDialogVisible = false;
@@ -594,6 +711,13 @@
         selectedPaymentMethod = PaymentMethodType.None;
         paymentInfo = new PaymentInformationDto();
         isProcessingPayment = false;
+
+        // Reset coupon data
+        couponCode = string.Empty;
+        appliedCoupon = null;
+        couponDiscount = 0m;
+        isValidatingCoupon = false;
+        couponErrorMessage = string.Empty;
     }
 
     private async Task CompleteOrder()
@@ -622,6 +746,8 @@
                 CustomerName = "John Doe", // Replace with actual customer name
                 CustomerPhone = "123-456-7890", // Replace with actual customer phone
                 ShippingAddress = "123 Main St, City, Country", // Replace with actual shipping address
+                CouponCode = appliedCoupon?.Coupon?.Code,
+                CouponDiscount = couponDiscount > 0 ? couponDiscount : null,
                 OrderDetails = SelectedOrderItems
                     .Select(id => OrderItems.FirstOrDefault(item => item.Id == id))
                     .Where(item => item != null)
@@ -667,7 +793,7 @@
         // In a real implementation, you might throw an exception on payment failure
     }
 
-    private decimal CalculateTotalPrice()
+    private decimal CalculateSubtotal()
     {
         decimal total = 0;
         foreach (var id in SelectedOrderItems)
@@ -679,5 +805,169 @@
             }
         }
         return total;
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        decimal subtotal = CalculateSubtotal();
+        return subtotal - couponDiscount;
+    }
+
+    private int GetTotalItemCount()
+    {
+        int total = 0;
+        foreach (var id in SelectedOrderItems)
+        {
+            var item = OrderItems.FirstOrDefault(i => i.Id == id);
+            if (item != null)
+            {
+                total += item.Quantity;
+            }
+        }
+        return total;
+    }
+
+    private async Task IncreaseQuantity(ProductDto item)
+    {
+        if (GetTotalItemCount() < 10)
+        {
+            item.Quantity++;
+            await RevalidateAppliedCoupon();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DecreaseQuantity(ProductDto item)
+    {
+        if (item.Quantity > 1)
+        {
+            item.Quantity--;
+            await RevalidateAppliedCoupon();
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveItem(ProductDto item)
+    {
+        SelectedOrderItems.Remove(item.Id);
+        await RevalidateAppliedCoupon();
+        StateHasChanged();
+    }
+
+    private async Task ApplyCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(couponCode))
+            return;
+
+        isValidatingCoupon = true;
+        couponErrorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var command = new ValidateCouponCommand
+            {
+                Code = couponCode.Trim().ToUpper(),
+                OrderTotal = CalculateSubtotal(),
+                UserId = null // You might want to get the current user ID if available
+            };
+
+            var response = await HttpClient.PostAsJsonAsync("/api/coupons/validate", command);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<CouponValidationResult>();
+
+                if (result != null && result.IsValid)
+                {
+                    appliedCoupon = result;
+                    couponDiscount = result.DiscountAmount;
+                    couponCode = string.Empty;
+                    Snackbar.Add($"Coupon applied successfully! You saved {result.DiscountAmount:C}", Severity.Success);
+                }
+                else
+                {
+                    couponErrorMessage = result?.Message ?? "Invalid coupon code";
+                }
+            }
+            else
+            {
+                couponErrorMessage = "Error validating coupon. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            couponErrorMessage = "Error validating coupon. Please try again.";
+        }
+        finally
+        {
+            isValidatingCoupon = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveCoupon()
+    {
+        appliedCoupon = null;
+        couponDiscount = 0m;
+        couponCode = string.Empty;
+        couponErrorMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task RevalidateAppliedCoupon()
+    {
+        if (appliedCoupon == null || appliedCoupon.Coupon == null)
+            return;
+
+        try
+        {
+            var command = new ValidateCouponCommand
+            {
+                Code = appliedCoupon.Coupon.Code,
+                OrderTotal = CalculateSubtotal(),
+                UserId = null // You might want to get the current user ID if available
+            };
+
+            var response = await HttpClient.PostAsJsonAsync("/api/coupons/validate", command);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<CouponValidationResult>();
+
+                if (result != null && result.IsValid)
+                {
+                    // Update the applied coupon with new discount amount
+                    appliedCoupon = result;
+                    couponDiscount = result.DiscountAmount;
+                    couponErrorMessage = string.Empty;
+                }
+                else
+                {
+                    // Coupon is no longer valid, remove it
+                    couponErrorMessage = result?.Message ?? "Coupon is no longer valid for current order total";
+                    Snackbar.Add($"Coupon removed: {couponErrorMessage}", Severity.Warning);
+                    RemoveCoupon();
+                }
+            }
+            else
+            {
+                // Error validating coupon, remove it
+                couponErrorMessage = "Error revalidating coupon. Coupon has been removed.";
+                Snackbar.Add(couponErrorMessage, Severity.Warning);
+                RemoveCoupon();
+            }
+        }
+        catch (Exception)
+        {
+            // Error validating coupon, remove it
+            couponErrorMessage = "Error revalidating coupon. Coupon has been removed.";
+            Snackbar.Add(couponErrorMessage, Severity.Warning);
+            RemoveCoupon();
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 }
