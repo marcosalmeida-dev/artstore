@@ -8,14 +8,19 @@
 @using ArtStore.UI.Client.Services
 @using MudBlazor
 
-@inject IJSRuntime JSRuntime
-
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">Lista de Pedidos</MudText>
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Gerenciamento de Pedidos</MudText>
+        <MudChip T="string" Color="Color.Info" Size="Size.Medium">
+            Atualizações: @_updateOrderCount
+        </MudChip>
+    </div>
 
     @if (Orders == null)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <div class="d-flex justify-center">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
     }
     else if (!Orders.Any())
     {
@@ -25,78 +30,89 @@
     }
     else
     {
-        <MudCard>
-            <MudCardHeader>
-                <MudText>OrderStatusChangedEvent counter: @_updateOrderCount</MudText>
-            </MudCardHeader>
-        </MudCard>
-        <MudGrid>
-            @foreach (var order in Orders)
-            {
-                <MudItem xs="12" sm="6" md="4" lg="3">
-                    <MudCard Elevation="3" Class="mud-height-full">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <div class="d-flex justify-space-between align-center">
-                                    <MudText Typo="Typo.h6">
-                                        #@order.OrderNumber
-                                        <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Small">
-                                            @order.OrderSource
-                                        </MudChip>
+        <MudDropContainer T="OrderDto" @ref="_dropContainer" Items="@Orders" ItemsSelector="@((item,column) => GetOrderStatus(item.Status) == column)" ItemDropped="OnOrderDropped" Class="d-flex flex-row">
+            <ChildContent>
+                @foreach (var section in _kanbanSections)
+                {
+                    <MudPaper Elevation="0" Width="350px" MinHeight="600px" Class="pa-4 ma-2 d-flex flex-column mud-background-gray rounded-lg">
+                        <MudToolBar Gutters="false" Class="@GetSectionHeaderClass(section.Status)">
+                            <MudIcon Icon="@GetSectionIcon(section.Status)" Class="mr-2" />
+                            <MudText Typo="Typo.h6" Style="color: white;"><b>@(section.Name)</b></MudText>
+                            <MudSpacer />
+                            <MudChip T="string" Color="Color.Surface" Size="Size.Small" Style="color: black; font-weight: bold;">
+                                @GetOrdersByStatus(section.Status).Count()
+                            </MudChip>
+                        </MudToolBar>
+                        <MudDropZone T="OrderDto" Identifier="@GetOrderStatus(section.Status)" Class="mud-height-full py-2" />
+                    </MudPaper>
+                }
+            </ChildContent>
+            <ItemRenderer>
+                <MudPaper Elevation="4" Class="@($"pa-3 ma-2 rounded-lg {GetOrderCardCssClass(context.Status)}")">
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                            #@context.OrderNumber
+                        </MudText>
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                            @context.OrderSource
+                        </MudChip>
+                    </div>
+
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+                        @context.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    </MudText>
+
+                    <MudDivider Class="my-2" />
+
+                    <div class="mb-3">
+                        <MudText Typo="Typo.body2" Class="font-weight-medium">@context.CustomerName</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.CustomerEmail</MudText>
+                    </div>
+
+                    <div class="mb-3">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1">
+                            Itens: @context.OrderDetails.Sum(d => d.Quantity) | Total: @context.TotalAmount.ToString("C")
+                        </MudText>
+
+                        @if (context.OrderDetails.Any())
+                        {
+                            <div style="max-height: 120px; overflow-y: auto;">
+                                @foreach (var item in context.OrderDetails.Take(3))
+                                {
+                                    <MudText Typo="Typo.caption" Class="d-block">
+                                        @($"{item.Quantity}x {item.ProductName}")
                                     </MudText>
-                                    <MudChip T="string" Color="GetStatusColor(order.Status)" Size="Size.Medium">
-                                        @GetStatusText(order.Status)
-                                    </MudChip>
-                                </div>
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
-                                </MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-
-                        <MudCardContent>
-                            <div class="mb-2">
-                                <MudText Typo="Typo.subtitle2">Cliente</MudText>
-                                <MudText Typo="Typo.body2">@order.CustomerName</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@order.CustomerEmail</MudText>
+                                }
+                                @if (context.OrderDetails.Count() > 3)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        +@(context.OrderDetails.Count() - 3) mais...
+                                    </MudText>
+                                }
                             </div>
+                        }
+                    </div>
 
-                            <div class="mb-2">
-                                <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                                    Total: @order.OrderDetails.Sum(d => d.Quantity) unidade(s)
-                                </MudText>
-                                <MudPaper Square="true">
-                                    <MudList T="OrderDetailDto" Dense="true" Class="mt-2">
-                                        @foreach (var item in order.OrderDetails)
-                                        {
-                                            <MudListItem Icon="@Icons.Material.Filled.LocalDrink">
-                                                <MudText Typo="Typo.body2">@($"{item.Quantity}x - {item.ProductName}")</MudText>
-                                            </MudListItem>
-                                            <MudDivider />
-                                        }
-                                    </MudList>
-                                </MudPaper>
-                            </div>
-                        </MudCardContent>
-
-                        <MudCardActions Class="d-flex justify-space-between align-center">
-                            <div>
-                                <MudButton Variant="Variant.Filled"
-                                           StartIcon="@GetOrderActionIcon(order.Status)"
-                                           Color="@GetStatusColor(order.Status)"
-                                           OnClick="() => UpdateOrderStatus(order)"
-                                           Disabled="@isUpdating"
-                                           style="@GetOrderButtonStyle(order.Status)"
-                                           id="order-update-btn"
-                                           @key="order.Id">
-                                    @GetOrderActionText(order.Status)
-                                </MudButton>
-                            </div>
-                        </MudCardActions>
-                    </MudCard>
-                </MudItem>
-            }
-        </MudGrid>
+                    <div class="d-flex justify-space-between align-center">
+                        @if (CanMoveToNextStatus(context.Status))
+                        {
+                            <MudButton Size="Size.Small"
+                                       Variant="Variant.Filled"
+                                       Color="@GetNextStatusButtonColor(context.Status)"
+                                       StartIcon="@GetStatusActionIcon(context.Status)"
+                                       OnClick="@(() => MoveOrderToNextStatus(context))"
+                                       Disabled="@isUpdating">
+                                @GetStatusActionText(context.Status)
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudSpacer />
+                        }
+                    </div>
+                </MudPaper>
+            </ItemRenderer>
+        </MudDropContainer>
     }
 </MudContainer>
 
@@ -105,13 +121,98 @@
 @inject ISnackbar Snackbar
 @inject OrderService OrderService
 
+<style>
+    :root {
+        --confirmed-color: #2196F3;
+        --confirmed-color-dark: #1976D2;
+        --processing-color: #FF9800;
+        --processing-color-dark: #F57C00;
+        --shipped-color: #4CAF50;
+        --shipped-color-dark: #388E3C;
+    }
+
+    .order-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: grab;
+        border-left: 4px solid var(--mud-palette-primary);
+    }
+
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .order-card-confirmed {
+        border-left: 4px solid var(--confirmed-color) !important;
+    }
+
+    .order-card-processing {
+        border-left: 4px solid var(--processing-color) !important;
+    }
+
+    .order-card-shipped {
+        border-left: 4px solid var(--shipped-color) !important;
+    }
+
+    .confirmed-section-header {
+        background: linear-gradient(135deg, var(--confirmed-color) 0%, var(--confirmed-color-dark) 100%);
+        border-radius: 8px;
+        color: white !important;
+    }
+
+    .processing-section-header {
+        background: linear-gradient(135deg, var(--processing-color) 0%, var(--processing-color-dark) 100%);
+        border-radius: 8px;
+        color: white !important;
+    }
+
+    .shipped-section-header {
+        background: linear-gradient(135deg, var(--shipped-color) 0%, var(--shipped-color-dark) 100%);
+        border-radius: 8px;
+        color: white !important;
+    }
+
+    @@media (max-width: 960px) {
+        .d-flex.flex-row {
+            flex-direction: column;
+        }
+
+        .mud-paper[width="350px"] {
+            width: 100% !important;
+            margin: 4px 0 !important;
+        }
+    }
+</style>
+
 @code {
+    private MudDropContainer<OrderDto> _dropContainer = null!;
+
     public List<OrderDto>? Orders { get; set; }
     private bool isUpdating = false;
 
     private int _updateOrderCount = 0;
 
     private HubConnection? _hubConnection;
+
+    // Kanban sections definition
+    private readonly List<KanbanSection> _kanbanSections = new()
+    {
+        new KanbanSection("Confirmados", OrderStatus.Confirmed),
+        new KanbanSection("Em Processamento", OrderStatus.Processing),
+        new KanbanSection("Enviados", OrderStatus.Shipped)
+    };
+
+    public class KanbanSection
+    {
+        public string Name { get; init; }
+        public OrderStatus Status { get; init; }
+
+        public KanbanSection(string name, OrderStatus status)
+        {
+            Name = name;
+            Status = status;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,14 +250,37 @@
         await _hubConnection.StartAsync();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    // MudDropContainer event handler
+    private async Task OnOrderDropped(MudItemDropInfo<OrderDto> dropInfo)
     {
-        // if (firstRender)
-        // {
-        //     LoadOrdersAsync();
-        // }
+        if (isUpdating) return;
 
-        base.OnAfterRender(firstRender);
+        try
+        {
+            isUpdating = true;
+
+            var newStatus = ParseOrderStatus(dropInfo.DropzoneIdentifier);
+
+            if (newStatus != dropInfo.Item.Status && IsValidStatusTransition(dropInfo.Item.Status, newStatus))
+            {
+                await UpdateOrderStatusInternal(dropInfo.Item, newStatus);
+            }
+            else if (newStatus != dropInfo.Item.Status)
+            {
+                Snackbar.Add("Transição de status não permitida", Severity.Warning);
+                _dropContainer?.Refresh();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error dropping order: {ex.Message}");
+            Snackbar.Add("Erro ao atualizar status do pedido", Severity.Error);
+            _dropContainer?.Refresh();
+        }
+        finally
+        {
+            isUpdating = false;
+        }
     }
 
     private async Task LoadOrdersAsync()
@@ -305,5 +429,156 @@
         return status == OrderStatus.Shipped
             ? "min-width: 120px; display:none;"
             : "min-width: 120px;";
+    }
+
+    // New methods for MudDropContainer Kanban
+    private string GetOrderStatus(OrderStatus status)
+    {
+        return status.ToString();
+    }
+
+    private OrderStatus ParseOrderStatus(string statusString)
+    {
+        return Enum.Parse<OrderStatus>(statusString);
+    }
+
+    private IEnumerable<OrderDto> GetOrdersByStatus(OrderStatus status)
+    {
+        return Orders?.Where(o => o.Status == status).OrderBy(o => o.OrderDate) ?? Enumerable.Empty<OrderDto>();
+    }
+
+    private string GetSectionHeaderClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => "confirmed-section-header",
+            OrderStatus.Processing => "processing-section-header",
+            OrderStatus.Shipped => "shipped-section-header",
+            _ => ""
+        };
+    }
+
+    private string GetSectionIcon(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => Icons.Material.Filled.CheckCircle,
+            OrderStatus.Processing => Icons.Material.Filled.Autorenew,
+            OrderStatus.Shipped => Icons.Material.Filled.LocalShipping,
+            _ => Icons.Material.Filled.Circle
+        };
+    }
+
+    private bool CanMoveToNextStatus(OrderStatus currentStatus)
+    {
+        return currentStatus == OrderStatus.Confirmed || currentStatus == OrderStatus.Processing;
+    }
+
+    private OrderStatus GetNextStatus(OrderStatus currentStatus)
+    {
+        return currentStatus switch
+        {
+            OrderStatus.Confirmed => OrderStatus.Processing,
+            OrderStatus.Processing => OrderStatus.Shipped,
+            _ => currentStatus
+        };
+    }
+
+    private string GetStatusActionText(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => "Processar",
+            OrderStatus.Processing => "Enviar",
+            _ => ""
+        };
+    }
+
+    private string GetStatusActionIcon(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => Icons.Material.Filled.PlayArrow,
+            OrderStatus.Processing => Icons.Material.Filled.LocalShipping,
+            _ => ""
+        };
+    }
+
+    private async Task MoveOrderToNextStatus(OrderDto order)
+    {
+        if (!CanMoveToNextStatus(order.Status) || isUpdating)
+            return;
+
+        try
+        {
+            isUpdating = true;
+            var newStatus = GetNextStatus(order.Status);
+
+            await UpdateOrderStatusInternal(order, newStatus);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error moving order to next status: {ex.Message}");
+            Snackbar.Add("Erro ao atualizar status do pedido", Severity.Error);
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private bool IsValidStatusTransition(OrderStatus from, OrderStatus to)
+    {
+        return (from, to) switch
+        {
+            (OrderStatus.Confirmed, OrderStatus.Processing) => true,
+            (OrderStatus.Processing, OrderStatus.Shipped) => true,
+            (OrderStatus.Processing, OrderStatus.Confirmed) => true, // Allow backward movement
+            (OrderStatus.Shipped, OrderStatus.Processing) => true, // Allow backward movement
+            _ => false
+        };
+    }
+
+    private async Task UpdateOrderStatusInternal(OrderDto order, OrderStatus newStatus)
+    {
+        var command = new UpdateOrderStatusCommand
+        {
+            OrderId = order.Id,
+            Status = newStatus
+        };
+
+        var success = await OrderService.UpdateOrderStatusAsync(command);
+        if (success)
+        {
+            order.Status = newStatus;
+            _dropContainer?.Refresh();
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add("Falha ao atualizar status do pedido", Severity.Error);
+        }
+    }
+
+    private string GetOrderCardCssClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Confirmed => "order-card order-card-confirmed",
+            OrderStatus.Processing => "order-card order-card-processing",
+            OrderStatus.Shipped => "order-card order-card-shipped",
+            _ => "order-card"
+        };
+    }
+
+    private Color GetNextStatusButtonColor(OrderStatus currentStatus)
+    {
+        var nextStatus = GetNextStatus(currentStatus);
+        return nextStatus switch
+        {
+            OrderStatus.Processing => Color.Warning,
+            OrderStatus.Shipped => Color.Success,
+            _ => Color.Primary
+        };
     }
 }
