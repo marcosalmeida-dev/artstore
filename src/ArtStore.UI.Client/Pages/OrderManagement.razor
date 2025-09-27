@@ -223,7 +223,16 @@
         _hubConnection.On<OrderCreatedEvent>("OrderCreated", async (orderCreatedEvent) =>
         {
             Snackbar.Add($"Pedido #{orderCreatedEvent.OrderNumber} criado com sucesso!", Severity.Success);
+
+            // Reload orders to include the new order in the kanban board
             await LoadOrdersAsync();
+
+            // Refresh the drop container to ensure proper rendering
+            await InvokeAsync(() =>
+            {
+                _dropContainer?.Refresh();
+                StateHasChanged();
+            });
         });
 
         _hubConnection.On<OrderStatusChangedEvent>("OrderStatusChanged", async (orderStatusChangedEvent) =>
@@ -232,8 +241,15 @@
             var updatedOrderItem = Orders?.Where(w => w.Id == orderStatusChangedEvent.OrderId).FirstOrDefault();
             if (updatedOrderItem is not null)
             {
+                var oldStatus = updatedOrderItem.Status;
                 updatedOrderItem.Status = orderStatusChangedEvent.NewStatus;
-                await InvokeAsync(StateHasChanged);
+
+                // Refresh kanban board to reflect status change
+                await InvokeAsync(() =>
+                {
+                    _dropContainer?.Refresh();
+                    StateHasChanged();
+                });
 
                 Snackbar.Add(
                     $"Status do pedido #{orderStatusChangedEvent.OrderNumber} alterado para {GetStatusText(orderStatusChangedEvent.NewStatus)}.",
@@ -243,6 +259,14 @@
             else
             {
                 Snackbar.Add($"Pedido #{orderStatusChangedEvent.OrderNumber} atualizado e não encontrado!", Severity.Warning);
+
+                // If order not found locally, reload all orders to sync with server
+                await LoadOrdersAsync();
+                await InvokeAsync(() =>
+                {
+                    _dropContainer?.Refresh();
+                    StateHasChanged();
+                });
             }
         });
 
