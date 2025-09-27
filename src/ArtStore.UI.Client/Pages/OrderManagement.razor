@@ -30,16 +30,16 @@
     }
     else
     {
-        <MudDropContainer T="OrderDto" @ref="_dropContainer" Items="@Orders" ItemsSelector="@((item,column) => GetOrderStatus(item.Status) == column)" ItemDropped="OnOrderDropped" Class="d-flex flex-row">
+        <MudDropContainer T="OrderDto" @ref="_dropContainer" Items="@Orders" ItemsSelector="@((item, column) => GetOrderStatus(item.Status) == column)" ItemDropped="OnOrderDropped" Class="d-flex flex-row" Style="width: 100%; gap: 8px;">
             <ChildContent>
                 @foreach (var section in _kanbanSections)
                 {
-                    <MudPaper Elevation="0" Width="350px" MinHeight="600px" Class="pa-4 ma-2 d-flex flex-column mud-background-gray rounded-lg">
-                        <MudToolBar Gutters="false" Class="@GetSectionHeaderClass(section.Status)">
-                            <MudIcon Icon="@GetSectionIcon(section.Status)" Class="mr-2" />
-                            <MudText Typo="Typo.h6" Style="color: white;"><b>@(section.Name)</b></MudText>
+                    <MudPaper Elevation="0" MinHeight="700px" Class="pa-4 d-flex flex-column mud-background-gray rounded-lg kanban-column">
+                        <MudToolBar Gutters="false" Class="@GetSectionHeaderClass(section.Status)" Style="padding: 16px;">
+                            <MudIcon Icon="@GetSectionIcon(section.Status)" Class="mr-3" Size="Size.Large" />
+                            <MudText Typo="Typo.h5" Style="color: white; font-weight: bold;">@(section.Name)</MudText>
                             <MudSpacer />
-                            <MudChip T="string" Color="Color.Surface" Size="Size.Small" Style="color: black; font-weight: bold;">
+                            <MudChip T="string" Color="Color.Surface" Size="Size.Medium" Style="color: black; font-weight: bold; font-size: 14px;">
                                 @GetOrdersByStatus(section.Status).Count()
                             </MudChip>
                         </MudToolBar>
@@ -48,60 +48,49 @@
                 }
             </ChildContent>
             <ItemRenderer>
-                <MudPaper Elevation="4" Class="@($"pa-3 ma-2 rounded-lg {GetOrderCardCssClass(context.Status)}")">
-                    <div class="d-flex justify-space-between align-center mb-2">
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
-                            #@context.OrderNumber
+                <MudPaper Elevation="6" Class="@($"pa-4 ma-2 rounded-lg {GetOrderCardCssClass(context.Status)}")" Style="min-height: 200px;">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.h6" Class="font-weight-bold" Style="font-size: 22px;">
+                            #@context.OrderNumber | @context.CustomerName
                         </MudText>
-                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Medium" Variant="Variant.Outlined" Style="font-size: 12px;">
                             @context.OrderSource
                         </MudChip>
                     </div>
 
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
-                        @context.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3" Style="font-size: 14px;">
+                        @context.OrderDate.ToString("HH:mm")
                     </MudText>
 
-                    <MudDivider Class="my-2" />
+                    <MudDivider Class="my-3" />
 
-                    <div class="mb-3">
-                        <MudText Typo="Typo.body2" Class="font-weight-medium">@context.CustomerName</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.CustomerEmail</MudText>
-                    </div>
-
-                    <div class="mb-3">
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-1">
-                            Itens: @context.OrderDetails.Sum(d => d.Quantity) | Total: @context.TotalAmount.ToString("C")
+                    <div class="mb-4">
+                        <MudText Typo="Typo.body1" Class="mud-text-secondary mb-2" Style="font-size: 15px; font-weight: 500;">
+                            Itens: @context.OrderDetails.Sum(d => d.Quantity)
                         </MudText>
 
                         @if (context.OrderDetails.Any())
                         {
-                            <div style="max-height: 120px; overflow-y: auto;">
-                                @foreach (var item in context.OrderDetails.Take(3))
+                            <div style="max-height: 140px; overflow-y: auto; padding: 8px 0;">
+                                @foreach (var item in context.OrderDetails)
                                 {
-                                    <MudText Typo="Typo.caption" Class="d-block">
+                                    <MudText Typo="Typo.body2" Class="d-block mb-1" Style="font-size: 20px; line-height: 1.6;">
                                         @($"{item.Quantity}x {item.ProductName}")
-                                    </MudText>
-                                }
-                                @if (context.OrderDetails.Count() > 3)
-                                {
-                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                        +@(context.OrderDetails.Count() - 3) mais...
                                     </MudText>
                                 }
                             </div>
                         }
                     </div>
 
-                    <div class="d-flex justify-space-between align-center">
+                    <div class="d-flex justify-space-between align-center mt-3">
                         @if (CanMoveToNextStatus(context.Status))
                         {
-                            <MudButton Size="Size.Small"
+                            <MudButton Size="Size.Medium"
                                        Variant="Variant.Filled"
                                        Color="@GetNextStatusButtonColor(context.Status)"
                                        StartIcon="@GetStatusActionIcon(context.Status)"
                                        OnClick="@(() => MoveOrderToNextStatus(context))"
-                                       Disabled="@isUpdating">
+                                       Style="height: 40px; font-size: 14px; font-weight: 600;">
                                 @GetStatusActionText(context.Status)
                             </MudButton>
                         }
@@ -134,24 +123,24 @@
     .order-card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         cursor: grab;
-        border-left: 4px solid var(--mud-palette-primary);
+        border-left: 6px solid var(--mud-palette-primary);
     }
 
-    .order-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
 
     .order-card-confirmed {
-        border-left: 4px solid var(--confirmed-color) !important;
+        border-left: 6px solid var(--confirmed-color) !important;
     }
 
     .order-card-processing {
-        border-left: 4px solid var(--processing-color) !important;
+        border-left: 6px solid var(--processing-color) !important;
     }
 
     .order-card-shipped {
-        border-left: 4px solid var(--shipped-color) !important;
+        border-left: 6px solid var(--shipped-color) !important;
     }
 
     .confirmed-section-header {
@@ -172,14 +161,54 @@
         color: white !important;
     }
 
-    @@media (max-width: 960px) {
+    .kanban-column {
+        flex: 1;
+        min-width: 0;
+        max-width: calc(33.333% - 6px);
+    }
+
+    @@media (min-width: 769px) and (max-width: 1200px) {
+        /* Tablet styles */
+        .kanban-column {
+            max-width: calc(33.333% - 6px);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        /* Mobile styles */
         .d-flex.flex-row {
-            flex-direction: column;
+            flex-direction: column !important;
+            gap: 12px !important;
         }
 
-        .mud-paper[width="350px"] {
-            width: 100% !important;
-            margin: 4px 0 !important;
+        .kanban-column {
+            max-width: 100% !important;
+            margin: 0 !important;
+            min-height: 400px !important;
+        }
+
+        .order-card {
+            margin: 8px 0 !important;
+        }
+
+        .mud-toolbar {
+            padding: 12px !important;
+        }
+
+        .mud-icon {
+            margin-right: 8px !important;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        /* Small mobile styles */
+        .kanban-column {
+            padding: 8px !important;
+        }
+
+        .order-card {
+            padding: 12px !important;
+            min-height: 160px !important;
         }
     }
 </style>
@@ -188,7 +217,6 @@
     private MudDropContainer<OrderDto> _dropContainer = null!;
 
     public List<OrderDto>? Orders { get; set; }
-    private bool isUpdating = false;
 
     private int _updateOrderCount = 0;
 
@@ -228,11 +256,7 @@
             await LoadOrdersAsync();
 
             // Refresh the drop container to ensure proper rendering
-            await InvokeAsync(() =>
-            {
-                _dropContainer?.Refresh();
-                StateHasChanged();
-            });
+            await InvokeAsync(StateHasChanged);
         });
 
         _hubConnection.On<OrderStatusChangedEvent>("OrderStatusChanged", async (orderStatusChangedEvent) =>
@@ -245,11 +269,8 @@
                 updatedOrderItem.Status = orderStatusChangedEvent.NewStatus;
 
                 // Refresh kanban board to reflect status change
-                await InvokeAsync(() =>
-                {
-                    _dropContainer?.Refresh();
-                    StateHasChanged();
-                });
+                _dropContainer?.Refresh();
+                await InvokeAsync(StateHasChanged);
 
                 Snackbar.Add(
                     $"Status do pedido #{orderStatusChangedEvent.OrderNumber} alterado para {GetStatusText(orderStatusChangedEvent.NewStatus)}.",
@@ -262,11 +283,9 @@
 
                 // If order not found locally, reload all orders to sync with server
                 await LoadOrdersAsync();
-                await InvokeAsync(() =>
-                {
-                    _dropContainer?.Refresh();
-                    StateHasChanged();
-                });
+
+                _dropContainer?.Refresh();
+                await InvokeAsync(StateHasChanged);
             }
         });
 
@@ -277,12 +296,8 @@
     // MudDropContainer event handler
     private async Task OnOrderDropped(MudItemDropInfo<OrderDto> dropInfo)
     {
-        if (isUpdating) return;
-
         try
         {
-            isUpdating = true;
-
             var newStatus = ParseOrderStatus(dropInfo.DropzoneIdentifier);
 
             if (newStatus != dropInfo.Item.Status && IsValidStatusTransition(dropInfo.Item.Status, newStatus))
@@ -303,7 +318,7 @@
         }
         finally
         {
-            isUpdating = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -312,7 +327,7 @@
         try
         {
             Orders = await OrderService.GetOrdersAsync();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
@@ -384,7 +399,6 @@
     {
         try
         {
-            isUpdating = true;
             var newStatus = order.Status switch
             {
                 OrderStatus.Confirmed => OrderStatus.Processing,
@@ -395,16 +409,16 @@
             if (newStatus != order.Status)
             {
                 var command = new UpdateOrderStatusCommand
-                    {
-                        OrderId = order.Id,
-                        Status = newStatus
-                    };
+                {
+                    OrderId = order.Id,
+                    Status = newStatus
+                };
 
                 var success = await OrderService.UpdateOrderStatusAsync(command);
                 if (success)
                 {
                     order.Status = newStatus;
-                    StateHasChanged();
+                    await InvokeAsync(StateHasChanged);
                 }
                 // Optionally handle failure (e.g., show a message)
             }
@@ -413,10 +427,6 @@
         {
             // Handle exceptions (e.g., log error, show message)
             Console.Error.WriteLine($"Error updating order status: {ex.Message}");
-        }
-        finally
-        {
-            isUpdating = false;
         }
     }
 
@@ -530,12 +540,11 @@
 
     private async Task MoveOrderToNextStatus(OrderDto order)
     {
-        if (!CanMoveToNextStatus(order.Status) || isUpdating)
+        if (!CanMoveToNextStatus(order.Status))
             return;
 
         try
         {
-            isUpdating = true;
             var newStatus = GetNextStatus(order.Status);
 
             await UpdateOrderStatusInternal(order, newStatus);
@@ -547,7 +556,7 @@
         }
         finally
         {
-            isUpdating = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -576,7 +585,6 @@
         {
             order.Status = newStatus;
             _dropContainer?.Refresh();
-            StateHasChanged();
         }
         else
         {
