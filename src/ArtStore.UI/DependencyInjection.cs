@@ -9,8 +9,10 @@ using ArtStore.UI.Components.Account;
 using ArtStore.UI.Hubs;
 using ArtStore.UI.Middlewares;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using MudExtensions.Services;
+using System.IO.Compression;
 
 namespace ArtStore.UI;
 
@@ -61,7 +63,12 @@ public static class DependencyInjection
             .AddLocalization(options => options.ResourcesPath = LocalizationConstants.ResourcesPath);
 
         services.AddScoped<IApplicationHubWrapper, ServerHubWrapper>()
-            .AddSignalR(options => options.MaximumReceiveMessageSize = 64 * 1024);
+            .AddSignalR(options =>
+            {
+                options.MaximumReceiveMessageSize = 64 * 1024;
+                options.KeepAliveInterval = TimeSpan.FromSeconds(10);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+            });
         services.AddProblemDetails();
         services.AddHealthChecks();
 
@@ -85,6 +92,20 @@ public static class DependencyInjection
         });
 
         services.AddMemoryCache();
+
+        // Add response compression for better performance
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        // Add output caching
+        services.AddOutputCache(options =>
+        {
+            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)));
+        });
 
         services.AddControllers()
                 .AddJsonOptions(options =>
@@ -119,6 +140,12 @@ public static class DependencyInjection
 
         app.UseHttpsRedirection();
 
+        // Add response compression for better performance
+        app.UseResponseCompression();
+
+        // Add output caching
+        app.UseOutputCache();
+
         app.MapControllers();
 
         app.UseAntiforgery();
@@ -139,18 +166,6 @@ public static class DependencyInjection
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Database.EnsureCreated();
-        }
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseMigrationsEndPoint();
-        }
-        else
-        {
-            app.UseExceptionHandler("/Error", true);
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-            app.UseHsts();
         }
 
         return app;
