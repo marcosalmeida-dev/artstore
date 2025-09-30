@@ -8,7 +8,7 @@
 @inject IJSRuntime JSRuntime
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">Lista de Pedidos</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4">Order List</MudText>
 
     @if (Orders == null)
     {
@@ -17,7 +17,7 @@
     else if (!Orders.Any())
     {
         <MudAlert Severity="Severity.Info">
-            Nenhum pedido encontrado.
+            No orders found.
         </MudAlert>
     }
     else
@@ -48,13 +48,13 @@
 
                         <MudCardContent>
                             <div class="mb-2">
-                                <MudText Typo="Typo.subtitle2">Cliente</MudText>
+                                <MudText Typo="Typo.subtitle2">Customer</MudText>
                                 <MudText Typo="Typo.body2">@order.CustomerName</MudText>
                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@order.CustomerEmail</MudText>
                             </div>
 
                             <div class="mb-2">
-                                <MudText Typo="Typo.subtitle2">Pagamento</MudText>
+                                <MudText Typo="Typo.subtitle2">Payment</MudText>
                                 <div class="d-flex align-center">
                                     <MudIcon Icon="@GetPaymentIcon(order.PaymentMethod)" Size="Size.Small" Class="mr-1" />
                                     <MudText Typo="Typo.body2">@GetPaymentMethodText(order.PaymentMethod)</MudText>
@@ -66,7 +66,7 @@
                                 <MudText Typo="Typo.body2">@order.OrderDetails.Count item(s)</MudText>
 
                                 <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                                    Total: @order.OrderDetails.Sum(d => d.Quantity) unidade(s)
+                                    Total: @order.OrderDetails.Sum(d => d.Quantity) unit(s)
                                 </MudText>
                                 <MudPaper Square="true">
                                     <MudList T="OrderDetailDto" Dense="true" Class="mt-2">
@@ -81,7 +81,7 @@
                                 </MudPaper>
                                 <MudDivider />
                                 <MudPaper Square="true">
-                                    <MudText Typo="Typo.subtitle2" Class="mt-2">Histórico de Status</MudText>
+                                    <MudText Typo="Typo.subtitle2" Class="mt-2">Status History</MudText>
                                     <MudList T="OrderStatusHistoryDto" Dense="true" Class="mt-2">
                                         @{
                                             var sortedHistories = order.OrderStatusHistories
@@ -119,7 +119,7 @@
                             @if (!string.IsNullOrEmpty(order.ShippingAddress))
                             {
                                 <div class="mb-2">
-                                    <MudText Typo="Typo.subtitle2">Endereço</MudText>
+                                    <MudText Typo="Typo.subtitle2">Address</MudText>
                                     <MudText Typo="Typo.body2" Class="text-truncate">@order.ShippingAddress</MudText>
                                 </div>
                             }
@@ -127,7 +127,7 @@
                             @if (!string.IsNullOrEmpty(order.Notes))
                             {
                                 <div class="mb-2">
-                                    <MudText Typo="Typo.subtitle2">Observações</MudText>
+                                    <MudText Typo="Typo.subtitle2">Notes</MudText>
                                     <MudText Typo="Typo.body2" Class="text-truncate">@order.Notes</MudText>
                                 </div>
                             }
@@ -184,16 +184,16 @@
     private string GetStatusText(OrderStatus? status)
     {
         if (status == null)
-            return "Desconhecido";
+            return "Unknown";
         return status switch
         {
-            OrderStatus.Pending => "Pendente",
-            OrderStatus.Confirmed => "Confirmado",
-            OrderStatus.Processing => "Processando",
-            OrderStatus.Shipped => "Enviado",
-            OrderStatus.Delivered => "Entregue",
-            OrderStatus.Cancelled => "Cancelado",
-            OrderStatus.Refunded => "Reembolsado",
+            OrderStatus.Pending => "Pending",
+            OrderStatus.Confirmed => "Confirmed",
+            OrderStatus.Processing => "Processing",
+            OrderStatus.Shipped => "Shipped",
+            OrderStatus.Delivered => "Delivered",
+            OrderStatus.Cancelled => "Cancelled",
+            OrderStatus.Refunded => "Refunded",
             _ => status.ToString()
         };
     }
@@ -216,10 +216,10 @@
     {
         return paymentMethod switch
         {
-            PaymentMethodType.None => "Não definido",
-            PaymentMethodType.Cash => "Dinheiro",
-            PaymentMethodType.DebitCard => "Cartão de Débito",
-            PaymentMethodType.CreditCard => "Cartão de Crédito",
+            PaymentMethodType.None => "Undefined",
+            PaymentMethodType.Cash => "Cash",
+            PaymentMethodType.DebitCard => "Debit Card",
+            PaymentMethodType.CreditCard => "Credit Card",
             PaymentMethodType.Bitcoin => "Bitcoin",
             PaymentMethodType.USDT => "USDT",
             _ => paymentMethod.ToString()

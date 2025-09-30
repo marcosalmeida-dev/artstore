@@ -10,9 +10,9 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <div class="d-flex justify-space-between align-center mb-4">
-        <MudText Typo="Typo.h4">Gerenciamento de Pedidos</MudText>
+        <MudText Typo="Typo.h4">Order Management</MudText>
         <MudChip T="string" Color="Color.Info" Size="Size.Medium">
-            Atualizações: @_updateOrderCount
+            Updates: @_updateOrderCount
         </MudChip>
     </div>
 
@@ -25,7 +25,7 @@
     else if (!Orders.Any())
     {
         <MudAlert Severity="Severity.Info">
-            Nenhum pedido encontrado.
+            No orders found.
         </MudAlert>
     }
     else
@@ -66,7 +66,7 @@
 
                     <div class="mb-4">
                         <MudText Typo="Typo.body1" Class="mud-text-secondary mb-2" Style="font-size: 15px; font-weight: 500;">
-                            Itens: @context.OrderDetails.Sum(d => d.Quantity)
+                            Items: @context.OrderDetails.Sum(d => d.Quantity)
                         </MudText>
 
                         @if (context.OrderDetails.Any())
@@ -225,9 +225,9 @@
     // Kanban sections definition
     private readonly List<KanbanSection> _kanbanSections = new()
     {
-        new KanbanSection("Confirmados", OrderStatus.Confirmed),
-        new KanbanSection("Em Processamento", OrderStatus.Processing),
-        new KanbanSection("Enviados", OrderStatus.Shipped)
+        new KanbanSection("Confirmed", OrderStatus.Confirmed),
+        new KanbanSection("Processing", OrderStatus.Processing),
+        new KanbanSection("Shipped", OrderStatus.Shipped)
     };
 
     public class KanbanSection
@@ -250,7 +250,7 @@
 
         _hubConnection.On<OrderCreatedEvent>("OrderCreated", async (orderCreatedEvent) =>
         {
-            Snackbar.Add($"Pedido #{orderCreatedEvent.OrderNumber} criado com sucesso!", Severity.Success);
+            Snackbar.Add($"Order #{orderCreatedEvent.OrderNumber} created successfully!", Severity.Success);
 
             // Reload orders to include the new order in the kanban board
             await LoadOrdersAsync();
@@ -273,13 +273,13 @@
                 await InvokeAsync(StateHasChanged);
 
                 Snackbar.Add(
-                    $"Status do pedido #{orderStatusChangedEvent.OrderNumber} alterado para {GetStatusText(orderStatusChangedEvent.NewStatus)}.",
+                    $"Order #{orderStatusChangedEvent.OrderNumber} status changed to {GetStatusText(orderStatusChangedEvent.NewStatus)}.",
                     Severity.Info
                 );
             }
             else
             {
-                Snackbar.Add($"Pedido #{orderStatusChangedEvent.OrderNumber} atualizado e não encontrado!", Severity.Warning);
+                Snackbar.Add($"Order #{orderStatusChangedEvent.OrderNumber} updated but not found!", Severity.Warning);
 
                 // If order not found locally, reload all orders to sync with server
                 await LoadOrdersAsync();
@@ -306,14 +306,14 @@
             }
             else if (newStatus != dropInfo.Item.Status)
             {
-                Snackbar.Add("Transição de status não permitida", Severity.Warning);
+                Snackbar.Add("Status transition not allowed", Severity.Warning);
                 _dropContainer?.Refresh();
             }
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error dropping order: {ex.Message}");
-            Snackbar.Add("Erro ao atualizar status do pedido", Severity.Error);
+            Snackbar.Add("Error updating order status", Severity.Error);
             _dropContainer?.Refresh();
         }
         finally
@@ -356,13 +356,13 @@
     {
         return status switch
         {
-            OrderStatus.Pending => "Pendente",
-            OrderStatus.Confirmed => "Confirmado",
-            OrderStatus.Processing => "Processando",
-            OrderStatus.Shipped => "Enviado",
-            OrderStatus.Delivered => "Entregue",
-            OrderStatus.Cancelled => "Cancelado",
-            OrderStatus.Refunded => "Reembolsado",
+            OrderStatus.Pending => "Pending",
+            OrderStatus.Confirmed => "Confirmed",
+            OrderStatus.Processing => "Processing",
+            OrderStatus.Shipped => "Shipped",
+            OrderStatus.Delivered => "Delivered",
+            OrderStatus.Cancelled => "Cancelled",
+            OrderStatus.Refunded => "Refunded",
             _ => status.ToString()
         };
     }
@@ -385,10 +385,10 @@
     {
         return paymentMethod switch
         {
-            PaymentMethodType.None => "Não definido",
-            PaymentMethodType.Cash => "Dinheiro",
-            PaymentMethodType.DebitCard => "Cartão de Débito",
-            PaymentMethodType.CreditCard => "Cartão de Crédito",
+            PaymentMethodType.None => "Undefined",
+            PaymentMethodType.Cash => "Cash",
+            PaymentMethodType.DebitCard => "Debit Card",
+            PaymentMethodType.CreditCard => "Credit Card",
             PaymentMethodType.Bitcoin => "Bitcoin",
             PaymentMethodType.USDT => "USDT",
             _ => paymentMethod.ToString()
@@ -434,8 +434,8 @@
     {
         return status switch
         {
-            OrderStatus.Confirmed => "Atender",
-            OrderStatus.Processing => "Entregar",
+            OrderStatus.Confirmed => "Process",
+            OrderStatus.Processing => "Ship",
             _ => ""
         };
     }
@@ -522,8 +522,8 @@
     {
         return status switch
         {
-            OrderStatus.Confirmed => "Processar",
-            OrderStatus.Processing => "Enviar",
+            OrderStatus.Confirmed => "Process",
+            OrderStatus.Processing => "Ship",
             _ => ""
         };
     }
@@ -552,7 +552,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error moving order to next status: {ex.Message}");
-            Snackbar.Add("Erro ao atualizar status do pedido", Severity.Error);
+            Snackbar.Add("Error updating order status", Severity.Error);
         }
         finally
         {
@@ -588,7 +588,7 @@
         }
         else
         {
-            Snackbar.Add("Falha ao atualizar status do pedido", Severity.Error);
+            Snackbar.Add("Failed to update order status", Severity.Error);
         }
     }
 
