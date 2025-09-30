@@ -1,0 +1,194 @@
+@using System.ComponentModel.DataAnnotations
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Inventory
+@using ArtStore.Shared.DTOs.Inventory.Commands
+@using ArtStore.Shared.DTOs.Product
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="mr-3" /> @(IsEditMode ? "Edit Item" : "Add Item")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+
+            <MudGrid>
+                @if (!IsEditMode)
+                {
+                    <MudItem xs="12">
+                        <MudAutocomplete T="ProductDto" Label="Product" @bind-Value="_selectedProduct"
+                                         SearchFunc="@SearchProducts" ToStringFunc="@(p => p?.Name ?? "")"
+                                         Required="true" Immediate="true" ResetValueOnEmptyText="true"
+                                         HelperText="Search for a product by name or code" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudSelect T="int" Label="Location" @bind-Value="model.InventoryLocationId" Required="true">
+                            @foreach (var location in Locations)
+                            {
+                                <MudSelectItem Value="@location.Id">@location.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudTextField Label="Product" Value="@Item?.ProductName" ReadOnly="true" Disabled="true" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField Label="Location" Value="@Item?.LocationName" ReadOnly="true" Disabled="true" />
+                    </MudItem>
+                }
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField Label="On Hand" @bind-Value="model.OnHand" For="@(() => model.OnHand)"
+                                     Min="0" Step="0.01M" Format="N2" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField Label="Safety Stock" @bind-Value="model.SafetyStock" For="@(() => model.SafetyStock)"
+                                     Min="0" Step="0.01M" Format="N2" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField Label="Reorder Point" @bind-Value="model.ReorderPoint" For="@(() => model.ReorderPoint)"
+                                     Min="0" Step="0.01M" Format="N2" />
+                </MudItem>
+            </MudGrid>
+
+            <ValidationSummary />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(saving || !IsFormValid)">
+            @if (saving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">@(IsEditMode ? "Updating..." : "Creating...")</MudText>
+            }
+            else
+            {
+                <MudText>@(IsEditMode ? "Update" : "Create")</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public InventoryItemDto? Item { get; set; }
+    [Parameter] public List<InventoryLocationDto> Locations { get; set; } = new();
+
+    private AddEditInventoryItemCommand model = new();
+    private ProductDto? _selectedProduct;
+    private bool saving = false;
+
+    private bool IsEditMode => Item != null;
+    private bool IsFormValid => IsEditMode || (_selectedProduct != null && model.InventoryLocationId > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode && Item != null)
+        {
+            model = new AddEditInventoryItemCommand
+            {
+                Id = Item.Id,
+                ProductId = Item.ProductId,
+                InventoryLocationId = Item.InventoryLocationId,
+                OnHand = Item.OnHand,
+                SafetyStock = Item.SafetyStock,
+                ReorderPoint = Item.ReorderPoint
+            };
+        }
+        else
+        {
+            model.OnHand = 0;
+            model.SafetyStock = 0;
+            model.ReorderPoint = 0;
+        }
+    }
+
+    private async Task<IEnumerable<ProductDto>> SearchProducts(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<ProductDto>();
+
+        try
+        {
+            var response = await httpClient.GetFromJsonAsync<List<ProductDto>>("/api/admin/products", token);
+            var products = response ?? new List<ProductDto>();
+
+            return products.Where(p =>
+                p.Name.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+                p.ProductCode.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Take(20);
+        }
+        catch (Exception)
+        {
+            return Array.Empty<ProductDto>();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (!IsEditMode && _selectedProduct != null)
+        {
+            model.ProductId = _selectedProduct.Id;
+        }
+
+        if (!IsFormValid)
+            return;
+
+        saving = true;
+        try
+        {
+            HttpResponseMessage response;
+
+            if (IsEditMode)
+            {
+                response = await httpClient.PutAsJsonAsync($"/api/admin/inventoryitems/{model.Id}", model);
+            }
+            else
+            {
+                response = await httpClient.PostAsJsonAsync("/api/admin/inventoryitems", model);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Result<long?>>();
+                if (result?.Succeeded == true)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    var errorMessage = result?.ErrorMessage ?? "Unknown error occurred";
+                    Snackbar.Add($"Error: {errorMessage}", Severity.Error);
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving item: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

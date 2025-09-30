@@ -1,0 +1,249 @@
+@page "/management/inventory/items"
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Inventory
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Inventory Items</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Inventory Items</MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenCreateDialog">
+            Add Item
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-4">
+        <div class="d-flex gap-4 mb-4">
+            <MudTextField @bind-Value="_searchString" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyDown="@(async (e) => { if (e.Key == "Enter") await SearchItems(); })" />
+            <MudSelect @bind-Value="_locationFilter" Label="Location" Clearable="true" T="int?">
+                @foreach (var location in _locations)
+                {
+                    <MudSelectItem Value="@((int?)location.Id)">@location.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect @bind-Value="_stockLevelFilter" Label="Stock Level" Clearable="true" T="string">
+                <MudSelectItem Value="@("low")">Low Stock</MudSelectItem>
+                <MudSelectItem Value="@("below_safety")">Below Safety</MudSelectItem>
+            </MudSelect>
+            <MudButton Color="Color.Primary" OnClick="SearchItems">Search</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear</MudButton>
+        </div>
+
+        <MudDataGrid T="InventoryItemDto" Items="@_filteredItems" Loading="@_loading">
+            <Columns>
+                <PropertyColumn Property="x => x.ProductName" Title="Product" />
+                <PropertyColumn Property="x => x.LocationName" Title="Location" />
+                <TemplateColumn Title="On Hand">
+                    <CellTemplate>
+                        <MudText>@context.Item.OnHand.ToString("N2")</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Available">
+                    <CellTemplate>
+                        <MudText>@context.Item.Available.ToString("N2")</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Safety Stock">
+                    <CellTemplate>
+                        <MudText>@context.Item.SafetyStock.ToString("N2")</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Reorder Point">
+                    <CellTemplate>
+                        <MudText>@context.Item.ReorderPoint.ToString("N2")</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        @if (context.Item.IsBelowSafety)
+                        {
+                            <MudChip Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Warning">Below Safety</MudChip>
+                        }
+                        else if (context.Item.IsLowStock)
+                        {
+                            <MudChip Color="Color.Warning" Size="Size.Small" Icon="@Icons.Material.Filled.Warning">Low Stock</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">Normal</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <div class="d-flex gap-2">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@((e) => OpenEditDialog(context.Item))">
+                                Edit
+                            </MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@((e) => DeleteItem(context.Item))">
+                                Delete
+                            </MudButton>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    private List<InventoryItemDto> _items = new();
+    private List<InventoryItemDto> _filteredItems = new();
+    private List<InventoryLocationDto> _locations = new();
+    private bool _loading = false;
+    private string _searchString = "";
+    private int? _locationFilter = null;
+    private string? _stockLevelFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocations();
+        await LoadItems();
+    }
+
+    private async Task LoadLocations()
+    {
+        try
+        {
+            var response = await HttpClient.GetFromJsonAsync<List<InventoryLocationDto>>("/api/admin/inventorylocations");
+            _locations = response ?? new List<InventoryLocationDto>();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading locations: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadItems()
+    {
+        _loading = true;
+        try
+        {
+            StateHasChanged();
+            var response = await HttpClient.GetFromJsonAsync<List<InventoryItemDto>>("/api/admin/inventoryitems");
+            _items = response ?? new List<InventoryItemDto>();
+            _filteredItems = _items;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading items: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchItems()
+    {
+        _loading = true;
+        try
+        {
+            var filtered = _items.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                filtered = filtered.Where(i =>
+                    i.ProductName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    i.LocationName.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_locationFilter.HasValue)
+            {
+                filtered = filtered.Where(i => i.InventoryLocationId == _locationFilter.Value);
+            }
+
+            if (!string.IsNullOrEmpty(_stockLevelFilter))
+            {
+                if (_stockLevelFilter == "low")
+                {
+                    filtered = filtered.Where(i => i.IsLowStock);
+                }
+                else if (_stockLevelFilter == "below_safety")
+                {
+                    filtered = filtered.Where(i => i.IsBelowSafety);
+                }
+            }
+
+            _filteredItems = filtered.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching items: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchString = "";
+        _locationFilter = null;
+        _stockLevelFilter = null;
+        _filteredItems = _items;
+        await Task.CompletedTask;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters { ["Locations"] = _locations };
+        var dialog = await DialogService.ShowAsync<InventoryItemDialog>("Add Item", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadItems();
+            Snackbar.Add("Item created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(InventoryItemDto item)
+    {
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                ["Item"] = item,
+                ["Locations"] = _locations
+            };
+            var dialog = await DialogService.ShowAsync<InventoryItemDialog>("Edit Item", parameters);
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await LoadItems();
+                Snackbar.Add("Item updated successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteItem(InventoryItemDto item)
+    {
+        var parameters = new DialogParameters { ["Item"] = item };
+        var dialog = await DialogService.ShowAsync<DeleteInventoryItemDialog>("Delete Item", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadItems();
+            Snackbar.Add("Item deleted successfully", Severity.Success);
+        }
+    }
+}

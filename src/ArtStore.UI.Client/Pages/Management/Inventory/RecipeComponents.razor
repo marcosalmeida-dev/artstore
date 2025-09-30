@@ -1,0 +1,200 @@
+@page "/management/inventory/recipes"
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Inventory
+@using ArtStore.Shared.DTOs.Product
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Recipe Components</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Recipe Components (BOM)</MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenCreateDialog">
+            Add Component
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-4">
+        <div class="d-flex gap-4 mb-4">
+            <MudTextField @bind-Value="_searchString" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyDown="@(async (e) => { if (e.Key == "Enter") await SearchComponents(); })" />
+            <MudAutocomplete T="ProductDto" Label="Filter by Product" @bind-Value="_productFilter"
+                             SearchFunc="@SearchProducts" ToStringFunc="@(p => p?.Name ?? "")"
+                             ResetValueOnEmptyText="true" Clearable="true"
+                             HelperText="Filter recipes by finished product" />
+            <MudButton Color="Color.Primary" OnClick="SearchComponents">Search</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear</MudButton>
+        </div>
+
+        <MudDataGrid T="RecipeComponentDto" Items="@_filteredComponents" Loading="@_loading" Groupable="true" GroupExpanded="true">
+            <Columns>
+                <PropertyColumn Property="x => x.ProductName" Title="Product" Grouping />
+                <PropertyColumn Property="x => x.ComponentProductName" Title="Component" />
+                <TemplateColumn Title="Quantity">
+                    <CellTemplate>
+                        <MudText>@context.Item.Quantity.ToString("N3") @context.Item.Unit.ToString()</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <div class="d-flex gap-2">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@((e) => OpenEditDialog(context.Item))">
+                                Edit
+                            </MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@((e) => DeleteComponent(context.Item))">
+                                Delete
+                            </MudButton>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    private List<RecipeComponentDto> _components = new();
+    private List<RecipeComponentDto> _filteredComponents = new();
+    private bool _loading = false;
+    private string _searchString = "";
+    private ProductDto? _productFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadComponents();
+    }
+
+    private async Task LoadComponents()
+    {
+        _loading = true;
+        try
+        {
+            StateHasChanged();
+            var response = await HttpClient.GetFromJsonAsync<List<RecipeComponentDto>>("/api/admin/recipecomponents");
+            _components = response ?? new List<RecipeComponentDto>();
+            _filteredComponents = _components;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading components: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<IEnumerable<ProductDto>> SearchProducts(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<ProductDto>();
+
+        try
+        {
+            var response = await HttpClient.GetFromJsonAsync<List<ProductDto>>("/api/admin/products", token);
+            var products = response ?? new List<ProductDto>();
+
+            return products.Where(p =>
+                p.Name.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+                p.ProductCode.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Take(20);
+        }
+        catch (Exception)
+        {
+            return Array.Empty<ProductDto>();
+        }
+    }
+
+    private async Task SearchComponents()
+    {
+        _loading = true;
+        try
+        {
+            var filtered = _components.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                filtered = filtered.Where(c =>
+                    c.ProductName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    c.ComponentProductName.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_productFilter != null)
+            {
+                filtered = filtered.Where(c => c.ProductId == _productFilter.Id);
+            }
+
+            _filteredComponents = filtered.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching components: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchString = "";
+        _productFilter = null;
+        _filteredComponents = _components;
+        await Task.CompletedTask;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<RecipeComponentDialog>("Add Component");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadComponents();
+            Snackbar.Add("Component created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(RecipeComponentDto component)
+    {
+        try
+        {
+            var parameters = new DialogParameters { ["Component"] = component };
+            var dialog = await DialogService.ShowAsync<RecipeComponentDialog>("Edit Component", parameters);
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await LoadComponents();
+                Snackbar.Add("Component updated successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteComponent(RecipeComponentDto component)
+    {
+        var parameters = new DialogParameters { ["Component"] = component };
+        var dialog = await DialogService.ShowAsync<DeleteRecipeComponentDialog>("Delete Component", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadComponents();
+            Snackbar.Add("Component deleted successfully", Severity.Success);
+        }
+    }
+}

@@ -1,0 +1,172 @@
+You are assisting on an existing .NET 9 solution named “ArtStore” with the following projects:
+- src/ArtStore.Domain
+- src/ArtStore.Application
+- src/ArtStore.Infrastructure
+- src/ArtStore.Shared
+- src/ArtStore.UI (Blazor Server)
+- src/ArtStore.UI.Client (Blazor WASM)
+
+GOAL
+Add a production-ready Inventory Management feature with Bill of Materials (BOM/Recipe) support, aligned with current conventions:
+- IDs/types: Product.Id = int, Order.Id = long, OrderDetail.Id = long
+- Base types: BaseTenantEntity<TId>, BaseEntity<TId>
+- Money/quantity precision: decimals with precision (18,2) unless otherwise noted
+- Nullable reference types ON; C# 12; .NET 9
+- Do NOT generate EF migrations (code only)
+- Do NOT rename or modify existing files unless specified; prefer NEW files and partials
+- Comments and documentation in ENGLISH
+
+FEATURE SCOPE
+1) Inventory with immutable movement ledger:
+   - InventoryLocation (warehouses/stores; start with a “Default” location)
+   - InventoryItem: OnHand, SafetyStock, ReorderPoint per Product+Location (unique)
+   - StockMovement: immutable events for Receipt, Sale, Return, Adjustment, TransferIn/Out, ReservationCreate/Commit/Release
+   - InventoryReservation: soft holds tied to Order/OrderDetail, with TTL and statuses (Active/Committed/Released/Expired)
+   - Service operations: Receive, Reserve, Commit, Release, Adjust, Transfer
+   - Query helpers: get snapshot (OnHand, Available)
+2) BOM/Recipe support:
+   - RecipeComponent: defines components consumed per ONE unit of a finished Product
+   - UnitOfMeasure enum + simple conversion (g⇄kg, ml⇄l, piece=1:1)
+   - Reserve/Commit/Release must EXPAND the finished product into component reservations/commits per recipe
+   - If a product has NO recipe, treat it as a direct stock item (1:1)
+
+OUTPUT FORMAT REQUIREMENTS
+- For EACH file, output one fenced C# code block
+- The FIRST line must be a single-line comment with the relative path, e.g.:
+// src/ArtStore.Domain/Entities/InventoryItem.cs
+- After all code blocks, output a short "How to wire it" section (bulleted) explaining:
+  - Where to register configurations in OnModelCreating (no migrations)
+  - Example usage of service methods across checkout (Reserve → Commit/Release)
+
+FILES TO CREATE
+
+1) Enums (Domain)
+// src/ArtStore.Domain/Entities/Enums/InventoryEnums.cs
+- enum StockMovementType { Receipt=1, Sale=2, Return=3, Adjustment=4, TransferIn=5, TransferOut=6, ReservationCreate=7, ReservationCommit=8, ReservationRelease=9 }
+- enum ReservationStatus { Active=1, Committed=2, Released=3, Expired=4 }
+
+// src/ArtStore.Domain/Entities/Enums/UnitOfMeasure.cs
+- enum UnitOfMeasure { Piece=1, Gram=2, Kilogram=3, Milliliter=4, Liter=5 }
+
+2) Entities (Domain) — use BaseTenantEntity<TId>
+// src/ArtStore.Domain/Entities/InventoryLocation.cs
+- Id:int, Name (required, 128), Code (<=32, unique per tenant, nullable), IsDefault:bool (default true)
+- Nav: ICollection<InventoryItem>
+
+// src/ArtStore.Domain/Entities/InventoryItem.cs
+- Id:long, ProductId:int, InventoryLocationId:int
+- OnHand:decimal(18,2), SafetyStock:decimal(18,2), ReorderPoint:decimal(18,2)
+- Navs: Product, Location
+
+// src/ArtStore.Domain/Entities/StockMovement.cs
+- Id:long, InventoryItemId:long?, ProductId:int, InventoryLocationId:int
+- Quantity:decimal(18,2), Type:StockMovementType, OccurredAt:DateTimeOffset (default UtcNow)
+- OrderId:long?, OrderDetailId:long?, Reference:string?, Notes:string?
+- Navs: InventoryItem?, Product, Location
+- NOTE: Movements are append-only and never updated for auditability
+
+// src/ArtStore.Domain/Entities/InventoryReservation.cs
+- Id:long, ProductId:int, InventoryLocationId:int
+- OrderId:long, OrderDetailId:long
+- Quantity:decimal(18,2), CreatedAt:DateTimeOffset (UtcNow), ExpiresAt:DateTimeOffset?, Status:ReservationStatus (default Active)
+- Navs: Product, Location
+
+// src/ArtStore.Domain/Entities/RecipeComponent.cs
+- Id:long, ProductId:int (finished product), ComponentProductId:int (raw material)
+- Quantity:decimal(18,3), Unit:UnitOfMeasure
+- Unique per (TenantId, ProductId, ComponentProductId)
+- Navs: Product, ComponentProduct
+
+3) EF Core Configurations (Infrastructure)
+// src/ArtStore.Infrastructure/Persistence/Configurations/InventoryLocationConfiguration.cs
+- Key, Name required max(128), Code max(32)
+- Unique index (TenantId, Code) with filtered unique when Code is not null
+
+// src/ArtStore.Infrastructure/Persistence/Configurations/InventoryItemConfiguration.cs
+- Key, unique index (TenantId, ProductId, InventoryLocationId)
+- Precision OnHand/SafetyStock/ReorderPoint (18,2)
+- FKs: Product (Restrict), Location (Restrict)
+
+// src/ArtStore.Infrastructure/Persistence/Configurations/StockMovementConfiguration.cs
+- Key, Precision Quantity(18,2), Type as int
+- Index (TenantId, ProductId, InventoryLocationId, OccurredAt)
+- FKs: InventoryItem(SetNull), Product(Restrict), Location(Restrict)
+
+// src/ArtStore.Infrastructure/Persistence/Configurations/InventoryReservationConfiguration.cs
+- Key, Precision Quantity(18,2), Status as int
+- Index (TenantId, OrderId, OrderDetailId, Status)
+- Index (TenantId, ProductId, InventoryLocationId, Status)
+- FKs: Product(Restrict), Location(Restrict)
+
+// src/ArtStore.Infrastructure/Persistence/Configurations/RecipeComponentConfiguration.cs
+- Key, Unique index (TenantId, ProductId, ComponentProductId)
+- Precision Quantity(18,3), Unit as int
+- FKs: Product(Cascade), ComponentProduct(Restrict)
+
+// src/ArtStore.Infrastructure/Persistence/Configurations/OrderConfiguration.Inventory.Partial.cs
+- Partial configuration to add Precision(18,2) for any new monetary/quantity fields if needed later.
+- NOTE: If your OrderConfiguration is not partial, keep this file minimal or omit.
+
+4) Application Services (Application)
+// src/ArtStore.Application/Features/Inventory/Services/UnitConversion.cs
+- Static helper: Convert(qty, from, to) for g⇄kg, ml⇄l; Piece=identity; throw NotSupported otherwise
+
+// src/ArtStore.Application/Features/Inventory/Services/InventoryQueries.cs
+- Static method GetSnapshotAsync(DbContext db, long tenantId, int productId, int locationId):
+  returns (onHand, available = onHand - sum(active reservations))
+
+// src/ArtStore.Application/Features/Inventory/Services/InventoryService.cs
+- Class InventoryService with constructor(DbContext)
+- Private Round2 MidpointRounding.AwayFromZero
+- GetOrCreateItemAsync(productId, locationId, tenantId)
+- ReceiveAsync(productId, locationId, tenantId, qty, reference?, notes?)
+// Creates Receipt movement and increases OnHand
+
+- ReserveAsync(orderId, orderDetailId, productId, locationId, tenantId, qty, ttl?, ct)
+// Validates available (OnHand - active reservations) >= qty
+// Creates InventoryReservation (Active) + StockMovement(ReservationCreate)
+
+- CommitReservationAsync(reservationId, tenantId, ct)
+// Validates Active, decreases OnHand by reservation qty
+// Marks reservation Committed
+// Adds StockMovement(ReservationCommit) and StockMovement(Sale)
+
+- ReleaseReservationAsync(reservationId, tenantId, reason, ct)
+// Validates Active, marks Released
+// Adds StockMovement(ReservationRelease)
+
+- AdjustAsync(productId, locationId, tenantId, delta, reason, ct)
+// Changes OnHand by delta with validation not to go negative; adds Adjustment movement
+
+- TransferAsync(productId, fromLocationId, toLocationId, tenantId, qty, note?, ct)
+// Moves OnHand from source to target; adds TransferOut/TransferIn movements
+
+// src/ArtStore.Application/Features/Inventory/Services/InventoryService.BomExtensions.cs
+- Make InventoryService partial; add methods:
+  - GetRecipeAsync(productId, tenantId): List<RecipeComponent>
+  - ExpandRequirementsAsync(productId, productQty, desiredUnitForDirect, tenantId):
+    If recipe empty → return (productId, productQty, desiredUnitForDirect)
+    Else → return list of (ComponentProductId, Quantity * productQty, Unit)
+  - ReserveForOrderDetailAsync(orderId, orderDetailId, finishedProductId, orderDetailQty, locationId, tenantId):
+    Expand requirements and call ReserveAsync for each component
+  - CommitForOrderAsync(orderId, tenantId): commit all Active reservations for the order
+  - ReleaseForOrderAsync(orderId, tenantId, reason): release all Active reservations for the order
+
+CODING GUIDELINES
+- Use file-scoped namespaces matching existing project style
+- Use XML summaries on public members
+- Business rules in services; EF configurations only map schema
+- Movements are append-only; do not modify past movements
+- Keep units simple; inventory quantities are decimals in a base notion (document assumptions)
+- No migrations; code only
+
+FINAL STEP
+Generate all code files exactly in the specified paths with fully compilable, production-quality C#.
+
+Also output a final section “How to wire it” with:
+- Where to call ApplyConfiguration in OnModelCreating
+- A checkout sequence example:
+  * On cart confirm: ReserveForOrderDetailAsync for each detail (TTL ~15 min)
+  * On payment success: CommitForOrderAsync(orderId)
+  * On cancel/timeout: ReleaseForOrderAsync(orderId, reason)
+  * For inbound stock: ReceiveAsync(productId, locationId, qty, reference)

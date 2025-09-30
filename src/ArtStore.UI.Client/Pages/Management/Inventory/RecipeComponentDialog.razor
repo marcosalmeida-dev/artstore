@@ -1,0 +1,201 @@
+@using System.ComponentModel.DataAnnotations
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Inventory
+@using ArtStore.Shared.DTOs.Inventory.Commands
+@using ArtStore.Shared.DTOs.Product
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-3" /> @(IsEditMode ? "Edit Component" : "Add Component")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="Submit">
+            <DataAnnotationsValidator />
+
+            <MudGrid>
+                @if (!IsEditMode)
+                {
+                    <MudItem xs="12">
+                        <MudAutocomplete T="ProductDto" Label="Product (Finished Product)" @bind-Value="_selectedProduct"
+                                         SearchFunc="@SearchProducts" ToStringFunc="@(p => p?.Name ?? "")"
+                                         Required="true" Immediate="true" ResetValueOnEmptyText="true"
+                                         HelperText="Select the finished product that uses this component" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudAutocomplete T="ProductDto" Label="Component (Raw Material)" @bind-Value="_selectedComponent"
+                                         SearchFunc="@SearchProducts" ToStringFunc="@(p => p?.Name ?? "")"
+                                         Required="true" Immediate="true" ResetValueOnEmptyText="true"
+                                         HelperText="Select the raw material component" />
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12">
+                        <MudTextField Label="Product" Value="@Component?.ProductName" ReadOnly="true" Disabled="true" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField Label="Component" Value="@Component?.ComponentProductName" ReadOnly="true" Disabled="true" />
+                    </MudItem>
+                }
+
+                <MudItem xs="12" md="8">
+                    <MudNumericField Label="Quantity" @bind-Value="model.Quantity" For="@(() => model.Quantity)"
+                                     Min="0.001M" Step="0.001M" Format="N3" Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudSelect T="UnitOfMeasure" Label="Unit" @bind-Value="model.Unit" Required="true">
+                        <MudSelectItem Value="@UnitOfMeasure.Piece">Piece</MudSelectItem>
+                        <MudSelectItem Value="@UnitOfMeasure.Gram">Gram (g)</MudSelectItem>
+                        <MudSelectItem Value="@UnitOfMeasure.Kilogram">Kilogram (kg)</MudSelectItem>
+                        <MudSelectItem Value="@UnitOfMeasure.Milliliter">Milliliter (ml)</MudSelectItem>
+                        <MudSelectItem Value="@UnitOfMeasure.Liter">Liter (L)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <ValidationSummary />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(saving || !IsFormValid)">
+            @if (saving)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">@(IsEditMode ? "Updating..." : "Creating...")</MudText>
+            }
+            else
+            {
+                <MudText>@(IsEditMode ? "Update" : "Create")</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject ISnackbar Snackbar
+@inject HttpClient httpClient
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public RecipeComponentDto? Component { get; set; }
+
+    private AddEditRecipeComponentCommand model = new();
+    private ProductDto? _selectedProduct;
+    private ProductDto? _selectedComponent;
+    private bool saving = false;
+
+    private bool IsEditMode => Component != null;
+    private bool IsFormValid => IsEditMode || (_selectedProduct != null && _selectedComponent != null && model.Quantity > 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode && Component != null)
+        {
+            model = new AddEditRecipeComponentCommand
+            {
+                Id = Component.Id,
+                ProductId = Component.ProductId,
+                ComponentProductId = Component.ComponentProductId,
+                Quantity = Component.Quantity,
+                Unit = Component.Unit
+            };
+        }
+        else
+        {
+            model.Quantity = 1;
+            model.Unit = UnitOfMeasure.Gram;
+        }
+    }
+
+    private async Task<IEnumerable<ProductDto>> SearchProducts(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Array.Empty<ProductDto>();
+
+        try
+        {
+            var response = await httpClient.GetFromJsonAsync<List<ProductDto>>("/api/admin/products", token);
+            var products = response ?? new List<ProductDto>();
+
+            return products.Where(p =>
+                p.Name.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+                p.ProductCode.Contains(value, StringComparison.OrdinalIgnoreCase))
+                .Take(20);
+        }
+        catch (Exception)
+        {
+            return Array.Empty<ProductDto>();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (!IsEditMode)
+        {
+            if (_selectedProduct != null)
+                model.ProductId = _selectedProduct.Id;
+
+            if (_selectedComponent != null)
+                model.ComponentProductId = _selectedComponent.Id;
+
+            // Validate no circular references
+            if (model.ProductId == model.ComponentProductId)
+            {
+                Snackbar.Add("Error: Product cannot be a component of itself", Severity.Error);
+                return;
+            }
+        }
+
+        if (!IsFormValid)
+            return;
+
+        saving = true;
+        try
+        {
+            HttpResponseMessage response;
+
+            if (IsEditMode)
+            {
+                response = await httpClient.PutAsJsonAsync($"/api/admin/recipecomponents/{model.Id}", model);
+            }
+            else
+            {
+                response = await httpClient.PostAsJsonAsync("/api/admin/recipecomponents", model);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<Result<long?>>();
+                if (result?.Succeeded == true)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    var errorMessage = result?.ErrorMessage ?? "Unknown error occurred";
+                    Snackbar.Add($"Error: {errorMessage}", Severity.Error);
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Error: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving component: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

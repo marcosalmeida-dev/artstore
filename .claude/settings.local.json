@@ -10,7 +10,8 @@
       "Bash(dotnet clean:*)",
       "Bash(findstr:*)",
       "Bash(powershell:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using ArtStore.Domain.Entities.Enums;
 using ArtStore.Domain.Entities.Translations;
 using ArtStore.Domain.Extensions;
 using ArtStore.Domain.Identity;
@@ -50,6 +51,7 @@ public class ApplicationDbContextInitializer
             await SeedRolesAsync();
             await SeedUsersAsync();
             await SeedCategoriesAndProductsAsync();
+            await SeedInventoryAsync();
             _context.ChangeTracker.Clear();
         }
         catch (Exception ex)
@@ -458,5 +460,370 @@ public class ApplicationDbContextInitializer
 
         await _context.Products.AddRangeAsync(products);
         await _context.SaveChangesAsync();
+    }
+
+    private async Task SeedInventoryAsync()
+    {
+        if (await _context.InventoryLocations.AnyAsync() || await _context.RecipeComponents.AnyAsync())
+        {
+            return;
+        }
+
+        _logger.LogInformation("Seeding inventory locations, raw materials, and recipes...");
+
+        var tenant = await _context.Tenants.FirstAsync();
+
+        // Create default inventory location
+        var defaultLocation = new InventoryLocation
+        {
+            Name = "Main Warehouse",
+            Code = "MAIN",
+            IsDefault = true,
+            TenantId = tenant.Id
+        };
+
+        await _context.InventoryLocations.AddAsync(defaultLocation);
+        await _context.SaveChangesAsync();
+
+        // Create a category for raw materials
+        var rawMaterialsCategory = new Category
+        {
+            Name = "Raw Materials",
+            Description = "Ingredients and raw materials for production",
+            TenantId = tenant.Id,
+            IsActive = true
+        };
+        rawMaterialsCategory.SetTranslation("pt-BR", "Matérias-Primas", "Ingredientes e matérias-primas para produção");
+        rawMaterialsCategory.SetTranslation("es-AR", "Materias Primas", "Ingredientes y materias primas para producción");
+
+        await _context.Categories.AddAsync(rawMaterialsCategory);
+        await _context.SaveChangesAsync();
+
+        // Create raw material products
+        var sugarcaneProduct = new Product
+        {
+            Name = "Sugarcane-fruit",
+            ProductCode = "RAW-SUGARCANE",
+            Description = "Fresh sugarcane for juice extraction",
+            Brand = "Farm Fresh",
+            Unit = "kg",
+            Price = 5.00m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        sugarcaneProduct.SetTranslation("pt-BR", "Cana-de-açúcar-fruta", "Cana-de-açúcar fresca para extração de suco", "kg");
+        sugarcaneProduct.SetTranslation("es-AR", "Caña de azúcar-fruta", "Caña de azúcar fresca para extracción de jugo", "kg");
+
+        var strawberryProduct = new Product
+        {
+            Name = "Strawberry-fruit",
+            ProductCode = "RAW-STRAWBERRY",
+            Description = "Fresh strawberries",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.03m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        strawberryProduct.SetTranslation("pt-BR", "Morango-fruta", "Morangos frescos", "g");
+        strawberryProduct.SetTranslation("es-AR", "Fresa-fruta", "Fresas frescas", "g");
+
+        var passionFruitProduct = new Product
+        {
+            Name = "Passion Fruit-fruit",
+            ProductCode = "RAW-PASSIONFRUIT",
+            Description = "Fresh passion fruit",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.025m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        passionFruitProduct.SetTranslation("pt-BR", "Maracujá-fruta", "Maracujá fresco", "g");
+        passionFruitProduct.SetTranslation("es-AR", "Maracuyá-fruta", "Maracuyá fresco", "g");
+
+        var lemonProduct = new Product
+        {
+            Name = "Lemon-fruit",
+            ProductCode = "RAW-LEMON",
+            Description = "Fresh lemon",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.02m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        lemonProduct.SetTranslation("pt-BR", "Limão-fruta", "Limão fresco", "g");
+        lemonProduct.SetTranslation("es-AR", "Limón-fruta", "Limón fresco", "g");
+
+        var sicilianLemonProduct = new Product
+        {
+            Name = "Sicilian Lemon-fruit",
+            ProductCode = "RAW-SICILIANLEMON",
+            Description = "Fresh Sicilian lemon",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.035m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        sicilianLemonProduct.SetTranslation("pt-BR", "Limão Siciliano-fruta", "Limão siciliano fresco", "g");
+        sicilianLemonProduct.SetTranslation("es-AR", "Limón Siciliano-fruta", "Limón siciliano fresco", "g");
+
+        var acaiProduct = new Product
+        {
+            Name = "Açaí-fruit",
+            ProductCode = "RAW-ACAI",
+            Description = "Fresh açaí pulp",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.08m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        acaiProduct.SetTranslation("pt-BR", "Açaí-fruta", "Polpa de açaí fresca", "g");
+        acaiProduct.SetTranslation("es-AR", "Açaí-fruta", "Pulpa de açaí fresca", "g");
+
+        var cocoaProduct = new Product
+        {
+            Name = "Cocoa-powder",
+            ProductCode = "RAW-COCOA",
+            Description = "Cocoa powder",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.05m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        cocoaProduct.SetTranslation("pt-BR", "Cacau-em-pó", "Cacau em pó", "g");
+        cocoaProduct.SetTranslation("es-AR", "Cacao-en-polvo", "Cacao en polvo", "g");
+
+        var coffeeProduct = new Product
+        {
+            Name = "Coffee-grain",
+            ProductCode = "RAW-COFFEE",
+            Description = "Ground coffee",
+            Brand = "Farm Fresh",
+            Unit = "g",
+            Price = 0.04m,
+            TenantId = tenant.Id,
+            CategoryId = rawMaterialsCategory.Id
+        };
+        coffeeProduct.SetTranslation("pt-BR", "Café-grão", "Café moído", "g");
+        coffeeProduct.SetTranslation("es-AR", "Café-grano", "Café molido", "g");
+
+        var rawMaterials = new[]
+        {
+            sugarcaneProduct,
+            strawberryProduct,
+            passionFruitProduct,
+            lemonProduct,
+            sicilianLemonProduct,
+            acaiProduct,
+            cocoaProduct,
+            coffeeProduct
+        };
+
+        await _context.Products.AddRangeAsync(rawMaterials);
+        await _context.SaveChangesAsync();
+
+        // Create BOM/Recipe components for finished products
+        // Get finished products (the sugarcane juice products created earlier)
+        var finishedProducts = await _context.Products
+            .Where(p => p.TenantId == tenant.Id &&
+                   (p.Name!.Contains("Pure") ||
+                    p.Name.Contains("Strawberry") ||
+                    p.Name.Contains("Passion Fruit") ||
+                    p.Name.Contains("Lemon") ||
+                    p.Name.Contains("Sicilian Lemon") ||
+                    p.Name.Contains("Açaí") ||
+                    p.Name.Contains("Cocoa") ||
+                    p.Name.Contains("Coffee")))
+            .ToListAsync();
+
+        var recipeComponents = new List<RecipeComponent>();
+
+        foreach (var product in finishedProducts)
+        {
+            // All products need sugarcane as base (except Ice Slush variations use less)
+            var isIceSlush = product.Name!.Contains("Ice Slush");
+            var baseSugarcaneAmount = isIceSlush ? 0.8m : 1.0m; // 800g for ice slush, 1kg for regular
+
+            // Base sugarcane component for all products
+            recipeComponents.Add(new RecipeComponent
+            {
+                ProductId = product.Id,
+                ComponentProductId = sugarcaneProduct.Id,
+                Quantity = baseSugarcaneAmount,
+                Unit = UnitOfMeasure.Kilogram,
+                TenantId = tenant.Id
+            });
+
+            // Add flavor-specific components
+            if (product.Name.Contains("Strawberry"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = strawberryProduct.Id,
+                    Quantity = 100,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Passion Fruit"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = passionFruitProduct.Id,
+                    Quantity = 120,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Sicilian Lemon"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = sicilianLemonProduct.Id,
+                    Quantity = 80,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Lemon") && !product.Name.Contains("Sicilian"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = lemonProduct.Id,
+                    Quantity = 80,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Açaí"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = acaiProduct.Id,
+                    Quantity = 150,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Cocoa"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = cocoaProduct.Id,
+                    Quantity = 50,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            else if (product.Name.Contains("Coffee"))
+            {
+                recipeComponents.Add(new RecipeComponent
+                {
+                    ProductId = product.Id,
+                    ComponentProductId = coffeeProduct.Id,
+                    Quantity = 30,
+                    Unit = UnitOfMeasure.Gram,
+                    TenantId = tenant.Id
+                });
+            }
+            // Pure flavor only has sugarcane (already added above)
+            // Detox would need its own ingredients (skipped for now)
+        }
+
+        await _context.RecipeComponents.AddRangeAsync(recipeComponents);
+        await _context.SaveChangesAsync();
+
+        // Initialize inventory items with some starting stock for raw materials
+        var inventoryItems = new List<InventoryItem>
+        {
+            new InventoryItem
+            {
+                ProductId = sugarcaneProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 500, // 500 kg in stock
+                SafetyStock = 50,
+                ReorderPoint = 100
+            },
+            new InventoryItem
+            {
+                ProductId = strawberryProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 5000, // 5000 g in stock
+                SafetyStock = 500,
+                ReorderPoint = 1000
+            },
+            new InventoryItem
+            {
+                ProductId = passionFruitProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 6000, // 6000 g in stock
+                SafetyStock = 600,
+                ReorderPoint = 1200
+            },
+            new InventoryItem
+            {
+                ProductId = lemonProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 4000, // 4000 g in stock
+                SafetyStock = 400,
+                ReorderPoint = 800
+            },
+            new InventoryItem
+            {
+                ProductId = sicilianLemonProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 3000, // 3000 g in stock
+                SafetyStock = 300,
+                ReorderPoint = 600
+            },
+            new InventoryItem
+            {
+                ProductId = acaiProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 8000, // 8000 g in stock
+                SafetyStock = 800,
+                ReorderPoint = 1500
+            },
+            new InventoryItem
+            {
+                ProductId = cocoaProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 2500, // 2500 g in stock
+                SafetyStock = 250,
+                ReorderPoint = 500
+            },
+            new InventoryItem
+            {
+                ProductId = coffeeProduct.Id,
+                InventoryLocationId = defaultLocation.Id,
+                TenantId = tenant.Id,
+                OnHand = 1500, // 1500 g in stock
+                SafetyStock = 150,
+                ReorderPoint = 300
+            }
+        };
+
+        await _context.InventoryItems.AddRangeAsync(inventoryItems);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Inventory seeding completed successfully");
     }
 }

@@ -22,4 +22,8 @@
     <ProjectReference Include="..\ArtStore.Shared\ArtStore.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\Management\Inventory\" />
+  </ItemGroup>
+
 </Project>

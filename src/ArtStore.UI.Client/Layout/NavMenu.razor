@@ -18,9 +18,12 @@
     @* <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Lock">Auth Required</MudNavLink> *@
 
     <MudNavGroup Title="Management" Expanded=true>
-        <MudNavLink Href="/management/categories" Icon="@Icons.Material.Filled.Add">Categories</MudNavLink>
-        <MudNavLink Href="/management/products" Icon="@Icons.Material.Filled.Add">Products</MudNavLink>
-        <MudNavLink Href="/management/coupons" Icon="@Icons.Material.Filled.Add">Coupons</MudNavLink>
+        <MudNavLink Href="/management/categories" Icon="@Icons.Material.Filled.Category">Categories</MudNavLink>
+        <MudNavLink Href="/management/products" Icon="@Icons.Material.Filled.Inventory2">Products</MudNavLink>
+        <MudNavLink Href="/management/coupons" Icon="@Icons.Material.Filled.LocalOffer">Coupons</MudNavLink>
+        <MudNavLink Href="/management/inventory/locations" Icon="@Icons.Material.Filled.Warehouse">Inventory Locations</MudNavLink>
+        <MudNavLink Href="/management/inventory/items" Icon="@Icons.Material.Filled.Inventory">Inventory Items</MudNavLink>
+        <MudNavLink Href="/management/inventory/recipes" Icon="@Icons.Material.Filled.Receipt">Recipe Components</MudNavLink>
     </MudNavGroup>
 
     <AuthorizeView>

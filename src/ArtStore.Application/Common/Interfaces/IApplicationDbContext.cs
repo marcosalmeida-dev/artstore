@@ -22,6 +22,11 @@ public interface IApplicationDbContext
     public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<CouponUsage> CouponUsages { get; set; }
+    public DbSet<InventoryLocation> InventoryLocations { get; set; }
+    public DbSet<InventoryItem> InventoryItems { get; set; }
+    public DbSet<StockMovement> StockMovements { get; set; }
+    public DbSet<InventoryReservation> InventoryReservations { get; set; }
+    public DbSet<RecipeComponent> RecipeComponents { get; set; }
     ChangeTracker ChangeTracker { get; }
 
     DbSet<DataProtectionKey> DataProtectionKeys { get; set; }

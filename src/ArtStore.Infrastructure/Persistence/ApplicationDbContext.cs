@@ -38,6 +38,11 @@ public class ApplicationDbContext : IdentityDbContext<
     public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<CouponUsage> CouponUsages { get; set; }
+    public DbSet<InventoryLocation> InventoryLocations { get; set; }
+    public DbSet<InventoryItem> InventoryItems { get; set; }
+    public DbSet<StockMovement> StockMovements { get; set; }
+    public DbSet<InventoryReservation> InventoryReservations { get; set; }
+    public DbSet<RecipeComponent> RecipeComponents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -54,6 +59,11 @@ public class ApplicationDbContext : IdentityDbContext<
         builder.ApplyConfiguration(new OrderStatusHistoryConfiguration());
         builder.ApplyConfiguration(new CouponConfiguration());
         builder.ApplyConfiguration(new CouponUsageConfiguration());
+        builder.ApplyConfiguration(new InventoryLocationConfiguration());
+        builder.ApplyConfiguration(new InventoryItemConfiguration());
+        builder.ApplyConfiguration(new StockMovementConfiguration());
+        builder.ApplyConfiguration(new InventoryReservationConfiguration());
+        builder.ApplyConfiguration(new RecipeComponentConfiguration());
     }
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

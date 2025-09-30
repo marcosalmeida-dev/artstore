@@ -1,0 +1,194 @@
+@page "/management/inventory/locations"
+@using ArtStore.Shared.DTOs
+@using ArtStore.Shared.DTOs.Inventory
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Inventory Locations</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Inventory Locations</MudText>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="OpenCreateDialog">
+            Add Location
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-4">
+        <div class="d-flex gap-4 mb-4">
+            <MudTextField @bind-Value="_searchString" Label="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          OnKeyDown="@(async (e) => { if (e.Key == "Enter") await SearchLocations(); })" />
+            <MudSelect @bind-Value="_isActiveFilter" Label="Status" Clearable="true" T="bool?">
+                <MudSelectItem Value="@((bool?)true)">Active</MudSelectItem>
+                <MudSelectItem Value="@((bool?)false)">Inactive</MudSelectItem>
+            </MudSelect>
+            <MudButton Color="Color.Primary" OnClick="SearchLocations">Search</MudButton>
+            <MudButton Color="Color.Secondary" OnClick="ClearFilters">Clear</MudButton>
+        </div>
+
+        <MudDataGrid T="InventoryLocationDto" Items="@_filteredLocations" Loading="@_loading">
+            <Columns>
+                <PropertyColumn Property="x => x.Code" Title="Code" />
+                <PropertyColumn Property="x => x.Name" Title="Name" />
+                <TemplateColumn Title="Default">
+                    <CellTemplate>
+                        @if (context.Item.IsDefault)
+                        {
+                            <MudChip Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">Default</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Status">
+                    <CellTemplate>
+                        @if (context.Item.IsActive)
+                        {
+                            <MudChip Color="Color.Success" Size="Size.Small">Active</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip Color="Color.Warning" Size="Size.Small">Inactive</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Created" Title="Created" Format="dd/MM/yyyy" />
+                <TemplateColumn Title="Actions" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <div class="d-flex gap-2">
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Edit"
+                                       OnClick="@((e) => OpenEditDialog(context.Item))">
+                                Edit
+                            </MudButton>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@((e) => DeleteLocation(context.Item))">
+                                Delete
+                            </MudButton>
+                        </div>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject HttpClient HttpClient
+
+@code {
+    private List<InventoryLocationDto> _locations = new();
+    private List<InventoryLocationDto> _filteredLocations = new();
+    private bool _loading = false;
+    private string _searchString = "";
+    private bool? _isActiveFilter = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocations();
+    }
+
+    private async Task LoadLocations()
+    {
+        _loading = true;
+        try
+        {
+            StateHasChanged();
+            var response = await HttpClient.GetFromJsonAsync<List<InventoryLocationDto>>("/api/admin/inventorylocations");
+            _locations = response ?? new List<InventoryLocationDto>();
+            _filteredLocations = _locations;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading locations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SearchLocations()
+    {
+        _loading = true;
+        try
+        {
+            var filtered = _locations.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_searchString))
+            {
+                filtered = filtered.Where(l =>
+                    (l.Code?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    l.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_isActiveFilter.HasValue)
+            {
+                filtered = filtered.Where(l => l.IsActive == _isActiveFilter.Value);
+            }
+
+            _filteredLocations = filtered.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error searching locations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        _searchString = "";
+        _isActiveFilter = null;
+        _filteredLocations = _locations;
+        await Task.CompletedTask;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<InventoryLocationDialog>("Add Location");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadLocations();
+            Snackbar.Add("Location created successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenEditDialog(InventoryLocationDto location)
+    {
+        try
+        {
+            var parameters = new DialogParameters { ["Location"] = location };
+            var dialog = await DialogService.ShowAsync<InventoryLocationDialog>("Edit Location", parameters);
+            var result = await dialog.Result;
+
+            if (result is not null && !result.Canceled)
+            {
+                await LoadLocations();
+                Snackbar.Add("Location updated successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteLocation(InventoryLocationDto location)
+    {
+        var parameters = new DialogParameters { ["Location"] = location };
+        var dialog = await DialogService.ShowAsync<DeleteInventoryLocationDialog>("Delete Location", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await LoadLocations();
+            Snackbar.Add("Location deleted successfully", Severity.Success);
+        }
+    }
+}
