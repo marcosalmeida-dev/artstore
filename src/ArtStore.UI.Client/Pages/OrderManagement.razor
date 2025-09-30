@@ -252,10 +252,9 @@
         {
             Snackbar.Add($"Order #{orderCreatedEvent.OrderNumber} created successfully!", Severity.Success);
 
-            // Reload orders to include the new order in the kanban board
             await LoadOrdersAsync();
 
-            // Refresh the drop container to ensure proper rendering
+            _dropContainer?.Refresh();
             await InvokeAsync(StateHasChanged);
         });
 
@@ -268,7 +267,6 @@
                 var oldStatus = updatedOrderItem.Status;
                 updatedOrderItem.Status = orderStatusChangedEvent.NewStatus;
 
-                // Refresh kanban board to reflect status change
                 _dropContainer?.Refresh();
                 await InvokeAsync(StateHasChanged);
 
@@ -291,6 +289,8 @@
 
         await LoadOrdersAsync();
         await _hubConnection.StartAsync();
+
+        await InvokeAsync(StateHasChanged);
     }
 
     // MudDropContainer event handler
@@ -327,7 +327,6 @@
         try
         {
             Orders = await OrderService.GetOrdersAsync();
-            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {

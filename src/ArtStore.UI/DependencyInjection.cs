@@ -101,11 +101,11 @@ public static class DependencyInjection
             options.Providers.Add<GzipCompressionProvider>();
         });
 
-        // Add output caching
-        services.AddOutputCache(options =>
-        {
-            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)));
-        });
+        //// Add output caching
+        //services.AddOutputCache(options =>
+        //{
+        //    options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)));
+        //});
 
         services.AddControllers()
                 .AddJsonOptions(options =>
@@ -143,8 +143,8 @@ public static class DependencyInjection
         // Add response compression for better performance
         app.UseResponseCompression();
 
-        // Add output caching
-        app.UseOutputCache();
+        //// Add output caching
+        //app.UseOutputCache();
 
         app.MapControllers();
 
