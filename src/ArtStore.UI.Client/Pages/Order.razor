@@ -96,7 +96,7 @@
                                             </div>
                                             <MudAnimate @ref="_animate" Selector=".id2" Duration="1" AnimationType="AnimationType.Fade" Value="_value2" ValueSecondary="0" Infinite="false"
                                                         KeyframeAdvanced="@KeyframeBuilder.Build(2, new List<string>() {"0", $"{_value2}"}, string.Join(" ", _animationTypes))" />
-                                            <MudCardMedia Class="id2" Image="@product.ImageDtos.First().Url" Height="200" />
+                                            <MudCardMedia Class="id2" Image="@product.PrimaryImageUrl" Height="200" />
                                         }
                                         else
                                         {

@@ -19,6 +19,15 @@ public class ProductDto
     public DateTime? LastModified { get; set; }
 
     public int Quantity { get; set; }
+    public string PrimaryImageUrl
+    {
+        get
+        {
+            return ImageDtos?.FirstOrDefault(img => img.IsPrimary)?.Url
+                ?? ImageDtos?.OrderBy(img => img.SortOrder).FirstOrDefault()?.Url
+                ?? string.Empty;
+        }
+    }
 }
 
 public class ProductImageDto
