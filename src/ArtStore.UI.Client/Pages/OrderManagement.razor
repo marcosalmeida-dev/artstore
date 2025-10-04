@@ -250,12 +250,12 @@
 
         _hubConnection.On<OrderCreatedEvent>("OrderCreated", async (orderCreatedEvent) =>
         {
-            Snackbar.Add($"Order #{orderCreatedEvent.OrderNumber} created successfully!", Severity.Success);
-
             await LoadOrdersAsync();
 
             _dropContainer?.Refresh();
             await InvokeAsync(StateHasChanged);
+
+            Snackbar.Add($"Order #{orderCreatedEvent.OrderNumber} created successfully!", Severity.Success);
         });
 
         _hubConnection.On<OrderStatusChangedEvent>("OrderStatusChanged", async (orderStatusChangedEvent) =>

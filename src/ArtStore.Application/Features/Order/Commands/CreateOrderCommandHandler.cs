@@ -80,7 +80,10 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Res
                 }
             };
 
-            // Add domain event for order creation
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Add domain event for order creation AFTER saving to get the ID
             order.AddDomainEvent(new OrderCreatedEvent(
                 order.Id,
                 order.OrderNumber,
@@ -88,7 +91,7 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Res
                 order.TotalAmount,
                 order.OrderDate));
 
-            _context.Orders.Add(order);
+            // Save again to process domain events
             await _context.SaveChangesAsync(cancellationToken);
 
             // Create CouponUsage record if a coupon was applied
