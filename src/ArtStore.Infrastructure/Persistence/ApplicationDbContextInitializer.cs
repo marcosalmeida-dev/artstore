@@ -352,7 +352,7 @@ public class ApplicationDbContextInitializer
                     Price = price,
                     TenantId = tenant.Id,
                     Category = category,
-                    Pictures = new List<ProductImage>
+                    ProductImages = new List<ProductImage>
                     {
                         new ProductImage
                         {
@@ -403,7 +403,7 @@ public class ApplicationDbContextInitializer
                 Price = 8.50m,
                 TenantId = tenant.Id,
                 Category = roastPastry,
-                Pictures = new List<ProductImage>
+                ProductImages = new List<ProductImage>
                 {
                     new ProductImage 
                     { 
@@ -430,7 +430,7 @@ public class ApplicationDbContextInitializer
                 Price = 9.50m,
                 TenantId = tenant.Id,
                 Category = roastPastry,
-                Pictures = new List<ProductImage>
+                ProductImages = new List<ProductImage>
                 {
                     new ProductImage 
                     { 

@@ -47,7 +47,7 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
 
         // Foreign key relationship
         builder.HasOne(x => x.Product)
-            .WithMany(x => x.Pictures)
+            .WithMany(x => x.ProductImages)
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 

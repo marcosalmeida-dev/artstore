@@ -1,26 +1,23 @@
-﻿namespace ArtStore.Application.Common.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ArtStore.Application.Common.Models;
 
 public class PaginatedData<T>
 {
-    public PaginatedData(IEnumerable<T> items, int total, int pageIndex, int pageSize)
+    [JsonConstructor]
+    public PaginatedData(IEnumerable<T> items, int totalItems, int currentPage, int totalPages)
     {
         Items = items;
-        TotalItems = total;
-        CurrentPage = pageIndex;
-        TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+        TotalItems = totalItems;
+        CurrentPage = currentPage;
+        TotalPages = totalPages;
     }
-
-    public int CurrentPage { get; }
-    public int TotalItems { get; private set; }
-    public int TotalPages { get; }
+    public IEnumerable<T> Items { get; set; } = Array.Empty<T>();
+    public int TotalItems { get; set; }
+    public int CurrentPage { get; set; }
+    public int TotalPages { get; set; }
     public bool HasPreviousPage => CurrentPage > 1;
     public bool HasNextPage => CurrentPage < TotalPages;
-    public IEnumerable<T> Items { get; set; }
-
-    public static async Task<PaginatedData<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
-    {
-        var count = await source.CountAsync();
-        var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
-        return new PaginatedData<T>(items, count, pageIndex, pageSize);
-    }
+    public static PaginatedData<T> Create(IEnumerable<T> items, int total, int pageIndex, int pageSize)
+        => new(items, total, pageIndex, (int)Math.Ceiling(total / (double)pageSize));
 }

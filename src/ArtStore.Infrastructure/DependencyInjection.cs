@@ -2,6 +2,7 @@
 using ActualLab.Fusion;
 using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Features.Fusion;
+using ArtStore.Application.Interfaces.Services;
 using ArtStore.Domain.Common.Events.Dispatcher;
 using ArtStore.Domain.Identity;
 using ArtStore.Infrastructure.Configurations;
@@ -13,6 +14,7 @@ using ArtStore.Infrastructure.PermissionSet;
 using ArtStore.Infrastructure.Persistence.Interceptors;
 using ArtStore.Infrastructure.Services.Circuits;
 using ArtStore.Infrastructure.Services.MultiTenant;
+using ArtStore.Infrastructure.Services.Storage;
 using ArtStore.Shared.Interfaces.MultiTenant;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
@@ -189,7 +191,30 @@ public static class DependencyInjection
             .AddScoped<IValidationService, ValidationService>()
             .AddScoped<IDateTime, DateTimeService>()
             .AddScoped<IExcelService, ExcelService>()
-            .AddScoped<IPDFService, PDFService>();
+            .AddScoped<IPDFService, PDFService>()
+            .AddStorageService();
+    }
+
+    private static IServiceCollection AddStorageService(this IServiceCollection services)
+    {
+        services.AddSingleton<IBlobStorageService>(sp =>
+        {
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var useLocalStorage = configuration.GetValue<bool>("UseLocalFileStorage", true);
+
+            if (useLocalStorage)
+            {
+                var logger = sp.GetRequiredService<ILogger<LocalFileStorageService>>();
+                return new LocalFileStorageService(configuration, logger);
+            }
+            else
+            {
+                var logger = sp.GetRequiredService<ILogger<AzureBlobStorageService>>();
+                return new AzureBlobStorageService(configuration, logger);
+            }
+        });
+
+        return services;
     }
 
     private static IServiceCollection AddMessageServices(this IServiceCollection services,

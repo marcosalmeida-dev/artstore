@@ -3,7 +3,6 @@ using ArtStore.Application.Common.Models;
 using ArtStore.Application.Features.Products.Caching;
 using ArtStore.Shared.DTOs.Product;
 using ArtStore.Shared.Interfaces.Query;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 
 namespace ArtStore.Application.Features.Products.Queries.Search;

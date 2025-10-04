@@ -1,4 +1,4 @@
-@using ArtStore.Shared.DTOs.Product
+﻿@using ArtStore.Shared.DTOs.Product
 @using System.Globalization
 @using MudBlazor
 
@@ -102,7 +102,7 @@
                         </MudItem>
                     </MudGrid>
 
-                    @if (Product.Pictures?.Any() == true)
+                    @if (Product.ImageDtos?.Any() == true)
                     {
                         <MudDivider Class="my-4" />
                         <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold">
@@ -110,7 +110,7 @@
                             @GetLocalizedText("ProductImage")
                         </MudText>
                         <div class="text-center">
-                            <MudImage Src="@Product.Pictures.First().Url" 
+                            <MudImage Src="@Product.ImageDtos.First().Url" 
                                       Alt="@Product.Name" 
                                       Width="200" 
                                       Height="200" 

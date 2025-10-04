@@ -14,7 +14,7 @@ public class ProductDto
     public string? CategoryName { get; set; }
     public int? TenantId { get; set; }
     public string? TenantName { get; set; }
-    public List<ProductImageDto> Pictures { get; set; } = new();
+    public List<ProductImageDto> ImageDtos { get; set; } = new();
     public DateTime? Created { get; set; }
     public DateTime? LastModified { get; set; }
 

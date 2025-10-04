@@ -89,14 +89,14 @@
                                      @onclick="() => ToggleSelection(product)">
                                 <div Class="@(IsSelected(product) ? "selected-card" : "hover-card") product-card-inner">
                                     <div class="product-image-container">
-                                        @if (product.Pictures?.Any() == true)
+                                        @if (product.ImageDtos?.Any() == true)
                                         {
                                             <div class="selected-indicator">
                                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Primary" Size="Size.Large" />
                                             </div>
                                             <MudAnimate @ref="_animate" Selector=".id2" Duration="1" AnimationType="AnimationType.Fade" Value="_value2" ValueSecondary="0" Infinite="false"
                                                         KeyframeAdvanced="@KeyframeBuilder.Build(2, new List<string>() {"0", $"{_value2}"}, string.Join(" ", _animationTypes))" />
-                                            <MudCardMedia Class="id2" Image="@product.Pictures.First().Url" Height="200" />
+                                            <MudCardMedia Class="id2" Image="@product.ImageDtos.First().Url" Height="200" />
                                         }
                                         else
                                         {

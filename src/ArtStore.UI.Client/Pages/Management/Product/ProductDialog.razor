@@ -37,7 +37,7 @@
 
                 <MudItem xs="12">
                     <MudTextField Label="Description" @bind-Value="model.Description" For="@(() => model.Description)"
-                                  Lines="3" Counter="1000" MaxLength="1000" />
+                                  Lines="2" Counter="1000" MaxLength="1000" />
                 </MudItem>
                 
                 <MudItem xs="12" md="6">
@@ -58,8 +58,72 @@
                 <MudItem xs="12" md="6">
                     <MudSwitch Label="Active" @bind-Value="model.IsActive" Color="Color.Primary" />
                 </MudItem>
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">Product Images</MudText>
+
+                    @if (existingImages.Any())
+                    {
+                        <MudGrid>
+                            @foreach (var img in existingImages.OrderByDescending(o => o.IsPrimary))
+                            {
+                                <MudItem xs="6" sm="6" md="6">
+                                    <MudCard>
+                                        <MudCardMedia Image="@img.Url" Height="150" />
+                                        <MudCardActions>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                         Color="Color.Error"
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => RemoveExistingImage(img.Id))" />
+                                            <MudCheckBox T="bool" Value="img.IsPrimary"
+                                                       Label="Primary" Dense="true"
+                                                       ValueChanged="@((bool value) => SetPrimaryImage(img.Id, value))" />
+                                        </MudCardActions>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+
+                    @if (newImages.Any())
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-2">New Images</MudText>
+                        <MudGrid>
+                            @foreach (var img in newImages)
+                            {
+                                <MudItem xs="6" sm="6" md="6">
+                                    <MudCard>
+                                        <MudCardMedia Image="@img.PreviewUrl" Height="150" />
+                                        <MudCardActions>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                         Color="Color.Error"
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => RemoveNewImage(img))" />
+                                            <MudCheckBox T="bool" Value="img.IsPrimary"
+                                                       Label="Primary" Dense="true"
+                                                       ValueChanged="@((bool value) => SetPrimaryNewImage(img, value))" />
+                                        </MudCardActions>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+
+                    <MudFileUpload T="IBrowserFile"
+                                  FilesChanged="HandleFileSelection"
+                                  Accept="image/*"
+                                  Class="mt-3">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled"
+                                     Color="Color.Primary"
+                                     StartIcon="@Icons.Material.Filled.CloudUpload">
+                                Upload Images
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                </MudItem>
             </MudGrid>
-            
+
             <ValidationSummary />
         </EditForm>
     </DialogContent>
@@ -79,8 +143,11 @@
     </DialogActions>
 </MudDialog>
 
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
 @inject ISnackbar Snackbar
 @inject HttpClient httpClient
+@inject IJSRuntime JS
 
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
@@ -88,14 +155,18 @@
 
     private ProductDto model = new();
     private List<CategoryDto> categories = new();
+    private List<ProductImageDto> existingImages = new();
+    private Dictionary<int, bool> originalIsPrimaryState = new();
+    private List<NewProductImage> newImages = new();
+    private List<int> imagesToDelete = new();
     private bool saving = false;
-    
+
     private bool IsEditMode => Product != null;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCategories();
-        
+
         if (IsEditMode && Product != null)
         {
             model = new ProductDto
@@ -110,7 +181,28 @@
                 IsActive = Product.IsActive,
                 CategoryId = Product.CategoryId
             };
+
+            existingImages = Product.ImageDtos?.ToList() ?? new List<ProductImageDto>();
+
+            // Store original IsPrimary state
+            foreach (var img in existingImages)
+            {
+                originalIsPrimaryState[img.Id] = img.IsPrimary;
+            }
         }
+    }
+
+    private class NewProductImage
+    {
+        public string Name { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+        public byte[] Content { get; set; } = Array.Empty<byte>();
+        public string ContentType { get; set; } = "image/jpeg";
+        public string PreviewUrl { get; set; } = string.Empty;
+        public bool IsPrimary { get; set; }
+        public int SortOrder { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 
     private async Task LoadCategories()
@@ -126,11 +218,142 @@
         }
     }
 
+    private IJSObjectReference? _imageHelperModule;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _imageHelperModule = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/imageHelper.js");
+        }
+    }
+
+    private async Task HandleFileSelection(IBrowserFile file)
+    {
+        if (file == null) return;
+
+        try
+        {
+            const long maxFileSize = 5 * 1024 * 1024; // 5MB
+            if (file.Size > maxFileSize)
+            {
+                Snackbar.Add("File size must be less than 5MB", Severity.Warning);
+                return;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(memoryStream);
+            var content = memoryStream.ToArray();
+
+            // Create data URL for preview
+            var base64 = Convert.ToBase64String(content);
+            var previewUrl = $"data:{file.ContentType};base64,{base64}";
+
+            // Get image dimensions using JavaScript
+            int width = 0, height = 0;
+            try
+            {
+                if (_imageHelperModule is not null)
+                {
+                    var dims = await _imageHelperModule.InvokeAsync<ImageDimensions>(
+                        "getImageDimensions", previewUrl);
+                    width = dims.Width;
+                    height = dims.Height;
+                }
+            }
+            catch { /* swallow as before */ }
+
+            var newImage = new NewProductImage
+            {
+                Name = file.Name,
+                FileName = file.Name,
+                Content = content,
+                ContentType = file.ContentType,
+                PreviewUrl = previewUrl,
+                IsPrimary = !existingImages.Any() && !newImages.Any(), // First image is primary by default
+                SortOrder = existingImages.Count + newImages.Count,
+                Width = width,
+                Height = height
+            };
+
+            newImages.Add(newImage);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading image: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private class ImageDimensions
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
+    private void RemoveExistingImage(int imageId)
+    {
+        var image = existingImages.FirstOrDefault(i => i.Id == imageId);
+        if (image != null)
+        {
+            existingImages.Remove(image);
+            imagesToDelete.Add(imageId);
+        }
+    }
+
+    private void RemoveNewImage(NewProductImage image)
+    {
+        newImages.Remove(image);
+    }
+
+    private void SetPrimaryImage(int imageId, bool isPrimary)
+    {
+        if (isPrimary)
+        {
+            // Unset primary for all other images
+            foreach (var img in existingImages)
+            {
+                img.IsPrimary = img.Id == imageId;
+            }
+            foreach (var img in newImages)
+            {
+                img.IsPrimary = false;
+            }
+        }
+    }
+
+    private void SetPrimaryNewImage(NewProductImage image, bool isPrimary)
+    {
+        if (isPrimary)
+        {
+            // Unset primary for all other images
+            foreach (var img in existingImages)
+            {
+                img.IsPrimary = false;
+            }
+            foreach (var img in newImages)
+            {
+                img.IsPrimary = img == image;
+            }
+        }
+    }
+
     private async Task Submit()
     {
         saving = true;
         try
         {
+            // Collect image updates (IsPrimary changes)
+            var imagesToUpdate = existingImages
+                .Where(img => originalIsPrimaryState.ContainsKey(img.Id) &&
+                             originalIsPrimaryState[img.Id] != img.IsPrimary)
+                .Select(img => new UpdateProductImageDto
+                {
+                    Id = img.Id,
+                    IsPrimary = img.IsPrimary
+                }).ToList();
+
             var command = new AddEditProductCommand
             {
                 Id = model.Id,
@@ -141,11 +364,24 @@
                 Unit = model.Unit,
                 Price = model.Price,
                 IsActive = model.IsActive,
-                CategoryId = model.CategoryId
+                CategoryId = model.CategoryId,
+                ImagesToDelete = imagesToDelete,
+                ImagesToUpdate = imagesToUpdate,
+                NewImages = newImages.Select(img => new UploadProductImageDto
+                {
+                    Name = img.Name,
+                    FileName = img.FileName,
+                    Content = img.Content,
+                    ContentType = img.ContentType,
+                    IsPrimary = img.IsPrimary,
+                    SortOrder = img.SortOrder,
+                    Width = img.Width,
+                    Height = img.Height
+                }).ToList()
             };
 
             HttpResponseMessage response;
-            
+
             if (IsEditMode)
             {
                 response = await httpClient.PutAsJsonAsync($"/api/admin/products/{model.Id}", command);
@@ -185,4 +421,12 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_imageHelperModule is not null)
+        {
+            await _imageHelperModule.DisposeAsync();
+        }
+    }
 }

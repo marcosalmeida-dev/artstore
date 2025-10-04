@@ -70,7 +70,7 @@ public class GetAllProductsQueryHandler :
                 var data = await _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Tenant)
-                    .Include(p => p.Pictures)
+                    .Include(p => p.ProductImages)
                     .Where(x => x.Id == request.Id)
                     .FirstOrDefaultAsync(cancel);
 
@@ -88,7 +88,7 @@ public class GetAllProductsQueryHandler :
                     TenantId = data.TenantId,
                     TenantName = data.Tenant?.Name,
                     ProductCode = data.ProductCode,
-                    Pictures = data.Pictures?.Select(p => new ProductImageDto
+                    ImageDtos = data.ProductImages?.Select(p => new ProductImageDto
                     {
                         Id = p.Id,
                         Name = p.Name,
@@ -121,7 +121,7 @@ public class GetAllProductsQueryHandler :
         var data = await _context.Products
                             .Include(p => p.Category)
                             .Include(p => p.Tenant)
-                            .Include(p => p.Pictures)
+                            .Include(p => p.ProductImages)
                             .Where(p => p.IsActive)
                             .ToListAsync(cancel);
 
@@ -139,7 +139,7 @@ public class GetAllProductsQueryHandler :
             TenantId = x.TenantId,
             TenantName = x.Tenant?.Name,
             ProductCode = x.ProductCode,
-            Pictures = x.Pictures?.Select(p => new ProductImageDto
+            ImageDtos = x.ProductImages?.Select(p => new ProductImageDto
             {
                 Id = p.Id,
                 Name = p.Name,
