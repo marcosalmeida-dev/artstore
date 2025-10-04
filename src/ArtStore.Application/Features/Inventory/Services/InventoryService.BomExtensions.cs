@@ -1,4 +1,4 @@
-// src/ArtStore.Application/Features/Inventory/Services/InventoryService.BomExtensions.cs
+﻿// src/ArtStore.Application/Features/Inventory/Services/InventoryService.BomExtensions.cs
 using ArtStore.Domain.Entities;
 using ArtStore.Domain.Entities.Enums;
 using Microsoft.EntityFrameworkCore;

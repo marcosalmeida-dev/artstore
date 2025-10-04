@@ -11,7 +11,8 @@
       "Bash(findstr:*)",
       "Bash(powershell:*)",
       "Bash(mkdir:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(dotnet list package:*)"
     ],
     "deny": [],
     "ask": []

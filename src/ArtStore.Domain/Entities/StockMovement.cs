@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/StockMovement.cs
+﻿// src/ArtStore.Domain/Entities/StockMovement.cs
 using ArtStore.Domain.Common.Entities;
 using ArtStore.Domain.Entities.Enums;
 

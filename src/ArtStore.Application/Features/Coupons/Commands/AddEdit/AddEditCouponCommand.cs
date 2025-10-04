@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Interfaces;
+﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Common.Models;
 using ArtStore.Domain.Entities;
 using ArtStore.Shared.DTOs.Coupon.Commands;

@@ -1,11 +1,11 @@
-using ArtStore.Application.Common.Models;
+﻿using ArtStore.Application.Common.Models;
 using ArtStore.Application.Features.Coupons.Commands.AddEdit;
 using ArtStore.Application.Features.Coupons.Commands.Delete;
 using ArtStore.Application.Features.Coupons.Queries.GetAll;
 using ArtStore.Shared.DTOs.Coupon;
 using ArtStore.Shared.DTOs.Coupon.Commands;
-using ArtStore.Shared.Interfaces.Query;
 using ArtStore.Shared.Interfaces.Command;
+using ArtStore.Shared.Interfaces.Query;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtStore.UI.Controllers.Admin;

@@ -1,4 +1,4 @@
-// src/ArtStore.Infrastructure/Persistence/Configurations/RecipeComponentConfiguration.cs
+﻿// src/ArtStore.Infrastructure/Persistence/Configurations/RecipeComponentConfiguration.cs
 using ArtStore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

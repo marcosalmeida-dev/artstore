@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/InventoryReservation.cs
+﻿// src/ArtStore.Domain/Entities/InventoryReservation.cs
 using ArtStore.Domain.Common.Entities;
 using ArtStore.Domain.Entities.Enums;
 

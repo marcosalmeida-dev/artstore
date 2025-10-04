@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/RecipeComponent.cs
+﻿// src/ArtStore.Domain/Entities/RecipeComponent.cs
 using ArtStore.Domain.Common.Entities;
 using ArtStore.Domain.Entities.Enums;
 

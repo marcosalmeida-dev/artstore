@@ -35,7 +35,7 @@ public class SearchProductsQueryHandler : IQueryHandler<SearchProductsQuery, Pag
     public async Task<PaginatedData<ProductDto>> Handle(SearchProductsQuery request, CancellationToken cancellationToken)
     {
         var cacheKey = ProductCacheKey.GetSearchCacheKey($"{request.SearchString}-{request.IsActive}-{request.CategoryId}-{request.PageNumber}-{request.PageSize}-{request.OrderBy}-{request.SortDirection}");
-        
+
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async cancel =>

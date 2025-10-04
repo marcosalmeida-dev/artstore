@@ -62,7 +62,7 @@ public class GetAllProductsQueryHandler :
     public async Task<ProductDto?> Handle(GetProductQuery request, CancellationToken cancellationToken)
     {
         var cacheKey = ProductCacheKey.GetProductByIdCacheKey(request.Id, request.Culture);
-        
+
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async cancel =>

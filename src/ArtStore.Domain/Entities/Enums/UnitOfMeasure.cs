@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/Enums/UnitOfMeasure.cs
+﻿// src/ArtStore.Domain/Entities/Enums/UnitOfMeasure.cs
 namespace ArtStore.Domain.Entities.Enums;
 
 /// <summary>

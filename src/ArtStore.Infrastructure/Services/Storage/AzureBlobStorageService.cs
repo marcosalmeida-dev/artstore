@@ -1,6 +1,6 @@
-﻿using Azure.Storage.Blobs;
+﻿using ArtStore.Application.Interfaces.Services;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using ArtStore.Application.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;

@@ -6,14 +6,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
    <ItemGroup>
-       <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.9" />
        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
        <PackageReference Include="Ardalis.Specification" Version="9.3.1" />
        <PackageReference Include="Ardalis.Specification.EntityFrameworkCore" Version="9.3.1" />
        <PackageReference Include="FluentValidation" Version="12.0.0" />
        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.9" />
+       <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.9" />
        <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="9.0.9" />
        <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.9.0" />
        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.4.0" />

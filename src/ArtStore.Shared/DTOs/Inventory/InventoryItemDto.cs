@@ -1,4 +1,4 @@
-namespace ArtStore.Shared.DTOs.Inventory;
+﻿namespace ArtStore.Shared.DTOs.Inventory;
 
 public class InventoryItemDto
 {

@@ -1,4 +1,4 @@
-using ArtStore.Shared.Events.Base;
+﻿using ArtStore.Shared.Events.Base;
 
 namespace ArtStore.Domain.Common.Entities;
 

@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Interfaces;
+﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Shared.DTOs.Inventory;
 using ArtStore.Shared.Interfaces.Query;
 using Microsoft.EntityFrameworkCore;
@@ -47,7 +47,10 @@ public class GetAllInventoryLocationsQueryHandler :
     {
         var location = await _context.InventoryLocations
             .FirstOrDefaultAsync(l => l.Id == request.Id, cancellationToken);
-        if (location == null) return null;
+        if (location == null)
+        {
+            return null;
+        }
 
         return new InventoryLocationDto
         {

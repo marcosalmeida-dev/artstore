@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using ArtStore.Shared.Interfaces.Command;
 
 namespace ArtStore.Shared.DTOs.Inventory.Commands;

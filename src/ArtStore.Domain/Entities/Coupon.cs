@@ -1,4 +1,4 @@
-using ArtStore.Domain.Common.Entities;
+﻿using ArtStore.Domain.Common.Entities;
 
 namespace ArtStore.Domain.Entities;
 

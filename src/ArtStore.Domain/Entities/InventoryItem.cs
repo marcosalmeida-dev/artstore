@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/InventoryItem.cs
+﻿// src/ArtStore.Domain/Entities/InventoryItem.cs
 using ArtStore.Domain.Common.Entities;
 
 namespace ArtStore.Domain.Entities;

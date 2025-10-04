@@ -1,4 +1,4 @@
-namespace ArtStore.Shared.DTOs.Coupon;
+﻿namespace ArtStore.Shared.DTOs.Coupon;
 
 public class CouponDto
 {

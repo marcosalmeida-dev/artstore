@@ -1,4 +1,4 @@
-using ArtStore.Domain.Entities;
+﻿using ArtStore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

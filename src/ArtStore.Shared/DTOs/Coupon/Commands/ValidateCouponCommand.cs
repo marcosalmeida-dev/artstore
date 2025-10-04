@@ -1,4 +1,4 @@
-using ArtStore.Shared.Interfaces.Command;
+﻿using ArtStore.Shared.Interfaces.Command;
 
 namespace ArtStore.Shared.DTOs.Coupon.Commands;
 

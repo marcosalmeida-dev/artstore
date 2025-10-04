@@ -1,4 +1,5 @@
-﻿using ArtStore.Application.Common.Interfaces;
+﻿using System.IO.Compression;
+using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Hubs;
 using ArtStore.Domain.Identity;
 using ArtStore.Infrastructure.Constants.Localization;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using MudExtensions.Services;
-using System.IO.Compression;
 
 namespace ArtStore.UI;
 

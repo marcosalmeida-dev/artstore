@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Models;
+﻿using ArtStore.Application.Common.Models;
 using ArtStore.Application.Features.Categories.Commands.Delete;
 using ArtStore.Application.Features.Categories.Queries.GetAll;
 using ArtStore.Application.Features.Categories.Queries.Search;

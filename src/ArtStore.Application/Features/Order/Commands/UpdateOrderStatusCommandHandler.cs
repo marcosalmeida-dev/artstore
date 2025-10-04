@@ -26,7 +26,7 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
 
         // Capture the old status before making changes
         var oldStatus = order.Status;
-        
+
         order.Status = request.Status;
         order.Notes = request.Notes ?? order.Notes;
         order.LastModified = DateTime.UtcNow;

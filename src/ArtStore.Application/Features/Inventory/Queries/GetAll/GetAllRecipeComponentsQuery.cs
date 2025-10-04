@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Interfaces;
+﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Shared.DTOs.Inventory;
 using ArtStore.Shared.Interfaces.Query;
 using Microsoft.EntityFrameworkCore;
@@ -60,7 +60,10 @@ public class GetAllRecipeComponentsQueryHandler :
             .Include(r => r.Product)
             .Include(r => r.ComponentProduct)
             .FirstOrDefaultAsync(r => r.Id == request.Id, cancellationToken);
-        if (component == null) return null;
+        if (component == null)
+        {
+            return null;
+        }
 
         return new RecipeComponentDto
         {

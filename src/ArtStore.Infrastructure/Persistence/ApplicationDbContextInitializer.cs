@@ -333,12 +333,12 @@ public class ApplicationDbContextInitializer
                 var flavorFileName = flavorEn.ToLower().Replace(" ", "-") switch
                 {
                     "passion-fruit" => "passion-fruit",
-                    "sicilian-lemon" => "sicilian-lemon", 
+                    "sicilian-lemon" => "sicilian-lemon",
                     "coffee" => "coffe", // Note: file has single 'e'
                     _ => flavorEn.ToLower().Replace(" ", "-")
                 };
-                
-                var imageFileName = type == "Regular" 
+
+                var imageFileName = type == "Regular"
                     ? $"sugarcane-{flavorFileName}.png"
                     : $"sugarcane-{flavorFileName}-ice-slush.png";
 
@@ -405,11 +405,11 @@ public class ApplicationDbContextInitializer
                 Category = roastPastry,
                 ProductImages = new List<ProductImage>
                 {
-                    new ProductImage 
-                    { 
+                    new ProductImage
+                    {
                         Name = "Chicken Roast Pastry",
-                        FileName = "roast-pasty-chicken.png", 
-                        Url = "/images/roast-pasty-chicken.png", 
+                        FileName = "roast-pasty-chicken.png",
+                        Url = "/images/roast-pasty-chicken.png",
                         AltText = "Crispy roast pastry filled with seasoned chicken",
                         Size = 1024 * 180, // 180KB in bytes
                         Width = 400,
@@ -432,11 +432,11 @@ public class ApplicationDbContextInitializer
                 Category = roastPastry,
                 ProductImages = new List<ProductImage>
                 {
-                    new ProductImage 
-                    { 
+                    new ProductImage
+                    {
                         Name = "Meat Roast Pastry",
-                        FileName = "roast-pasty-chicken-meat.png", 
-                        Url = "/images/roast-pasty-chicken-meat.png", 
+                        FileName = "roast-pasty-chicken-meat.png",
+                        Url = "/images/roast-pasty-chicken-meat.png",
                         AltText = "Traditional roast pastry with chicken and seasoned ground beef",
                         Size = 1024 * 180, // 180KB in bytes
                         Width = 400,

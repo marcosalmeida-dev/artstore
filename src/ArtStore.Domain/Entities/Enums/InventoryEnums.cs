@@ -1,4 +1,4 @@
-// src/ArtStore.Domain/Entities/Enums/InventoryEnums.cs
+﻿// src/ArtStore.Domain/Entities/Enums/InventoryEnums.cs
 namespace ArtStore.Domain.Entities.Enums;
 
 /// <summary>

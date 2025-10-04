@@ -28,7 +28,7 @@ public class ProductsWithPaginationQueryHandler :
 {
     private readonly IApplicationDbContext _context;
     private readonly HybridCache _cache;
-    
+
     public ProductsWithPaginationQueryHandler(
         IApplicationDbContext context,
         HybridCache cache
@@ -42,7 +42,7 @@ public class ProductsWithPaginationQueryHandler :
         CancellationToken cancellationToken)
     {
         var cacheKey = ProductCacheKey.GetPaginationCacheKey($"{request}");
-        
+
         return await _cache.GetOrCreateAsync(
             cacheKey,
             async cancel =>

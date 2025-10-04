@@ -1,4 +1,4 @@
-// src/ArtStore.Application/Features/Inventory/Services/InventoryService.cs
+﻿// src/ArtStore.Application/Features/Inventory/Services/InventoryService.cs
 using ArtStore.Domain.Entities;
 using ArtStore.Domain.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -86,7 +86,9 @@ public partial class InventoryService
         CancellationToken cancellationToken = default)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be positive.", nameof(quantity));
+        }
 
         var item = await GetOrCreateItemAsync(productId, locationId, tenantId, cancellationToken);
 
@@ -133,7 +135,9 @@ public partial class InventoryService
         CancellationToken cancellationToken = default)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be positive.", nameof(quantity));
+        }
 
         // Check available inventory
         var (onHand, available) = await InventoryQueries.GetSnapshotAsync(
@@ -200,11 +204,15 @@ public partial class InventoryService
                 cancellationToken);
 
         if (reservation == null)
+        {
             throw new InvalidOperationException($"Reservation {reservationId} not found.");
+        }
 
         if (reservation.Status != ReservationStatus.Active)
+        {
             throw new InvalidOperationException(
                 $"Reservation {reservationId} is not active (status: {reservation.Status}).");
+        }
 
         var item = await GetOrCreateItemAsync(
             reservation.ProductId,
@@ -216,8 +224,10 @@ public partial class InventoryService
         item.OnHand = Round2(item.OnHand - reservation.Quantity);
 
         if (item.OnHand < 0)
+        {
             throw new InvalidOperationException(
                 $"Cannot commit reservation: would result in negative inventory (OnHand: {item.OnHand}).");
+        }
 
         // Mark reservation as committed
         reservation.Status = ReservationStatus.Committed;
@@ -276,11 +286,15 @@ public partial class InventoryService
                 cancellationToken);
 
         if (reservation == null)
+        {
             throw new InvalidOperationException($"Reservation {reservationId} not found.");
+        }
 
         if (reservation.Status != ReservationStatus.Active)
+        {
             throw new InvalidOperationException(
                 $"Reservation {reservationId} is not active (status: {reservation.Status}).");
+        }
 
         var item = await GetOrCreateItemAsync(
             reservation.ProductId,
@@ -332,8 +346,10 @@ public partial class InventoryService
         var newOnHand = Round2(item.OnHand + delta);
 
         if (newOnHand < 0)
+        {
             throw new InvalidOperationException(
                 $"Adjustment would result in negative inventory (current: {item.OnHand}, delta: {delta}).");
+        }
 
         item.OnHand = newOnHand;
 
@@ -374,17 +390,23 @@ public partial class InventoryService
         CancellationToken cancellationToken = default)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be positive.", nameof(quantity));
+        }
 
         if (fromLocationId == toLocationId)
+        {
             throw new ArgumentException("Source and destination locations must be different.");
+        }
 
         var fromItem = await GetOrCreateItemAsync(productId, fromLocationId, tenantId, cancellationToken);
         var toItem = await GetOrCreateItemAsync(productId, toLocationId, tenantId, cancellationToken);
 
         if (fromItem.OnHand < quantity)
+        {
             throw new InvalidOperationException(
                 $"Insufficient inventory at source location (available: {fromItem.OnHand}, requested: {quantity}).");
+        }
 
         fromItem.OnHand = Round2(fromItem.OnHand - quantity);
         toItem.OnHand = Round2(toItem.OnHand + quantity);

@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Interfaces;
+﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Shared.DTOs.Coupon;
 using ArtStore.Shared.Interfaces.Query;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +56,10 @@ public class GetAllCouponsQueryHandler :
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
-        if (coupon == null) return null;
+        if (coupon == null)
+        {
+            return null;
+        }
 
         return new CouponDto
         {

@@ -1,4 +1,4 @@
-// src/ArtStore.Infrastructure/Persistence/Configurations/InventoryLocationConfiguration.cs
+﻿// src/ArtStore.Infrastructure/Persistence/Configurations/InventoryLocationConfiguration.cs
 using ArtStore.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

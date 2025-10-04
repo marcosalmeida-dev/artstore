@@ -1,4 +1,4 @@
-using ArtStore.Application.Common.Interfaces;
+﻿using ArtStore.Application.Common.Interfaces;
 using ArtStore.Application.Features.Inventory.Services;
 using ArtStore.Domain.Entities.Enums;
 using ArtStore.Shared.DTOs.Inventory;
@@ -73,7 +73,10 @@ public class GetAllInventoryItemsQueryHandler :
             .Include(i => i.Product)
             .Include(i => i.Location)
             .FirstOrDefaultAsync(i => i.Id == request.Id, cancellationToken);
-        if (item == null) return null;
+        if (item == null)
+        {
+            return null;
+        }
 
         // Get available quantity (OnHand - active reservations)
         var reserved = await _context.InventoryReservations
