@@ -491,7 +491,8 @@ public class ApplicationDbContextInitializer
             Name = "Raw Materials",
             Description = "Ingredients and raw materials for production",
             TenantId = tenant.Id,
-            IsActive = true
+            IsActive = true,
+            IsRawMaterial = true
         };
         rawMaterialsCategory.SetTranslation("pt-BR", "Matérias-Primas", "Ingredientes e matérias-primas para produção");
         rawMaterialsCategory.SetTranslation("es-AR", "Materias Primas", "Ingredientes y materias primas para producción");

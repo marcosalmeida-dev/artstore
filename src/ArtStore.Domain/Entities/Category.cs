@@ -12,6 +12,9 @@ public class Category : BaseTenantEntity<int>
 
     public bool IsActive { get; set; } = true;
 
+    // Flag to identify raw materials category
+    public bool IsRawMaterial { get; set; } = false;
+
     // Self-referencing for parent categories
     public int? ParentCategoryId { get; set; }
     public virtual Category? ParentCategory { get; set; }

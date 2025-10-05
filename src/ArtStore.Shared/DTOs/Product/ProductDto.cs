@@ -12,6 +12,7 @@ public class ProductDto
     public int CategoryId { get; set; }
     public string ProductCode { get; set; } = string.Empty;
     public string? CategoryName { get; set; }
+    public bool CategoryIsRawMaterial { get; set; } = false;
     public int? TenantId { get; set; }
     public string? TenantName { get; set; }
     public List<ProductImageDto> ImageDtos { get; set; } = new();

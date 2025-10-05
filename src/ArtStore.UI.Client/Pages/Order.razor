@@ -38,15 +38,15 @@
                                 BR
                             </MudButton>
                             <MudButton OnClick="@(() => ChangeLanguage(ENGLISH))"
-                                      Color="@(currentLanguage == ENGLISH ? Color.Primary : Color.Default)"
-                                      Variant="@(currentLanguage == ENGLISH ? Variant.Filled : Variant.Outlined)"
-                                      StartIcon="@GetFlagIcon(ENGLISH)" Size="Size.Medium">
+                                       Color="@(currentLanguage == ENGLISH ? Color.Primary : Color.Default)"
+                                       Variant="@(currentLanguage == ENGLISH ? Variant.Filled : Variant.Outlined)"
+                                       StartIcon="@GetFlagIcon(ENGLISH)" Size="Size.Medium">
                                 EN
                             </MudButton>
                             <MudButton OnClick="@(() => ChangeLanguage(SPANISH))"
-                                      Color="@(currentLanguage == SPANISH ? Color.Primary : Color.Default)"
-                                      Variant="@(currentLanguage == SPANISH ? Variant.Filled : Variant.Outlined)"
-                                      StartIcon="@GetFlagIcon(SPANISH)" Size="Size.Medium">
+                                       Color="@(currentLanguage == SPANISH ? Color.Primary : Color.Default)"
+                                       Variant="@(currentLanguage == SPANISH ? Variant.Filled : Variant.Outlined)"
+                                       StartIcon="@GetFlagIcon(SPANISH)" Size="Size.Medium">
                                 AR
                             </MudButton>
                         </MudButtonGroup>
@@ -80,7 +80,7 @@
                     <MudIcon Icon="@GetCategoryIcon(category)" Class="mr-2" />
                     @GetLocalizedCategory(category)
                 </MudText>
-                
+
                 <MudGrid>
                     @foreach (var product in categoryProducts)
                     {
@@ -105,29 +105,29 @@
                                             </div>
                                         }
                                     </div>
-                                    
+
                                     <MudCardContent Class="product-content">
                                         <div class="product-header">
-                                            <MudText Typo="Typo.h6" Class="fw-bold product-name">
+                                            <MudText Typo="Typo.h6" Color="Color.Primary" Class="fw-bold product-name">
                                                 @product.Name
                                             </MudText>
                                             <MudText Typo="Typo.h6" Color="Color.Success" Class="fw-bold product-price">
                                                 @FormatPrice(product.Price)
                                             </MudText>
                                         </div>
-                                        
-                                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="product-description">
+
+                                        <MudText Typo="Typo.body2" Class="product-description">
                                             @product.Description
                                         </MudText>
-                                        
+
                                         @if (product.Unit != null)
                                         {
-                                            <MudText Typo="Typo.caption" Color="Color.Tertiary" Class="product-unit">
+                                            <MudText Typo="Typo.caption" Color="Color.Dark" Class="product-unit">
                                                 @product.Unit
                                             </MudText>
                                         }
                                     </MudCardContent>
-                                    
+
                                     <MudCardActions Class="product-actions">
                                         @if (IsSelected(product))
                                         {
@@ -153,28 +153,28 @@
                                                                    OnClick="@(() => IncreaseItemCount(product))"
                                                                    Disabled="@(GetItemCount(product) > 9)" />
                                                 </div>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Info" 
-                                                             Color="Color.Secondary" 
-                                                             Size="Size.Small"
-                                                             Class="product-info-button"
-                                                             OnClick="@(() => OpenNutritionDialog(product))" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                                               Color="Color.Secondary"
+                                                               Size="Size.Small"
+                                                               Class="product-info-button"
+                                                               OnClick="@(() => OpenNutritionDialog(product))" />
                                             </div>
                                         }
                                         else
                                         {
                                             <div class="d-flex align-center justify-space-between" style="width: 100%;">
-                                                <MudButton Variant="Variant.Filled" 
-                                                          Color="Color.Primary" 
-                                                          FullWidth="false"
-                                                          StartIcon="@Icons.Material.Filled.ShoppingCart"
-                                                          @onclick="() => ToggleSelection(product)">
+                                                <MudButton Variant="Variant.Filled"
+                                                           Color="Color.Primary"
+                                                           FullWidth="false"
+                                                           StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                                           @onclick="() => ToggleSelection(product)">
                                                     @GetLocalizedText("AddToOrder")
                                                 </MudButton>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Info" 
-                                                             Color="Color.Secondary" 
-                                                             Size="Size.Small"
-                                                             Class="product-info-button"
-                                                             OnClick="@(() => OpenNutritionDialog(product))" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                                               Color="Color.Secondary"
+                                                               Size="Size.Small"
+                                                               Class="product-info-button"
+                                                               OnClick="@(() => OpenNutritionDialog(product))" />
                                             </div>
                                         }
                                     </MudCardActions>
@@ -228,10 +228,9 @@
     </div>
 }
 
-
 <style type="text/css">
-    .product-card {
-        height: 350px !important; /* Fixed height for all cards */
+        .product-card {
+        height: 375px !important; /* Fixed height for all cards */
         display: flex;
         flex-direction: column;
     }
@@ -339,7 +338,6 @@
         margin-bottom: 80px;
     }
 
-    /* Bottom-center the overlay */
     .selection-popup-overlay {
         position: fixed;
         bottom: 16px;
@@ -368,25 +366,26 @@
         .product-card {
             height: 375px !important;
         }
-        
+
         .product-content {
             padding: 10px !important;
             gap: 4px;
         }
-        
+
         .product-description {
             -webkit-line-clamp: 2;
             max-height: 2.6em; /* 2 lines * 1.3 line height */
         }
-        
+
         .product-price {
             font-size: 0.9rem !important;
         }
-        
+
         .product-actions {
             padding: 10px !important;
         }
     }
+
 </style>
 
 @code {
@@ -404,7 +403,7 @@
     private List<ProductDto> allProducts = new();
     private HashSet<int> SelectedItems = new HashSet<int>();
     private IReadOnlyCollection<string> selectedCategories = new HashSet<string>();
-    
+
     // Nutrition dialog reference
     private IDialogReference? _nutritionDialogReference;
 
@@ -417,7 +416,11 @@
     {
         try
         {
-            allProducts = await ProductService.GetProductsAsync(GetCultureCode(currentLanguage));
+            var products = await ProductService.GetProductsAsync(GetCultureCode(currentLanguage));
+
+            // Filter out raw materials
+            allProducts = products.Where(p => !p.CategoryIsRawMaterial).ToList();
+
             StateHasChanged();
         }
         catch (Exception ex)
@@ -672,11 +675,12 @@
     // Nutrition Dialog Methods
     private async Task OpenNutritionDialog(ProductDto product)
     {
-        var options = new DialogOptions { 
+        var options = new DialogOptions
+        {
             MaxWidth = MaxWidth.Medium,
             FullWidth = true,
-            CloseOnEscapeKey = true, 
-            CloseButton = true 
+            CloseOnEscapeKey = true,
+            CloseButton = true
         };
         var parameters = new DialogParameters<NutritionFacts>
         {
