@@ -1,4 +1,4 @@
-﻿@page "/order-list"
+﻿@page "/order-report"
 
 @using ArtStore.Shared.DTOs.Order
 @using ArtStore.Shared.Models.Enums
@@ -8,7 +8,7 @@
 @inject IJSRuntime JSRuntime
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">Order List</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4">Order Report</MudText>
 
     @if (Orders == null)
     {
@@ -63,9 +63,8 @@
 
                             <div class="mb-2">
                                 <MudText Typo="Typo.subtitle2">Items</MudText>
-                                <MudText Typo="Typo.body2">@order.OrderDetails.Count item(s)</MudText>
 
-                                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                                <MudText Typo="Typo.body1" Color="Color.Primary" Class="mud-text-secondary">
                                     Total: @order.OrderDetails.Sum(d => d.Quantity) unit(s)
                                 </MudText>
                                 <MudPaper Square="true">
