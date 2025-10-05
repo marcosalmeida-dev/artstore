@@ -1,30 +1,27 @@
 ﻿using ArtStore.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
-using ZiggyCreatures.Caching.Fusion;
 
 namespace ArtStore.Application.Common.Security;
 
 public class UserProfileStateService : IDisposable
 {
-    // Cache refresh interval of 60 seconds
-    private TimeSpan RefreshInterval => TimeSpan.FromSeconds(60);
-
     // Internal user profile state
     private UserProfile _userProfile = new UserProfile { Email = "", UserId = "", UserName = "" };
 
     // Dependencies
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IFusionCache _fusionCache;
+    private readonly HybridCache _cache;
     private readonly IServiceScope _scope;
 
     public UserProfileStateService(
         IServiceScopeFactory scopeFactory,
-        IFusionCache fusionCache)
+        HybridCache cache)
     {
         _scope = scopeFactory.CreateScope();
         _userManager = _scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        _fusionCache = fusionCache;
+        _cache = cache;
     }
 
     /// <summary>
@@ -33,13 +30,17 @@ public class UserProfileStateService : IDisposable
     public async Task InitializeAsync(string userName)
     {
         var key = GetApplicationUserCacheKey(userName);
-        var result = await _fusionCache.GetOrSetAsync(
+        var result = await _cache.GetOrCreateAsync(
             key,
-            _ => _userManager.Users
+            async cancel => await _userManager.Users
                         .Where(x => x.UserName == userName)
                         .Include(x => x.UserRoles).ThenInclude(x => x.Role)
-                        .FirstOrDefaultAsync(),
-            RefreshInterval);
+                        .FirstOrDefaultAsync(cancel),
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(60),
+                LocalCacheExpiration = TimeSpan.FromSeconds(30)
+            });
 
         if (result is not null)
         {
@@ -103,9 +104,9 @@ public class UserProfileStateService : IDisposable
         return $"GetApplicationUserDto:{userName}";
     }
 
-    public void RemoveApplicationUserCache(string userName)
+    public async void RemoveApplicationUserCache(string userName)
     {
-        _fusionCache.Remove(GetApplicationUserCacheKey(userName));
+        await _cache.RemoveAsync(GetApplicationUserCacheKey(userName));
     }
 
     public void Dispose() => _scope.Dispose();

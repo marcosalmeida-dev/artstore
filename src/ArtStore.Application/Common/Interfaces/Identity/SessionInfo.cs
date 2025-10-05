@@ -1,23 +1,43 @@
-﻿using System.Runtime.Serialization;
-using ActualLab.Fusion.Blazor;
-using MemoryPack;
-using MessagePack;
-using KeyAttribute = MessagePack.KeyAttribute;
+﻿namespace ArtStore.Application.Common.Interfaces.Identity;
 
-namespace ArtStore.Application.Common.Interfaces.Identity;
-[DataContract, MemoryPackable, MessagePackObject]
-[ParameterComparer(typeof(ByValueParameterComparer))]
-public sealed partial record SessionInfo(
-    [property: DataMember, Key(0)] string? UserId,
-    [property: DataMember, Key(1)] string? UserName,
-    [property: DataMember, Key(2)] string? DisplayName,
-    [property: DataMember, Key(3)] string? IPAddress,
-    [property: DataMember, Key(4)] string? TenantId,
-    [property: DataMember, Key(5)] string? ProfilePictureDataUrl,
-    [property: DataMember, Key(6)] UserPresence Status
+/// <summary>
+/// Represents user session information.
+/// Using record for immutability and value-based equality.
+/// </summary>
+public sealed record SessionInfo
+{
+    public string? UserId { get; init; }
+    public string? UserName { get; init; }
+    public string? DisplayName { get; init; }
+    public string? IPAddress { get; init; }
+    public string? TenantId { get; init; }
+    public string? ProfilePictureDataUrl { get; init; }
+    public UserPresence Status { get; init; }
 
-    )
-{ }
+    public SessionInfo()
+    {
+        Status = UserPresence.Statusunknown;
+    }
+
+    public SessionInfo(
+        string? userId,
+        string? userName,
+        string? displayName,
+        string? ipAddress,
+        string? tenantId,
+        string? profilePictureDataUrl,
+        UserPresence status)
+    {
+        UserId = userId;
+        UserName = userName;
+        DisplayName = displayName;
+        IPAddress = ipAddress;
+        TenantId = tenantId;
+        ProfilePictureDataUrl = profilePictureDataUrl;
+        Status = status;
+    }
+}
+
 public enum UserPresence
 {
     Available,

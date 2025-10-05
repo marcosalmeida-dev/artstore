@@ -2,18 +2,14 @@
 using System.Data;
 using ArtStore.Infrastructure.Configurations;
 using ArtStore.Infrastructure.Constants.Database;
-using ArtStore.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using NpgsqlTypes;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
-using Serilog.Sinks.PostgreSQL;
-using Serilog.Sinks.PostgreSQL.ColumnWriters;
 using ColumnOptions = Serilog.Sinks.MSSqlServer.ColumnOptions;
 
 namespace ArtStore.Infrastructure.Extensions;
@@ -35,14 +31,7 @@ public static class SerilogExtensions
                 .MinimumLevel.Override("Hangfire.Server.BackgroundServerProcess", LogEventLevel.Error)
                 .MinimumLevel.Override("Hangfire.Server.ServerHeartbeatProcess", LogEventLevel.Error)
                 .MinimumLevel.Override("Hangfire.Processing.BackgroundExecution", LogEventLevel.Error)
-                .MinimumLevel.Override("ZiggyCreatures.Caching.Fusion.FusionCache", LogEventLevel.Error)
-                .MinimumLevel.Override("ActualLab.CommandR.Interception.CommandServiceInterceptor", LogEventLevel.Error)
-                .MinimumLevel.Override("ActualLab.Fusion.Interception.ComputeServiceInterceptor", LogEventLevel.Error)
-                .MinimumLevel.Override("ActualLab.Fusion.Extensions.Services.InMemoryKeyValueStore", LogEventLevel.Error)
-                .MinimumLevel.Override("ActualLab.Fusion.Operations.Internal.CompletionProducer", LogEventLevel.Error)
-                .MinimumLevel.Override("ActualLab.Fusion.Internal.ComputedGraphPruner", LogEventLevel.Error)
-                .MinimumLevel.Override("ArtStore.Server.UI.Services.Fusion.UserSessionTracker", LogEventLevel.Error)
-                .MinimumLevel.Override("ArtStore.Server.UI.Services.Fusion.OnlineUserTracker", LogEventLevel.Error)
+                .MinimumLevel.Override("Microsoft.Extensions.Caching.Hybrid", LogEventLevel.Error)
                 .Enrich.FromLogContext()
                 .Enrich.WithUtcTime()
                 .Enrich.WithUserInfo()
@@ -75,9 +64,6 @@ public static class SerilogExtensions
         {
             case DbProviderKeys.SqlServer:
                 WriteToSqlServer(serilogConfig, connectionString);
-                break;
-            case DbProviderKeys.Npgsql:
-                WriteToNpgsql(serilogConfig, connectionString);
                 break;
         }
     }
@@ -142,45 +128,6 @@ public static class SerilogExtensions
             columnOptions: columnOpts
         ));
     }
-
-    private static void WriteToNpgsql(LoggerConfiguration serilogConfig, string? connectionString)
-    {
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            return;
-        }
-
-        const string tableName = "system_logs";
-        //Used columns (Key is a column name) 
-        //Column type is writer's constructor parameter
-        IDictionary<string, ColumnWriterBase> columnOptions = new Dictionary<string, ColumnWriterBase>
-        {
-            { "message", new RenderedMessageColumnWriter(NpgsqlDbType.Text) },
-            { "message_template", new MessageTemplateColumnWriter(NpgsqlDbType.Text) },
-            { "level", new LevelColumnWriter(true, NpgsqlDbType.Varchar) },
-            { "time_stamp", new TimestampColumnWriter(NpgsqlDbType.Timestamp) },
-            { "exception", new ExceptionColumnWriter(NpgsqlDbType.Text) },
-            { "properties", new PropertiesColumnWriter(NpgsqlDbType.Varchar) },
-            { "log_event", new LogEventSerializedColumnWriter(NpgsqlDbType.Varchar) },
-            { "user_name", new SinglePropertyColumnWriter("UserName", PropertyWriteMethod.Raw, NpgsqlDbType.Varchar) },
-            { "client_ip", new SinglePropertyColumnWriter("ClientIP", PropertyWriteMethod.Raw, NpgsqlDbType.Varchar) },
-            {
-                "client_agent",
-                new SinglePropertyColumnWriter("ClientAgent", PropertyWriteMethod.ToString, NpgsqlDbType.Varchar)
-            }
-        };
-        serilogConfig.WriteTo.Async(wt => wt.PostgreSQL(
-            connectionString,
-            tableName,
-            columnOptions,
-            LogEventLevel.Information,
-            needAutoCreateTable: false,
-            schemaName: "public",
-            useCopy: false,
-            failureCallback: e => Console.WriteLine($"Sink error: {e.Message}")
-        ));
-    }
-
 
     public static LoggerConfiguration WithUtcTime(this LoggerEnrichmentConfiguration enrichmentConfiguration)
     {

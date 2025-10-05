@@ -2,8 +2,8 @@
 using ArtStore.Application.Features.Identity.DTOs;
 using ArtStore.Domain.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Localization;
-using ZiggyCreatures.Caching.Fusion;
 
 namespace ArtStore.Infrastructure.Services.Identity;
 
@@ -11,38 +11,50 @@ public class IdentityService : IIdentityService
 {
     private readonly IAuthorizationService _authorizationService;
     private readonly IStringLocalizer<IdentityService> _localizer;
-    private readonly IFusionCache _fusionCache;
+    private readonly HybridCache _cache;
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly UserManager<ApplicationUser> _userManager;
 
     public IdentityService(
         IServiceScopeFactory scopeFactory,
         IApplicationSettings appConfig,
-        IFusionCache fusionCache,
+        HybridCache cache,
         IStringLocalizer<IdentityService> localizer)
     {
         var scope = scopeFactory.CreateScope();
         _userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         _userClaimsPrincipalFactory = scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<ApplicationUser>>();
         _authorizationService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
-        _fusionCache = fusionCache;
+        _cache = cache;
         _localizer = localizer;
     }
-
-    private TimeSpan RefreshInterval => TimeSpan.FromMinutes(60);
 
     public async Task<string?> GetUserNameAsync(string userId, CancellationToken cancellation = default)
     {
         var key = $"GetUserNameAsync:{userId}";
-        var user = await _fusionCache.GetOrSetAsync(key,
-             _ => _userManager.Users.SingleOrDefaultAsync(u => u.Id == userId), RefreshInterval);
+        var user = await _cache.GetOrCreateAsync(
+            key,
+            async cancel => await _userManager.Users.SingleOrDefaultAsync(u => u.Id == userId, cancel),
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(60),
+                LocalCacheExpiration = TimeSpan.FromMinutes(30)
+            },
+            cancellationToken: cancellation);
         return user?.UserName;
     }
 
     public string GetUserName(string userId)
     {
         var key = $"GetUserName-byId:{userId}";
-        var user = _fusionCache.GetOrSet(key, _ => _userManager.Users.SingleOrDefault(u => u.Id == userId), RefreshInterval);
+        var user = _cache.GetOrCreateAsync(
+            key,
+            async cancel => await _userManager.Users.SingleOrDefaultAsync(u => u.Id == userId, cancel),
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(60),
+                LocalCacheExpiration = TimeSpan.FromMinutes(30)
+            }).GetAwaiter().GetResult();
         return user?.UserName ?? string.Empty;
     }
 
@@ -77,9 +89,16 @@ public class IdentityService : IIdentityService
         CancellationToken cancellation = default)
     {
         var key = GetApplicationUserCacheKey(userName);
-        var result = await _fusionCache.GetOrSetAsync(key,
-            _ => _userManager.Users.Where(x => x.UserName == userName).Include(x => x.UserRoles)
-                .FirstOrDefaultAsync(cancellation), RefreshInterval);
+        var result = await _cache.GetOrCreateAsync(
+            key,
+            async cancel => await _userManager.Users.Where(x => x.UserName == userName).Include(x => x.UserRoles)
+                .FirstOrDefaultAsync(cancel),
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(60),
+                LocalCacheExpiration = TimeSpan.FromMinutes(30)
+            },
+            cancellationToken: cancellation);
         return new ApplicationUserDto()
         {
             Id = result?.Id ?? string.Empty,
@@ -94,8 +113,9 @@ public class IdentityService : IIdentityService
     public async Task<List<ApplicationUserDto>?> GetUsers(int? tenantId, CancellationToken cancellation = default)
     {
         var key = $"GetApplicationUserDtoListWithTenantId:{tenantId}";
-        Func<int?, CancellationToken, Task<List<ApplicationUserDto>?>> getUsersByTenantId =
-            async (tenantId, token) =>
+        var result = await _cache.GetOrCreateAsync(
+            key,
+            async cancel =>
             {
                 if (tenantId.HasValue)
                 {
@@ -108,7 +128,7 @@ public class IdentityService : IIdentityService
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         TenantId = s.TenantId
-                    }).ToListAsync();
+                    }).ToListAsync(cancel);
                 }
                 return await _userManager.Users.Where(x => x.TenantId == tenantId).Include(x => x.UserRoles)
                     .ThenInclude(x => x.Role)
@@ -120,15 +140,20 @@ public class IdentityService : IIdentityService
                         Email = s.Email,
                         PhoneNumber = s.PhoneNumber,
                         TenantId = s.TenantId
-                    }).ToListAsync();
-            };
-        var result = await _fusionCache.GetOrSetAsync(key, _ => getUsersByTenantId(tenantId, cancellation), RefreshInterval);
+                    }).ToListAsync(cancel);
+            },
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromMinutes(60),
+                LocalCacheExpiration = TimeSpan.FromMinutes(30)
+            },
+            cancellationToken: cancellation);
         return result;
     }
 
-    public void RemoveApplicationUserCache(string userName)
+    public async void RemoveApplicationUserCache(string userName)
     {
-        _fusionCache.Remove(GetApplicationUserCacheKey(userName));
+        await _cache.RemoveAsync(GetApplicationUserCacheKey(userName));
     }
 
     private string GetApplicationUserCacheKey(string userName)

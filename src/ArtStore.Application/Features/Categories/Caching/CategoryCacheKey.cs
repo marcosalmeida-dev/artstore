@@ -1,6 +1,4 @@
-﻿using ArtStore.Application.Common.FusionCache;
-
-namespace ArtStore.Application.Features.Categories.Caching;
+﻿namespace ArtStore.Application.Features.Categories.Caching;
 
 public static class CategoryCacheKey
 {
@@ -17,9 +15,4 @@ public static class CategoryCacheKey
     }
 
     public static IEnumerable<string>? Tags => new string[] { "category" };
-
-    public static void Refresh()
-    {
-        FusionCacheFactory.RemoveByTags(Tags);
-    }
 }

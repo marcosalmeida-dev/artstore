@@ -1,20 +1,20 @@
 ﻿using ArtStore.Application.Features.Identity.DTOs;
 using ArtStore.Domain.Identity;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace ArtStore.Infrastructure.Services.Identity;
 
 public class RoleService : IRoleService
 {
     private const string CACHEKEY = "ALL-ApplicationRoleDto";
-    private readonly IFusionCache _fusionCache;
+    private readonly HybridCache _cache;
     private readonly RoleManager<ApplicationRole> _roleManager;
 
     public RoleService(
-        IFusionCache fusionCache,
+        HybridCache cache,
         IServiceScopeFactory scopeFactory)
     {
-        _fusionCache = fusionCache;
+        _cache = cache;
         var scope = scopeFactory.CreateScope();
         _roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
         DataSource = new List<ApplicationRoleDto>();
@@ -24,10 +24,11 @@ public class RoleService : IRoleService
 
     public event Func<Task>? OnChange;
 
-    public void Initialize()
+    public async void Initialize()
     {
-        DataSource = _fusionCache.GetOrSet(CACHEKEY,
-                         _ => _roleManager.Roles
+        DataSource = await _cache.GetOrCreateAsync(
+                         CACHEKEY,
+                         async cancel => await Task.Run(() => _roleManager.Roles
                              .Select(s => new ApplicationRoleDto()
                              {
                                  Id = s.Id,
@@ -36,17 +37,18 @@ public class RoleService : IRoleService
                                  Description = s.Description,
                                  TenantId = s.TenantId
                              }).OrderBy(x => x.TenantId).ThenBy(x => x.Name)
-                             .ToList())
+                             .ToList(), cancel))
                      ?? new List<ApplicationRoleDto>();
         OnChange?.Invoke();
     }
 
 
-    public void Refresh()
+    public async void Refresh()
     {
-        _fusionCache.Remove(CACHEKEY);
-        DataSource = _fusionCache.GetOrSet(CACHEKEY,
-                         _ => _roleManager.Roles
+        await _cache.RemoveAsync(CACHEKEY);
+        DataSource = await _cache.GetOrCreateAsync(
+                         CACHEKEY,
+                         async cancel => await Task.Run(() => _roleManager.Roles
                              .Select(s => new ApplicationRoleDto()
                              {
                                  Id = s.Id,
@@ -56,7 +58,7 @@ public class RoleService : IRoleService
                                  TenantId = s.TenantId
                              })
                              .OrderBy(x => x.TenantId).ThenBy(x => x.Name)
-                             .ToList())
+                             .ToList(), cancel))
                      ?? new List<ApplicationRoleDto>();
         OnChange?.Invoke();
     }

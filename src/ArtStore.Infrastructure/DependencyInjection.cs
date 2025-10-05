@@ -1,7 +1,4 @@
 ﻿using System.Reflection;
-using ActualLab.Fusion;
-using ArtStore.Application.Common.Interfaces;
-using ArtStore.Application.Features.Fusion;
 using ArtStore.Application.Interfaces.Services;
 using ArtStore.Domain.Common.Events.Dispatcher;
 using ArtStore.Domain.Identity;
@@ -12,15 +9,12 @@ using ArtStore.Infrastructure.Constants.Role;
 using ArtStore.Infrastructure.Constants.User;
 using ArtStore.Infrastructure.PermissionSet;
 using ArtStore.Infrastructure.Persistence.Interceptors;
-using ArtStore.Infrastructure.Services.Circuits;
 using ArtStore.Infrastructure.Services.MultiTenant;
 using ArtStore.Infrastructure.Services.Storage;
 using ArtStore.Shared.Interfaces.MultiTenant;
-using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
-using ZiggyCreatures.Caching.Fusion;
 
 namespace ArtStore.Infrastructure;
 public static class DependencyInjection
@@ -28,16 +22,8 @@ public static class DependencyInjection
     private const string IDENTITY_SETTINGS_KEY = "IdentitySettings";
     private const string APP_CONFIGURATION_SETTINGS_KEY = "AppConfigurationSettings";
     private const string DATABASE_SETTINGS_KEY = "DatabaseSettings";
-    private const string SMTP_CLIENT_OPTIONS_KEY = "SmtpClientOptions";
     private const string USE_IN_MEMORY_DATABASE_KEY = "UseInMemoryDatabase";
     private const string IN_MEMORY_DATABASE_NAME = "ArtStoreDb";
-    private const string NPGSQL_ENABLE_LEGACY_TIMESTAMP_BEHAVIOR = "Npgsql.EnableLegacyTimestampBehavior";
-    private const string POSTGRESQL_MIGRATIONS_ASSEMBLY = "ArtStore.Migrators.PostgreSQL";
-    private const string MSSQL_MIGRATIONS_ASSEMBLY = "ArtStore.Migrators.MSSQL";
-    private const string SQLITE_MIGRATIONS_ASSEMBLY = "ArtStore.Migrators.SqLite";
-    private const string SMTP_CLIENT_OPTIONS_DEFAULT_FROM_EMAIL = "SmtpClientOptions:DefaultFromEmail";
-    private const string EMAIL_TEMPLATES_PATH = "Resources/EmailTemplates";
-    private const string DEFAULT_FROM_EMAIL = "noreply@blazorserver.com";
     private const string LOGIN_PATH = "/pages/authentication/login";
     private const int DEFAULT_LOCKOUT_TIME_SPAN_MINUTES = 5;
     private const int MAX_FAILED_ACCESS_ATTEMPTS = 5;
@@ -47,14 +33,11 @@ public static class DependencyInjection
     {
         services.AddSettings(configuration)
             .AddDatabase(configuration)
-            .AddServices()
-            .AddMessageServices(configuration);
+            .AddServices();
 
         services
             .AddAuthenticationService(configuration)
-            .AddFusionCacheService()
-            .AddSessionInfoService()
-            .AddFusionService();
+            .AddCurrentUserServices();
 
         services.AddSingleton<IUsersStateContainer, UsersStateContainer>();
         services.AddScoped<IPermissionService, PermissionService>();
@@ -99,7 +82,6 @@ public static class DependencyInjection
             {
                 var databaseSettings = p.GetRequiredService<IOptions<DatabaseSettings>>().Value;
                 m.AddInterceptors(p.GetServices<ISaveChangesInterceptor>());
-                m.UseExceptionProcessor(databaseSettings.DBProvider);
                 m.UseDatabase(databaseSettings.DBProvider, databaseSettings.ConnectionString);
             });
         }
@@ -117,38 +99,11 @@ public static class DependencyInjection
     {
         switch (dbProvider.ToLowerInvariant())
         {
-            case DbProviderKeys.Npgsql:
-                AppContext.SetSwitch(NPGSQL_ENABLE_LEGACY_TIMESTAMP_BEHAVIOR, true);
-                return builder.UseNpgsql(connectionString)
-                    .UseSnakeCaseNamingConvention();
-
             case DbProviderKeys.SqlServer:
                 return builder.UseSqlServer(connectionString);
 
             case DbProviderKeys.SqLite:
                 return builder.UseSqlite(connectionString);
-
-            default:
-                throw new InvalidOperationException($"DB Provider {dbProvider} is not supported.");
-        }
-    }
-
-    private static DbContextOptionsBuilder UseExceptionProcessor(this DbContextOptionsBuilder builder, string dbProvider)
-    {
-
-        switch (dbProvider.ToLowerInvariant())
-        {
-            //case DbProviderKeys.Npgsql:
-            //    EntityFramework.Exceptions.PostgreSQL.ExceptionProcessorExtensions.UseExceptionProcessor(builder);
-            //    return builder;
-
-            case DbProviderKeys.SqlServer:
-                EntityFramework.Exceptions.SqlServer.ExceptionProcessorExtensions.UseExceptionProcessor(builder);
-                return builder;
-
-            //case DbProviderKeys.SqLite:
-            //    EntityFramework.Exceptions.Sqlite.ExceptionProcessorExtensions.UseExceptionProcessor(builder);
-            //    return builder;
 
             default:
                 throw new InvalidOperationException($"DB Provider {dbProvider} is not supported.");
@@ -190,7 +145,6 @@ public static class DependencyInjection
         return services
             .AddScoped<IValidationService, ValidationService>()
             .AddScoped<IDateTime, DateTimeService>()
-            .AddScoped<IExcelService, ExcelService>()
             .AddScoped<IPDFService, PDFService>()
             .AddStorageService();
     }
@@ -213,25 +167,6 @@ public static class DependencyInjection
                 return new AzureBlobStorageService(configuration, logger);
             }
         });
-
-        return services;
-    }
-
-    private static IServiceCollection AddMessageServices(this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        //var smtpClientOptions = new SmtpClientOptions();
-        //configuration.GetSection(SMTP_CLIENT_OPTIONS_KEY).Bind(smtpClientOptions);
-        //services.Configure<SmtpClientOptions>(configuration.GetSection(SMTP_CLIENT_OPTIONS_KEY));
-
-        //services.AddSingleton(smtpClientOptions);
-        //services.AddScoped<IMailService, MailService>();
-
-        //// configure your sender and template choices with dependency injection.
-        //var defaultFromEmail = configuration.GetValue<string>(SMTP_CLIENT_OPTIONS_DEFAULT_FROM_EMAIL);
-        //services.AddFluentEmail(defaultFromEmail ?? DEFAULT_FROM_EMAIL)
-        //    .AddRazorRenderer(Path.Combine(Directory.GetCurrentDirectory(), EMAIL_TEMPLATES_PATH))
-        //    .AddMailKitSender(smtpClientOptions);
 
         return services;
     }
@@ -322,11 +257,6 @@ public static class DependencyInjection
                 googleOptions.ClientSecret = configuration.GetValue<string>("Authentication:Google:ClientSecret") ?? string.Empty; ;
             }
             )
-            //.AddFacebook(facebookOptions =>
-            //{
-            //    facebookOptions.AppId = configuration.GetValue<string>("Authentication:Facebook:AppId") ?? string.Empty;
-            //    facebookOptions.AppSecret = configuration.GetValue<string>("Authentication:Facebook:AppSecret") ?? string.Empty;
-            //})
             .AddIdentityCookies(options => { });
 
         services.ConfigureApplicationCookie(options =>
@@ -341,38 +271,11 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddFusionCacheService(this IServiceCollection services)
-    {
-        services.AddMemoryCache();
-        services.AddFusionCache().WithDefaultEntryOptions(new FusionCacheEntryOptions
-        {
-            // CACHE DURATION
-            Duration = TimeSpan.FromMinutes(120),
-            // FAIL-SAFE OPTIONS
-            IsFailSafeEnabled = true,
-            FailSafeMaxDuration = TimeSpan.FromHours(8),
-            FailSafeThrottleDuration = TimeSpan.FromSeconds(30),
-            // FACTORY TIMEOUTS
-            FactorySoftTimeout = TimeSpan.FromSeconds(10),
-            FactoryHardTimeout = TimeSpan.FromSeconds(30),
-            AllowTimedOutFactoryBackgroundCompletion = true,
-        });
-        return services;
-    }
-
-    private static IServiceCollection AddSessionInfoService(this IServiceCollection services)
+    private static IServiceCollection AddCurrentUserServices(this IServiceCollection services)
     {
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
         services.AddScoped<ICurrentUserContextSetter, CurrentUserContextSetter>();
-        services.AddScoped<CircuitHandler, UserSessionCircuitHandler>();
         return services;
-    }
-
-    private static void AddFusionService(this IServiceCollection services)
-    {
-        var fusion = services.AddFusion();
-        fusion.AddService<IUserSessionTracker, UserSessionTracker>();
-        fusion.AddService<IOnlineUserTracker, OnlineUserTracker>();
     }
 }

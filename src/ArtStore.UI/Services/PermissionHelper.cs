@@ -5,7 +5,7 @@ using ArtStore.Application.Common.Security;
 using ArtStore.Domain.Identity;
 using ArtStore.Infrastructure.Constants.ClaimTypes;
 using ArtStore.Infrastructure.PermissionSet;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace ArtStore.UI.Services;
 
@@ -16,21 +16,19 @@ public class PermissionHelper
 {
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IFusionCache _fusionCache;
-    private readonly TimeSpan _refreshInterval;
+    private readonly HybridCache _cache;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PermissionHelper"/> class.
     /// </summary>
     /// <param name="scopeFactory">The service scope factory.</param>
-    /// <param name="fusionCache">The fusion cache.</param>
-    public PermissionHelper(IServiceScopeFactory scopeFactory, IFusionCache fusionCache)
+    /// <param name="cache">The hybrid cache.</param>
+    public PermissionHelper(IServiceScopeFactory scopeFactory, HybridCache cache)
     {
         var scope = scopeFactory.CreateScope();
         _userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         _roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-        _fusionCache = fusionCache;
-        _refreshInterval = TimeSpan.FromSeconds(30);
+        _cache = cache;
     }
 
     /// <summary>
@@ -85,25 +83,32 @@ public class PermissionHelper
     private async Task<List<Claim>> GetInheritedClaims(string userId)
     {
         var key = $"get-inherited-claims-by-{userId}";
-        return await _fusionCache.GetOrSetAsync(key, async _ =>
-        {
-            var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false)
-                                    ?? throw new NotFoundException($"not found application user: {userId}");
-            var roles = (await _userManager.GetRolesAsync(user)).ToArray();
-            var inheritClaims = new List<Claim>();
-            if (roles is not null && roles.Any())
+        return await _cache.GetOrCreateAsync(
+            key,
+            async cancel =>
             {
-                var assigendRoles = await _roleManager.Roles.Where(x => roles.Contains(x.Name) && x.TenantId == user.TenantId).ToListAsync();
-                foreach (var role in assigendRoles)
+                var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false)
+                                        ?? throw new NotFoundException($"not found application user: {userId}");
+                var roles = (await _userManager.GetRolesAsync(user)).ToArray();
+                var inheritClaims = new List<Claim>();
+                if (roles is not null && roles.Any())
                 {
-                    var claims = await _roleManager.GetClaimsAsync(role).ConfigureAwait(false);
-                    inheritClaims.AddRange(claims);
+                    var assigendRoles = await _roleManager.Roles.Where(x => roles.Contains(x.Name) && x.TenantId == user.TenantId).ToListAsync();
+                    foreach (var role in assigendRoles)
+                    {
+                        var claims = await _roleManager.GetClaimsAsync(role).ConfigureAwait(false);
+                        inheritClaims.AddRange(claims);
+                    }
+                    inheritClaims = inheritClaims.Distinct(new ClaimComparer()).ToList();
                 }
-                inheritClaims = inheritClaims.Distinct(new ClaimComparer()).ToList();
-            }
 
-            return inheritClaims;
-        }, _refreshInterval).ConfigureAwait(false);
+                return inheritClaims;
+            },
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(30),
+                LocalCacheExpiration = TimeSpan.FromSeconds(15)
+            }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -114,14 +119,20 @@ public class PermissionHelper
     private async Task<IList<Claim>> GetUserClaimsByUserId(string userId)
     {
         var key = $"get-claims-by-{userId}";
-        return await _fusionCache.GetOrSetAsync(key, async _ =>
-        {
-            var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false)
-                       ?? throw new NotFoundException($"not found application user: {userId}");
-            var userClaims = await _userManager.GetClaimsAsync(user).ConfigureAwait(false);
-            return userClaims;
-
-        }, _refreshInterval).ConfigureAwait(false);
+        return await _cache.GetOrCreateAsync(
+            key,
+            async cancel =>
+            {
+                var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false)
+                           ?? throw new NotFoundException($"not found application user: {userId}");
+                var userClaims = await _userManager.GetClaimsAsync(user).ConfigureAwait(false);
+                return userClaims;
+            },
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(30),
+                LocalCacheExpiration = TimeSpan.FromSeconds(15)
+            }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -174,12 +185,19 @@ public class PermissionHelper
     private async Task<IList<Claim>> GetUserClaimsByRoleId(string roleId)
     {
         var key = $"get-claims-by-{roleId}";
-        return await _fusionCache.GetOrSetAsync(key, async _ =>
-        {
-            var role = await _roleManager.FindByIdAsync(roleId).ConfigureAwait(false)
-                       ?? throw new NotFoundException($"not found application role: {roleId}");
-            return await _roleManager.GetClaimsAsync(role).ConfigureAwait(false);
-        }, _refreshInterval).ConfigureAwait(false);
+        return await _cache.GetOrCreateAsync(
+            key,
+            async cancel =>
+            {
+                var role = await _roleManager.FindByIdAsync(roleId).ConfigureAwait(false)
+                           ?? throw new NotFoundException($"not found application role: {roleId}");
+                return await _roleManager.GetClaimsAsync(role).ConfigureAwait(false);
+            },
+            options: new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(30),
+                LocalCacheExpiration = TimeSpan.FromSeconds(15)
+            }).ConfigureAwait(false);
     }
 
     /// <summary>

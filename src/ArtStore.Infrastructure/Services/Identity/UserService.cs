@@ -1,20 +1,20 @@
 ﻿using ArtStore.Application.Features.Identity.DTOs;
 using ArtStore.Domain.Identity;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace ArtStore.Infrastructure.Services.Identity;
 
 public class UserService : IUserService
 {
     private const string CACHEKEY = "ALL-ApplicationUserDto";
-    private readonly IFusionCache _fusionCache;
+    private readonly HybridCache _cache;
     private readonly UserManager<ApplicationUser> _userManager;
 
     public UserService(
-        IFusionCache fusionCache,
+        HybridCache cache,
         IServiceScopeFactory scopeFactory)
     {
-        _fusionCache = fusionCache;
+        _cache = cache;
         var scope = scopeFactory.CreateScope();
         _userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         DataSource = new List<ApplicationUserDto>();
@@ -24,10 +24,11 @@ public class UserService : IUserService
 
     public event Func<Task>? OnChange;
 
-    public void Initialize()
+    public async void Initialize()
     {
-        DataSource = _fusionCache.GetOrSet(CACHEKEY,
-                         _ => _userManager.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
+        DataSource = await _cache.GetOrCreateAsync(
+                         CACHEKEY,
+                         async cancel => await _userManager.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
                              .Select(s => new ApplicationUserDto
                              {
                                  Id = s.Id,
@@ -40,17 +41,18 @@ public class UserService : IUserService
                                  TenantId = s.TenantId
                              })
                              .OrderBy(x => x.UserName)
-                             .ToList())
+                             .ToListAsync(cancel))
                      ?? new List<ApplicationUserDto>();
         OnChange?.Invoke();
     }
 
 
-    public void Refresh()
+    public async void Refresh()
     {
-        _fusionCache.Remove(CACHEKEY);
-        DataSource = _fusionCache.GetOrSet(CACHEKEY,
-                         _ => _userManager.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
+        await _cache.RemoveAsync(CACHEKEY);
+        DataSource = await _cache.GetOrCreateAsync(
+                         CACHEKEY,
+                         async cancel => await _userManager.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role)
                              .Select(s => new ApplicationUserDto
                              {
                                  Id = s.Id,
@@ -63,7 +65,7 @@ public class UserService : IUserService
                                  TenantId = s.TenantId
                              })
                              .OrderBy(x => x.UserName)
-                             .ToList())
+                             .ToListAsync(cancel))
                      ?? new List<ApplicationUserDto>();
         OnChange?.Invoke();
     }

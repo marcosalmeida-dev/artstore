@@ -1,8 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using ArtStore.Application.Common.FusionCache;
-
 namespace ArtStore.Application.Features.Tenants.Caching;
 
 public static class TenantCacheKey
@@ -14,9 +12,4 @@ public static class TenantCacheKey
         return $"TenantsWithPaginationQuery,{parameters}";
     }
     public static IEnumerable<string>? Tags => new string[] { "tenant" };
-    public static void Refresh()
-    {
-        FusionCacheFactory.RemoveByTags(Tags);
-    }
-
 }

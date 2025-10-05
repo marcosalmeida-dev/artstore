@@ -1,44 +1,70 @@
-﻿using ArtStore.Infrastructure.Extensions;
+using System.Security.Claims;
+using ArtStore.Infrastructure.Constants.ClaimTypes;
+using Microsoft.AspNetCore.Http;
 
 namespace ArtStore.Infrastructure.Services.Identity;
 
 /// <summary>
-/// Service for setting and clearing the current user context.
+/// Service for setting the current user context.
 /// </summary>
 public class CurrentUserContextSetter : ICurrentUserContextSetter
 {
     private readonly ICurrentUserContext _currentUserContext;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CurrentUserContextSetter"/> class.
-    /// </summary>
-    /// <param name="currentUserContext">The current user context.</param>
-    public CurrentUserContextSetter(ICurrentUserContext currentUserContext)
+    public CurrentUserContextSetter(
+        ICurrentUserContext currentUserContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         _currentUserContext = currentUserContext;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <summary>
-    /// Sets the current user context with the provided session information.
+    /// Sets the current user from ClaimsPrincipal.
     /// </summary>
-    /// <param name="user">The session information of the current user.</param>
-    public void SetCurrentUser(ClaimsPrincipal user)
+    public void SetCurrentUser(ClaimsPrincipal principal)
     {
-        _currentUserContext.SessionInfo = new SessionInfo(
-                user.GetUserId(),
-                user.GetUserName(),
-                user.GetDisplayName(),
-                "",
-                user.GetTenantId(),
-                user.GetProfilePictureDataUrl(),
-                UserPresence.Available
-            );
+        if (principal?.Identity?.IsAuthenticated != true)
+        {
+            ClearCurrentUser();
+            return;
+        }
+
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = principal.FindFirst(ClaimTypes.Name)?.Value;
+        var displayName = principal.FindFirst("DisplayName")?.Value ?? userName;
+        var tenantId = principal.FindFirst(ApplicationClaimTypes.TenantId)?.Value;
+        var profilePictureDataUrl = principal.FindFirst(ApplicationClaimTypes.ProfilePictureDataUrl)?.Value;
+
+        // Get IP address from HttpContext
+        var ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+
+        var sessionInfo = new SessionInfo(
+            userId: userId,
+            userName: userName,
+            displayName: displayName,
+            ipAddress: ipAddress,
+            tenantId: tenantId,
+            profilePictureDataUrl: profilePictureDataUrl,
+            status: UserPresence.Available
+        );
+
+        _currentUserContext.SessionInfo = sessionInfo;
+    }
+
+    /// <summary>
+    /// Sets the current user session information directly.
+    /// </summary>
+    public void SetCurrentUser(SessionInfo sessionInfo)
+    {
+        _currentUserContext.SessionInfo = sessionInfo;
     }
 
     /// <summary>
     /// Clears the current user context.
     /// </summary>
-    public void Clear()
+    public void ClearCurrentUser()
     {
         _currentUserContext.SessionInfo = null;
     }

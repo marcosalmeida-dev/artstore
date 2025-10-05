@@ -1,5 +1,4 @@
-﻿using ArtStore.Application.Common.FusionCache;
-using ArtStore.Application.Features.Products.Services;
+﻿using ArtStore.Application.Features.Products.Services;
 using ArtStore.Shared.Interfaces.Command;
 using ArtStore.Shared.Interfaces.Query;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -73,8 +72,4 @@ public static class DependencyInjection
         }
     }
 
-    public static void InitializeCacheFactory(this IHost host)
-    {
-        FusionCacheFactory.Configure(host.Services);
-    }
 }

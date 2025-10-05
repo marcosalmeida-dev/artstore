@@ -12,7 +12,9 @@
       "Bash(powershell:*)",
       "Bash(mkdir:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(dotnet list package:*)"
+      "Bash(dotnet list package:*)",
+      "Bash(Select-String \"error\")",
+      "Bash(Select-Object -First 10)"
     ],
     "deny": [],
     "ask": []

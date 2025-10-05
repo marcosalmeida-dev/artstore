@@ -1,4 +1,4 @@
-﻿namespace ArtStore.Application.Common.Interfaces.Identity;
+namespace ArtStore.Application.Common.Interfaces.Identity;
 
 /// <summary>
 /// Interface representing the current user context.
