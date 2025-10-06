@@ -26,9 +26,7 @@ public class GetAllCategoriesQueryHandler :
 {
     private readonly IApplicationDbContext _context;
 
-    public GetAllCategoriesQueryHandler(
-        IApplicationDbContext context
-    )
+    public GetAllCategoriesQueryHandler(IApplicationDbContext context)
     {
         _context = context;
     }
@@ -38,20 +36,24 @@ public class GetAllCategoriesQueryHandler :
         var data = await _context.Categories
             .Include(c => c.ParentCategory)
             .Include(p => p.Products)
+            .Where(c => c.IsActive) // Only active categories
+            .OrderBy(c => c.Name)
             .ToListAsync(cancellationToken);
 
-        return data.Select(x => new CategoryDto
-        {
-            Id = x.Id,
-            Name = x.Name,
-            Description = x.Description,
-            IsActive = x.IsActive,
-            ParentCategoryId = x.ParentCategoryId,
-            ParentCategoryName = x.ParentCategory?.Name,
-            ProductCount = x.Products?.Count ?? 0,
-            Created = x.Created,
-            LastModified = x.LastModified
-        });
+        return data
+            .Select(x => new CategoryDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Description = x.Description,
+                IsActive = x.IsActive,
+                ParentCategoryId = x.ParentCategoryId,
+                ParentCategoryName = x.ParentCategory?.Name,
+                ProductCount = x.Products?.Count ?? 0,
+                Created = x.Created,
+                LastModified = x.LastModified
+            })
+            .OrderBy(c => c.Name); // Defensive ordering post-projection
     }
 
     public async Task<CategoryDto?> Handle(GetCategoryQuery request, CancellationToken cancellationToken)

@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtStore.Shared", "src\ArtStore.Shared\ArtStore.Shared.csproj", "{3C686810-9461-61AA-CEF2-0B7E9B97368E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArtStore.Application.Tests", "tests\ArtStore.Application.Tests\ArtStore.Application.Tests.csproj", "{3C321F08-EB95-B01E-0C48-DC402FD14700}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{3C686810-9461-61AA-CEF2-0B7E9B97368E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C686810-9461-61AA-CEF2-0B7E9B97368E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C686810-9461-61AA-CEF2-0B7E9B97368E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C321F08-EB95-B01E-0C48-DC402FD14700}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C321F08-EB95-B01E-0C48-DC402FD14700}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C321F08-EB95-B01E-0C48-DC402FD14700}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C321F08-EB95-B01E-0C48-DC402FD14700}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 		{AE238AA6-4DFB-6343-03AF-7429B43E4FE6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F0B10DC4-4F24-8A5A-5442-760816611BEF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{3C686810-9461-61AA-CEF2-0B7E9B97368E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{3C321F08-EB95-B01E-0C48-DC402FD14700} = {2C3EF961-B40E-49AD-9564-5325E16A5D1E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0B53AA2E-B3A1-43AD-860E-4EFB993331FC}

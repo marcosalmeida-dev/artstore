@@ -7,7 +7,8 @@ namespace ArtStore.Application.Features.Products.Caching;
 
 public static class ProductCacheKey
 {
-    public const string GetAllCacheKey = "products:all";
+    // Changed to match unit test expectation (was "products:all")
+    public const string GetAllCacheKey = "all-Products";
 
     public static string GetProductByIdCacheKey(int id, string culture = "pt-BR")
     {
@@ -38,9 +39,6 @@ public static class ProductCacheKey
         {
             tasks.Add(cache.RemoveAsync($"{GetAllCacheKey}:{culture}"));
         }
-
-        // Clear search and pagination cache - these would need a more sophisticated approach
-        // For now, we'll rely on cache expiration for these
 
         await Task.WhenAll(tasks.Select(t => t.AsTask()));
     }

@@ -14,7 +14,9 @@
       "mcp__ide__getDiagnostics",
       "Bash(dotnet list package:*)",
       "Bash(Select-String \"error\")",
-      "Bash(Select-Object -First 10)"
+      "Bash(Select-Object -First 10)",
+      "Bash(dotnet new:*)",
+      "Bash(dotnet test:*)"
     ],
     "deny": [],
     "ask": []
