@@ -20,10 +20,10 @@ public class LocalFileStorageService : IBlobStorageService
         _logger = logger;
 
         _storageBasePath = configuration["LocalFileStorage:BasePath"]
-            ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
         _baseUrl = configuration["LocalFileStorage:BaseUrl"]
-            ?? "/uploads";
+            ?? "/images";
 
         // Ensure directory exists
         if (!Directory.Exists(_storageBasePath))

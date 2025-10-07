@@ -21,12 +21,8 @@ public class ApplicationDbContext : IdentityDbContext<
     {
     }
 
-    //public DbSet<SystemLog> SystemLogs { get; set; }
-    //public DbSet<AuditTrail> AuditTrails { get; set; }
-    //public DbSet<Document> Documents { get; set; }
-    //public DbSet<PicklistSet> PicklistSets { get; set; }
-    //public DbSet<Contact> Contacts { get; set; }
-
+    public DbSet<SystemLog> SystemLogs { get; set; }
+    public DbSet<AuditTrail> AuditTrails { get; set; }
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     public DbSet<Tenant> Tenants { get; set; }
